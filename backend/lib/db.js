@@ -12,6 +12,7 @@ const bucket = storage.bucket(BUCKET_NAME);
 const availabilityCollection = firestore.collection("availability");
 const bookingsCollection = firestore.collection("bookings");
 const overridesCollection = firestore.collection("overrides");
+const settingsCollection = firestore.collection("settings");
 
 module.exports = {
   firestore,
@@ -19,5 +20,6 @@ module.exports = {
   bucket,
   availabilityCollection,
   bookingsCollection,
-  overridesCollection
+  overridesCollection,
+  settingsCollection
 };

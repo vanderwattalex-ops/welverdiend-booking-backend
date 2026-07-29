@@ -35,7 +35,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>Upload proof of payment</h1>
+  <h1>Payment for your stay</h1>
   <p class="sub">Welverdiend Accommodation</p>
   <div id="content">
     <p class="state-note">Loading your booking details…</p>
@@ -44,7 +44,7 @@
 
 <script>
 (function(){
-  const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
+  const API_BASE = "https://YOUR-CLOUD-RUN-SERVICE-URL";
 
   const params = new URLSearchParams(window.location.search);
   const bookingId = params.get("booking");
@@ -53,7 +53,7 @@
   let selectedFile = null;
 
   if(!bookingId){
-    content.innerHTML = `<p class="state-note">This link is missing a booking reference — please use the link from your approval email.</p>`;
+    content.innerHTML = `<p class="state-note">This link is missing a booking reference — please use the link from your email.</p>`;
     return;
   }
 
@@ -69,76 +69,100 @@
         content.innerHTML = `<p class="state-note">We couldn't find that booking. Please check the link from your email, or contact us directly.</p>`;
         return;
       }
-      if(data.status === "submitted" || data.status === "confirmed"){
-        content.innerHTML = `<p class="state-note">Thanks — your proof of payment has already been received for this booking. We'll be in touch with final confirmation shortly.</p>`;
-        return;
+
+      // Which stage are we in?
+      if(data.status === "awaiting_payment"){
+        renderPaymentStep({
+          heading: "Pay your deposit",
+          amountLabel: "Deposit due now",
+          amount: data.depositAmount,
+          note: `The remaining ${rand(data.balanceAmount)} balance is due before check-in — we'll email you separately for that closer to your stay.`,
+          bankDetails,
+          uploadUrl: `${API_BASE}/api/bookings/${bookingId}/proof`,
+          data
+        });
+      } else if(data.status === "submitted"){
+        content.innerHTML = `<p class="state-note">Thanks — your deposit proof of payment has already been received. We'll be in touch with final confirmation shortly.</p>`;
+      } else if(data.status === "confirmed" && data.balanceStatus === "unpaid"){
+        renderPaymentStep({
+          heading: "Pay your final balance",
+          amountLabel: "Balance due before check-in",
+          amount: data.balanceAmount,
+          note: `Your booking is confirmed — this is the remaining balance, due before you check in.`,
+          bankDetails,
+          uploadUrl: `${API_BASE}/api/bookings/${bookingId}/balance-proof`,
+          data
+        });
+      } else if(data.status === "confirmed" && data.balanceStatus === "submitted"){
+        content.innerHTML = `<p class="state-note">Thanks — your final payment proof has already been received. We'll confirm shortly.</p>`;
+      } else if(data.status === "confirmed" && data.balanceStatus === "paid"){
+        content.innerHTML = `<p class="state-note">You're all paid up — we look forward to hosting you!</p>`;
+      } else {
+        content.innerHTML = `<p class="state-note">There's no payment currently due for this booking.</p>`;
       }
-      if(data.status !== "awaiting_payment"){
-        content.innerHTML = `<p class="state-note">This booking isn't currently waiting for proof of payment.</p>`;
-        return;
-      }
-
-      const lines = (data.lineItems || []).map(l => `<div class="summary-line"><span>${l.label}</span><span>${rand(l.amount)}</span></div>`).join("");
-      content.innerHTML = `
-        <div class="summary">
-          <div class="summary-line"><span>${data.unitName}</span><span>${data.checkIn} → ${data.checkOut}</span></div>
-          ${lines}
-          <div class="summary-total"><span>Total due</span><span>${rand(data.totalAmount)}</span></div>
-        </div>
-        <div class="bank"><b>Pay by EFT to:</b><br>${bankDetails}</div>
-        <div class="file-drop" id="file-drop">Click to upload a screenshot or PDF of your EFT payment</div>
-        <input type="file" id="file-input" accept="image/*,application/pdf" style="display:none">
-        <button class="btn" id="submit-btn">Submit proof of payment</button>
-        <div class="msg" id="msg"></div>
-      `;
-
-      const fileDrop = document.getElementById("file-drop");
-      const fileInput = document.getElementById("file-input");
-      fileDrop.onclick = () => fileInput.click();
-      fileInput.onchange = (e) => {
-        const f = e.target.files[0];
-        if(f){
-          selectedFile = f;
-          fileDrop.textContent = `Selected: ${f.name}`;
-          fileDrop.classList.add("has-file");
-        }
-      };
-
-      document.getElementById("submit-btn").onclick = async () => {
-        const msg = document.getElementById("msg");
-        const btn = document.getElementById("submit-btn");
-        msg.className = "msg";
-        msg.textContent = "";
-        if(!selectedFile){
-          msg.className = "msg error";
-          msg.textContent = "Please attach your proof of payment first.";
-          return;
-        }
-        btn.disabled = true; btn.textContent = "Uploading…";
-        try{
-          const fd = new FormData();
-          fd.append("proof", selectedFile);
-          const res = await fetch(`${API_BASE}/api/bookings/${bookingId}/proof`, { method: "POST", body: fd });
-          const result = await res.json();
-          if(result.ok){
-            msg.className = "msg success";
-            msg.textContent = result.message;
-            btn.style.display = "none";
-            fileDrop.style.display = "none";
-          } else {
-            msg.className = "msg error";
-            msg.textContent = result.error || "Something went wrong — please try again.";
-            btn.disabled = false; btn.textContent = "Submit proof of payment";
-          }
-        }catch(err){
-          msg.className = "msg error";
-          msg.textContent = "Could not reach the server — please try again shortly.";
-          btn.disabled = false; btn.textContent = "Submit proof of payment";
-        }
-      };
     }catch(err){
       content.innerHTML = `<p class="state-note">Could not load your booking right now — please refresh, or contact us directly.</p>`;
     }
+  }
+
+  function renderPaymentStep({ heading, amountLabel, amount, note, bankDetails, uploadUrl, data }){
+    document.querySelector("h1").textContent = heading;
+    content.innerHTML = `
+      <div class="summary">
+        <div class="summary-line"><span>${data.unitName}</span><span>${data.checkIn} → ${data.checkOut}</span></div>
+        <div class="summary-total"><span>${amountLabel}</span><span>${rand(amount)}</span></div>
+      </div>
+      <div class="bank"><b>Pay by EFT to:</b><br>${bankDetails}<br><br>${note}</div>
+      <div class="file-drop" id="file-drop">Click to upload a screenshot or PDF of your EFT payment</div>
+      <input type="file" id="file-input" accept="image/*,application/pdf" style="display:none">
+      <button class="btn" id="submit-btn">Submit proof of payment</button>
+      <div class="msg" id="msg"></div>
+    `;
+
+    const fileDrop = document.getElementById("file-drop");
+    const fileInput = document.getElementById("file-input");
+    fileDrop.onclick = () => fileInput.click();
+    fileInput.onchange = (e) => {
+      const f = e.target.files[0];
+      if(f){
+        selectedFile = f;
+        fileDrop.textContent = `Selected: ${f.name}`;
+        fileDrop.classList.add("has-file");
+      }
+    };
+
+    document.getElementById("submit-btn").onclick = async () => {
+      const msg = document.getElementById("msg");
+      const btn = document.getElementById("submit-btn");
+      msg.className = "msg";
+      msg.textContent = "";
+      if(!selectedFile){
+        msg.className = "msg error";
+        msg.textContent = "Please attach your proof of payment first.";
+        return;
+      }
+      btn.disabled = true; btn.textContent = "Uploading…";
+      try{
+        const fd = new FormData();
+        fd.append("proof", selectedFile);
+        const res = await fetch(uploadUrl, { method: "POST", body: fd });
+        const result = await res.json();
+        if(result.ok){
+          msg.className = "msg success";
+          msg.textContent = result.message;
+          btn.style.display = "none";
+          fileDrop.style.display = "none";
+        } else {
+          msg.className = "msg error";
+          msg.textContent = result.error || "Something went wrong — please try again.";
+          btn.disabled = false; btn.textContent = "Submit proof of payment";
+        }
+      }catch(err){
+        msg.className = "msg error";
+        msg.textContent = "Could not reach the server — please try again shortly.";
+        btn.disabled = false; btn.textContent = "Submit proof of payment";
+      }
+    };
   }
 
   load();

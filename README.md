@@ -15,11 +15,15 @@ Squarespace site.
    slip through, you'll see a conflict warning instead of approving a
    double-booking.
 3. **The guest gets an email** with your bank details and a link to
-   `upload-proof.html`, where they pay by EFT and upload proof.
+   `upload-proof.html`, asking for a **50% deposit** to secure the dates.
 4. **You get a second email** once they've uploaded it, and give final
    confirmation in the dashboard.
 5. **Only now do the dates actually block** on the calendar — and get
    exported back out so Airbnb/Booking.com/Lekkeslaap pick them up too.
+6. **Before check-in**, use **Send balance reminder** in the dashboard —
+   this emails the guest the same upload link, now asking for the
+   remaining 50%. Once they upload it (or you confirm payment another
+   way), click **Mark balance received**.
 
 ## How it fits together
 
@@ -165,6 +169,24 @@ buttons shown change depending on where a booking is in the flow:
 Declining or rejecting lets you type an optional short reason, which
 gets included in the email sent to the guest.
 
+## Editing prices, extras, and bank details
+
+The **Settings** tab in `admin-dashboard.html` covers everything you'll
+want to change day to day — no code editing or redeploy required,
+changes take effect immediately:
+
+- Nightly rate, description, beds, bathrooms, and amenities per unit
+- The full extras list — edit prices, add new ones, remove ones you
+  don't want
+- Bank details (shown to guests once approved, and in the approval email)
+- The email address booking-request notifications go to
+
+These are stored in Firestore now rather than the code, which is why
+they update live. What's *not* in Settings (and still lives in
+`backend/config/units.js`, requiring a redeploy to change) is
+deliberately kept there since it changes rarely and is more technical:
+each unit's iCal source links, and `frontendBaseUrl`.
+
 ## Seeing why a day is blocked, and unblocking one if needed
 
 The **Calendar** tab in `admin-dashboard.html` lists every booked date
@@ -182,6 +204,62 @@ calendar shows and lets guests book — it does **not** cancel anything on
 Airbnb, Booking.com or Lekkeslaap themselves, so only use it when you're
 sure the dates are genuinely free. An unblock sticks around through
 future syncs until you remove it with **Re-block**.
+
+## Invoices
+
+Once you give final confirmation, an invoice PDF is automatically
+attached to the guest's confirmation email — no separate step needed.
+You can also download it any time from a confirmed booking's card in
+the dashboard (**Download invoice**) — it's generated fresh each time,
+so it always reflects the current balance status.
+
+## Automatic check-in reminders
+
+Two days before a confirmed booking's check-in date, the system emails
+the guest automatically: how much they've paid so far, and — if the
+balance is still unpaid — a reminder with the payment link. This needs
+one more Cloud Scheduler job (separate from the sync job), which runs
+once a day:
+
+```
+gcloud scheduler jobs create http welverdiend-checkin-reminders \
+  --schedule="0 9 * * *" \
+  --uri="https://YOUR-CLOUD-RUN-URL/api/reminders/checkin" \
+  --http-method=GET \
+  --headers="x-admin-token=YOUR_GENERATED_TOKEN" \
+  --location=europe-west1
+```
+
+This runs daily at 9am and only emails each booking once (it tracks
+this internally), so it's safe to leave running indefinitely. You can
+also still send a balance reminder manually any time from a booking's
+card, regardless of how close check-in is.
+
+## Deposits and balance payments
+
+Every total is automatically split 50/50: a deposit due to secure the
+booking, and a balance due before check-in. Both stages use the same
+guest-facing page (`upload-proof.html`) — it automatically shows
+whichever payment is currently due based on the booking's status, so
+there's only one link to ever share with a guest.
+
+## Cleaning up test or unwanted bookings
+
+Every booking card in the dashboard has a **Delete** button. This is a
+hard delete (no undo, no email sent) — use it for test bookings or
+anything you don't need a record of. If you ever see a booking with an
+unrecognized status (from testing an older version of this system), it
+won't have any action buttons except Delete — safe to remove.
+
+## Verifying email delivery
+
+The **Settings** tab has a **Send test email** button next to the
+notification address — use it any time to confirm emails are actually
+arriving, without needing a real booking to test with. If a test email
+doesn't arrive within a couple of minutes, check: the address isn't
+just an alias with no real inbox behind it, it isn't going to spam, and
+`EMAIL_USER` / `EMAIL_APP_PASSWORD` are both still set correctly on the
+Cloud Run service.
 
 ## Costs
 

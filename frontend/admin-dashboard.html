@@ -65,6 +65,21 @@
   .override-form label{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
   .override-form input,.override-form select{padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;}
   .no-ranges{font-size:13px;color:var(--ink-soft);font-style:italic;}
+  .settings-field{margin-bottom:14px;}
+  .settings-field label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--ink);}
+  .settings-field input,.settings-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:4px;font-size:13.5px;font-family:'Inter',sans-serif;}
+  .settings-field textarea{min-height:70px;resize:vertical;}
+  .settings-row{display:flex;gap:12px;}
+  .settings-row .settings-field{flex:1;}
+  .extra-row{display:flex;gap:8px;align-items:end;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .extra-row .settings-field{margin-bottom:0;min-width:120px;}
+  .extra-row .settings-field.grow{flex:1;min-width:160px;}
+  .btn-remove-extra{background:var(--danger);color:white;border:none;border-radius:4px;padding:8px 10px;cursor:pointer;font-size:12px;height:36px;}
+  .btn-add-extra{background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:8px 14px;cursor:pointer;font-size:12.5px;color:var(--ink);margin-top:6px;}
+  .btn-save-settings{background:var(--success);color:white;border:none;border-radius:4px;padding:10px 22px;cursor:pointer;font-size:13.5px;font-weight:600;margin-top:20px;}
+  .settings-msg{font-size:13px;margin-top:10px;}
+  .settings-msg.success{color:var(--success);}
+  .settings-msg.error{color:var(--danger);}
 </style>
 </head>
 <body>
@@ -81,6 +96,7 @@
 <div class="tabs">
   <button class="active" data-tab="bookings">Bookings</button>
   <button data-tab="calendar">Calendar</button>
+  <button data-tab="settings">Settings</button>
 </div>
 
 <div class="tab-panel active" id="panel-bookings">
@@ -102,8 +118,14 @@
   </div>
 </div>
 
+<div class="tab-panel" id="panel-settings">
+  <div id="settings-content">
+    <p class="no-ranges">Enter your admin token above and open this tab to load settings.</p>
+  </div>
+</div>
+
 <script>
-  const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app"; // same backend URL as the widget
+  const API_BASE = "https://YOUR-CLOUD-RUN-SERVICE-URL"; // same backend URL as the widget
   let currentStatus = "";
 
   document.querySelectorAll(".filters button").forEach(btn => {
@@ -124,6 +146,7 @@
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${btn.dataset.tab}`).classList.add("active");
       if(btn.dataset.tab === "calendar" && token()) loadCalendar();
+      if(btn.dataset.tab === "settings" && token()) loadSettings();
     };
   });
   document.getElementById("token-toggle").onclick = () => {
@@ -171,7 +194,8 @@
       const guestsLine = `${b.adults || 1} adult${(b.adults||1)===1?"":"s"}` + (b.children ? `, ${b.children} child${b.children===1?"":"ren"}${b.childrenAges ? " ("+esc(b.childrenAges)+")" : ""}` : "");
       const petsLine = b.hasPets ? (esc(b.petDetails) || "Yes") : "No";
       const extrasLines = (b.lineItems || []).slice(1).map(li => `${esc(li.label)} — ${rand(li.amount)}`).join("<br>") || "None";
-      const statusLabels = { requested: "New request", awaiting_payment: "Awaiting payment", submitted: "Ready to confirm", confirmed: "Confirmed", rejected: "Rejected" };
+      const statusLabels = { requested: "New request", awaiting_payment: "Awaiting deposit", submitted: "Ready to confirm", confirmed: "Confirmed", rejected: "Rejected" };
+      const balanceLabels = { unpaid: "Balance not yet paid", submitted: "Balance proof received", paid: "Balance paid" };
 
       let actionsHtml = "";
       if(b.status === "requested"){
@@ -179,10 +203,25 @@
       } else if(b.status === "awaiting_payment"){
         actionsHtml = `<button class="btn-reject" data-id="${b.id}" data-action="decline">Cancel request</button>`;
       } else if(b.status === "submitted"){
-        actionsHtml = `<button class="btn-proof" data-id="${b.id}" data-action="proof">View proof of payment</button><button class="btn-confirm" data-id="${b.id}" data-action="confirm">Confirm booking</button><button class="btn-reject" data-id="${b.id}" data-action="reject">Reject</button>`;
-      } else if(b.status === "confirmed" && b.proofOfPaymentPath){
-        actionsHtml = `<button class="btn-proof" data-id="${b.id}" data-action="proof">View proof of payment</button>`;
+        actionsHtml = `<button class="btn-proof" data-id="${b.id}" data-action="proof">View deposit proof</button><button class="btn-confirm" data-id="${b.id}" data-action="confirm">Confirm booking</button><button class="btn-reject" data-id="${b.id}" data-action="reject">Reject</button>`;
+      } else if(b.status === "confirmed"){
+        const parts = [];
+        parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="invoice">Download invoice</button>`);
+        if(b.proofOfPaymentPath) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="proof">View deposit proof</button>`);
+        if(b.balanceStatus === "unpaid"){
+          parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="remind">Send balance reminder</button>`);
+          parts.push(`<button class="btn-confirm" data-id="${b.id}" data-action="mark-paid">Mark balance received</button>`);
+        } else if(b.balanceStatus === "submitted"){
+          if(b.balanceProofPath) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="balance-proof">View balance proof</button>`);
+          parts.push(`<button class="btn-confirm" data-id="${b.id}" data-action="mark-paid">Mark balance received</button>`);
+        } else if(b.balanceStatus === "paid" && b.balanceProofPath){
+          parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="balance-proof">View balance proof</button>`);
+        }
+        actionsHtml = parts.join("");
       }
+      actionsHtml += `<button class="btn-reject" data-id="${b.id}" data-action="delete">Delete</button>`;
+
+      const knownStatus = ["requested","awaiting_payment","submitted","confirmed","rejected"].includes(b.status);
 
       const card = document.createElement("div");
       card.className = "card";
@@ -192,34 +231,56 @@
             <h3>${esc(b.guestName)} · ${esc(b.unitId)}</h3>
             <div class="dates">${b.checkIn} → ${b.checkOut} (${b.nights || ""} night${b.nights===1?"":"s"})${b.arrivalTime ? " · arriving " + esc(b.arrivalTime) : ""}</div>
           </div>
-          <span class="status ${b.status}">${statusLabels[b.status] || b.status}</span>
+          <span class="status ${knownStatus ? b.status : ''}">${statusLabels[b.status] || `Unrecognized status: ${esc(b.status)}`}</span>
         </div>
+        ${!knownStatus ? `<div class="notes">This booking has a status from an older version of the system and won't show any action buttons except Delete. Safe to delete if it's old test data.</div>` : ""}
         <div class="detail-grid">
           <div><div class="label">Contact</div>${esc(b.email)}<br>${esc(b.phone)}</div>
           <div><div class="label">Guests</div>${guestsLine}</div>
           <div><div class="label">Pets</div>${petsLine}</div>
           <div><div class="label">Extras</div><div class="extras-list">${extrasLines}</div></div>
-          <div><div class="label">Total due</div><div class="total">${rand(b.totalAmount)}</div></div>
+          <div>
+            <div class="label">Payment</div>
+            <div class="total">${rand(b.totalAmount)} total</div>
+            <div class="range-source">Deposit ${rand(b.depositAmount)} · Balance ${rand(b.balanceAmount)}${b.status === 'confirmed' ? ` — ${balanceLabels[b.balanceStatus] || b.balanceStatus}` : ''}</div>
+          </div>
         </div>
         ${b.notes ? `<div class="notes">"${esc(b.notes)}"</div>` : ""}
-        ${b.status === "awaiting_payment" ? `<div class="waiting-note">Waiting for the guest to upload proof of payment.</div>` : ""}
+        ${b.status === "awaiting_payment" ? `<div class="waiting-note">Waiting for the guest to upload deposit proof of payment.</div>` : ""}
         <div class="actions">${actionsHtml}</div>
       `;
       cards.appendChild(card);
     });
 
-    cards.querySelectorAll("[data-action='proof']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id));
+    cards.querySelectorAll("[data-action='proof']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "deposit"));
+    cards.querySelectorAll("[data-action='balance-proof']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "balance"));
+    cards.querySelectorAll("[data-action='invoice']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "invoice"));
     cards.querySelectorAll("[data-action='approve']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "approve"));
     cards.querySelectorAll("[data-action='confirm']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "confirm"));
     cards.querySelectorAll("[data-action='decline']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "decline"));
     cards.querySelectorAll("[data-action='reject']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "reject"));
+    cards.querySelectorAll("[data-action='remind']").forEach(btn => btn.onclick = () => balanceAction(btn.dataset.id, "remind"));
+    cards.querySelectorAll("[data-action='mark-paid']").forEach(btn => btn.onclick = () => balanceAction(btn.dataset.id, "mark-paid"));
+    cards.querySelectorAll("[data-action='delete']").forEach(btn => btn.onclick = () => deleteBooking(btn.dataset.id));
   }
 
-  async function viewProof(id){
-    const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/proof`, { headers: { "x-admin-token": token() } });
-    const data = await res.json();
-    if(data.ok) window.open(data.url, "_blank");
-    else alert(data.error || "Could not load proof of payment file.");
+
+  async function viewProof(id, type){
+    const path = type === "balance" ? `balance-proof` : type === "invoice" ? `invoice` : `proof`;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/${path}`, { headers: { "x-admin-token": token() } });
+      if(!res.ok){
+        let errMsg = `Could not load that file (status ${res.status}).`;
+        try{ const errData = await res.json(); if(errData.error) errMsg = errData.error; }catch(e){}
+        alert(errMsg);
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    }catch(err){
+      alert("Could not reach the server to load that file.");
+    }
   }
 
   async function decide(id, action){
@@ -238,6 +299,30 @@
     if(data.ok) loadBookings();
     else alert(data.error || "Action failed.");
   }
+
+  async function balanceAction(id, action){
+    const labels = { remind: "Email the guest a reminder to pay their final balance?", "mark-paid": "Mark the balance as received? Only do this once you've actually confirmed payment." };
+    if(!confirm(labels[action])) return;
+    const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/balance/${action}`, {
+      method: "POST",
+      headers: { "x-admin-token": token() }
+    });
+    const data = await res.json();
+    if(data.ok) loadBookings();
+    else alert(data.error || "Action failed.");
+  }
+
+  async function deleteBooking(id){
+    if(!confirm("Permanently delete this booking record? This can't be undone, and no email is sent to the guest.")) return;
+    const res = await fetch(`${API_BASE}/api/admin/bookings/${id}`, {
+      method: "DELETE",
+      headers: { "x-admin-token": token() }
+    });
+    const data = await res.json();
+    if(data.ok) loadBookings();
+    else alert(data.error || "Could not delete that booking.");
+  }
+
 
   const sourceLabels = { airbnb: "Airbnb", "booking.com": "Booking.com", lekkeslaap: "Lekkeslaap", direct: "Direct booking" };
 
@@ -336,6 +421,179 @@
     const data = await res.json();
     if(data.ok) loadCalendar();
     else alert(data.error || "Could not remove that unblock.");
+  }
+
+  let settingsState = null;
+  let extraCounter = 0;
+
+  async function loadSettings(){
+    const content = document.getElementById("settings-content");
+    if(!token()){ alert("Enter your admin token first."); return; }
+    let res, data;
+    try{
+      res = await fetch(`${API_BASE}/api/admin/settings`, { headers: { "x-admin-token": token() } });
+      data = await res.json();
+    }catch(err){
+      content.innerHTML = `<p class="no-ranges">Could not reach the server.</p>`;
+      return;
+    }
+    if(!data.ok){
+      content.innerHTML = `<p class="no-ranges">Could not load settings — check your admin token.</p>`;
+      return;
+    }
+    settingsState = data.settings;
+    renderSettings();
+  }
+
+  function renderSettings(){
+    const content = document.getElementById("settings-content");
+    const s = settingsState;
+
+    const unitBlocks = s.units.map(u => `
+      <div class="unit-block">
+        <h2>${esc(u.name)}</h2>
+        <div class="settings-row">
+          <div class="settings-field"><label>Nightly rate (R)</label><input type="number" id="price-${u.id}" value="${u.pricePerNight}"></div>
+          <div class="settings-field"><label>Beds</label><input type="number" id="beds-${u.id}" value="${u.beds ?? ''}"></div>
+          <div class="settings-field"><label>Bathrooms</label><input type="number" id="baths-${u.id}" value="${u.bathrooms ?? ''}"></div>
+        </div>
+        <div class="settings-field"><label>Description</label><textarea id="desc-${u.id}">${esc(u.description)}</textarea></div>
+        <div class="settings-field"><label>Amenities (comma-separated)</label><input type="text" id="amen-${u.id}" value="${esc((u.amenities||[]).join(', '))}"></div>
+      </div>
+    `).join("");
+
+    content.innerHTML = `
+      ${unitBlocks}
+      <div class="unit-block">
+        <h2>Extras</h2>
+        <div id="extras-list"></div>
+        <button type="button" class="btn-add-extra" id="add-extra-btn">+ Add an extra</button>
+      </div>
+      <div class="unit-block">
+        <h2>Bank details</h2>
+        <div class="settings-field"><label>Shown to guests once approved, and in the approval email</label><textarea id="bank-details">${esc(s.bankDetails)}</textarea></div>
+        <div class="settings-field"><label>Booking-request notification email</label><input type="text" id="owner-email" value="${esc(s.ownerNotificationEmail)}"></div>
+        <button type="button" class="btn-add-extra" id="test-email-btn">Send test email to this address</button>
+        <div class="settings-msg" id="test-email-msg"></div>
+      </div>
+      <button class="btn-save-settings" id="save-settings-btn">Save settings</button>
+      <div class="settings-msg" id="settings-msg"></div>
+    `;
+
+    document.getElementById("test-email-btn").onclick = sendTestEmail;
+    renderExtrasList(s.extras);
+    document.getElementById("add-extra-btn").onclick = () => {
+      const newExtra = { id: `extra_${Date.now()}`, label: "", description: "", price: 0, type: "flat", max: 5 };
+      settingsState.extras = [...readExtrasFromForm(), newExtra];
+      renderExtrasList(settingsState.extras);
+    };
+    document.getElementById("save-settings-btn").onclick = saveSettingsForm;
+  }
+
+  function renderExtrasList(extrasList){
+    const wrap = document.getElementById("extras-list");
+    wrap.innerHTML = extrasList.map((ex, i) => `
+      <div class="extra-row" data-idx="${i}">
+        <div class="settings-field grow"><label>Label</label><input type="text" class="ex-label" value="${esc(ex.label)}"></div>
+        <div class="settings-field grow"><label>Description</label><input type="text" class="ex-desc" value="${esc(ex.description||'')}"></div>
+        <div class="settings-field"><label>Price (R)</label><input type="number" class="ex-price" value="${ex.price}"></div>
+        <div class="settings-field"><label>Type</label>
+          <select class="ex-type">
+            <option value="flat" ${ex.type==='flat'?'selected':''}>Once (checkbox)</option>
+            <option value="qty" ${ex.type==='qty'?'selected':''}>Per quantity</option>
+          </select>
+        </div>
+        <div class="settings-field"><label>Max qty</label><input type="number" class="ex-max" value="${ex.max||5}"></div>
+        <button type="button" class="btn-remove-extra" data-idx="${i}">Remove</button>
+      </div>
+    `).join("") || `<p class="no-ranges">No extras yet — add one below.</p>`;
+
+    wrap.querySelectorAll(".btn-remove-extra").forEach(btn => {
+      btn.onclick = () => {
+        const list = readExtrasFromForm();
+        list.splice(Number(btn.dataset.idx), 1);
+        settingsState.extras = list;
+        renderExtrasList(list);
+      };
+    });
+  }
+
+  function readExtrasFromForm(){
+    return Array.from(document.querySelectorAll(".extra-row")).map((row, i) => ({
+      id: settingsState.extras[i] ? settingsState.extras[i].id : `extra_${Date.now()}_${i}`,
+      label: row.querySelector(".ex-label").value,
+      description: row.querySelector(".ex-desc").value,
+      price: Number(row.querySelector(".ex-price").value) || 0,
+      type: row.querySelector(".ex-type").value,
+      max: Number(row.querySelector(".ex-max").value) || 5
+    }));
+  }
+
+  async function saveSettingsForm(){
+    const msg = document.getElementById("settings-msg");
+    const btn = document.getElementById("save-settings-btn");
+    const units = settingsState.units.map(u => ({
+      id: u.id,
+      pricePerNight: Number(document.getElementById(`price-${u.id}`).value) || 0,
+      beds: Number(document.getElementById(`beds-${u.id}`).value) || null,
+      bathrooms: Number(document.getElementById(`baths-${u.id}`).value) || null,
+      description: document.getElementById(`desc-${u.id}`).value,
+      amenities: document.getElementById(`amen-${u.id}`).value.split(",").map(a => a.trim()).filter(Boolean),
+      photo: u.photo
+    }));
+    const extras = readExtrasFromForm();
+    const bankDetails = document.getElementById("bank-details").value;
+    const ownerNotificationEmail = document.getElementById("owner-email").value;
+
+    btn.disabled = true; btn.textContent = "Saving…";
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/settings`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ units, extras, bankDetails, ownerNotificationEmail })
+      });
+      const data = await res.json();
+      if(data.ok){
+        msg.className = "settings-msg success";
+        msg.textContent = "Saved — changes are live immediately, no redeploy needed.";
+        loadSettings();
+      } else {
+        msg.className = "settings-msg error";
+        msg.textContent = data.error || "Could not save settings.";
+      }
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server.";
+    }
+    btn.disabled = false; btn.textContent = "Save settings";
+  }
+
+  async function sendTestEmail(){
+    const msg = document.getElementById("test-email-msg");
+    const to = document.getElementById("owner-email").value;
+    const btn = document.getElementById("test-email-btn");
+    msg.className = "settings-msg";
+    msg.textContent = "";
+    btn.disabled = true; btn.textContent = "Sending…";
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/test-email`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ to })
+      });
+      const data = await res.json();
+      if(data.ok){
+        msg.className = "settings-msg success";
+        msg.textContent = `Test email sent to ${data.to} — check that inbox (and spam folder) in a minute or two.`;
+      } else {
+        msg.className = "settings-msg error";
+        msg.textContent = data.error || "Could not send the test email.";
+      }
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server.";
+    }
+    btn.disabled = false; btn.textContent = "Send test email to this address";
   }
 </script>
 

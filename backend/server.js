@@ -17,6 +17,7 @@ app.use("/api", require("./routes/availability"));
 app.use("/api", require("./routes/bookings"));
 app.use("/api", require("./routes/admin"));
 app.use("/api", require("./routes/sync"));
+app.use("/api", require("./routes/reminders"));
 app.use("/", require("./routes/icalExport"));
 
 const PORT = process.env.PORT || 8080;

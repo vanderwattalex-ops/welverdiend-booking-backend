@@ -15,6 +15,21 @@
 module.exports = {
   units: [
     {
+      id: "unit2",
+      name: "Unit 2",
+      pricePerNight: 950,
+      description: "Wildlife, tranquillity, and city convenience — your perfect escape. Two cozy bedrooms (one double, one with two singles), a spacious bathroom, a serene reading nook, and a dedicated work area. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen. Step outside to a tranquil setting where wildlife roams freely. Pet-friendly and peaceful — the perfect blend of comfort and wilderness, just minutes from the city.",
+      beds: 3,
+      bathrooms: 1,
+      amenities: ["WiFi", "Pet-friendly", "Braai facilities", "Wildlife on the property"],
+      photo: "/assets/unit2-exterior.jpg",
+      sources: {
+        airbnb: "https://www.airbnb.co.za/calendar/ical/1337503040346302823.ics?t=50fab091ad904775847a5324962b96b3",
+        booking: "https://ical.booking.com/v1/export?t=b20183f7-adae-435f-a440-124fe88cd5be",
+        lekkeslaap: "https://www.lekkeslaap.co.za/suppliers/icalendar.ics?t=U1JHUEhQUkl0L2tQTWU4TUZJSEEzdz09"
+      }
+    },
+    {
       id: "unit1",
       name: "Unit 1",
       // Rand per night — edit to your real rate. Shown to guests and used
@@ -32,21 +47,6 @@ module.exports = {
         airbnb: "https://www.airbnb.co.za/calendar/ical/1543967224420154478.ics?t=7cac96d84cd84b29ac746cabaf8a60e9",
         booking: "https://ical.booking.com/v1/export?t=5743af40-d68e-4ddb-94ea-ed06db29854b",
         lekkeslaap: "https://www.lekkeslaap.co.za/suppliers/icalendar.ics?t=aVQxMmFidC9Bc3dZaE1WZ3oyalFhZz09"
-      }
-    },
-    {
-      id: "unit2",
-      name: "Unit 2",
-      pricePerNight: 950,
-      description: "Wildlife, tranquillity, and city convenience — your perfect escape. Two cozy bedrooms (one double, one with two singles), a spacious bathroom, a serene reading nook, and a dedicated work area. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen. Step outside to a tranquil setting where wildlife roams freely. Pet-friendly and peaceful — the perfect blend of comfort and wilderness, just minutes from the city.",
-      beds: 3,
-      bathrooms: 1,
-      amenities: ["WiFi", "Pet-friendly", "Braai facilities", "Wildlife on the property"],
-      photo: "/assets/unit2-exterior.jpg",
-      sources: {
-        airbnb: "https://www.airbnb.co.za/calendar/ical/1337503040346302823.ics?t=50fab091ad904775847a5324962b96b3",
-        booking: "https://ical.booking.com/v1/export?t=b20183f7-adae-435f-a440-124fe88cd5be",
-        lekkeslaap: "https://www.lekkeslaap.co.za/suppliers/icalendar.ics?t=U1JHUEhQUkl0L2tQTWU4TUZJSEEzdz09"
       }
     }
   ],
@@ -82,5 +82,5 @@ module.exports = {
   // your Firebase Hosting URL). Required for the "upload proof of
   // payment" link in approval emails to work — leave blank while you're
   // still testing locally, but you must set this before going live.
-  frontendBaseUrl: "https://welverdiend-booking-478269051372.europe-west1.run.app"
+  frontendBaseUrl: ""
 };

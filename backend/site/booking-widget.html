@@ -350,7 +350,7 @@
 (function(){
   // -----------------------------------------------------------------
   // CONFIG — point this at your deployed Cloud Run backend URL.
-  const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
+  const API_BASE = "https://YOUR-CLOUD-RUN-SERVICE-URL";
   // -----------------------------------------------------------------
 
   const state = {
@@ -649,11 +649,15 @@
       lines.push({ label: ex.type === "flat" ? ex.label : `${ex.label} × ${sel}`, amount });
     });
     const total = base + extrasTotal;
+    const deposit = Math.round((total / 2) * 100) / 100;
+    const balance = Math.round((total - deposit) * 100) / 100;
 
     const box = $("wa-summary");
     box.innerHTML = lines.map(l => `<div class="wa-summary-line"><span>${l.label}</span><span>${rand(l.amount)}</span></div>`).join("")
-      + `<div class="wa-summary-total"><span>Total due</span><span>${rand(total)}</span></div>`
-      + `<div class="wa-eft-note">This is a request, not a payment yet. Once we've confirmed these dates are genuinely available, we'll email you with our banking details and a link to upload proof of payment.</div>`;
+      + `<div class="wa-summary-total"><span>Total</span><span>${rand(total)}</span></div>`
+      + `<div class="wa-summary-line"><span>50% deposit to secure booking</span><span>${rand(deposit)}</span></div>`
+      + `<div class="wa-summary-line"><span>Balance due before check-in</span><span>${rand(balance)}</span></div>`
+      + `<div class="wa-eft-note">This is a request, not a payment yet. Once we've confirmed these dates are genuinely available, we'll email you with our banking details and a link to pay your deposit.</div>`;
   }
 
   $("wa-children").oninput = () => {
