@@ -281,6 +281,7 @@ router.get("/admin/calendar", async (req, res) => {
         unitName: u.name,
         busyRanges: avail ? avail.data().busyRanges || [] : [],
         lastSyncedAt: avail ? avail.data().lastSyncedAt : null,
+        feedHealth: avail ? avail.data().feedHealth || {} : {},
         overrides: overridesByUnit[u.id] || []
       };
     });

@@ -205,6 +205,16 @@ Airbnb, Booking.com or Lekkeslaap themselves, so only use it when you're
 sure the dates are genuinely free. An unblock sticks around through
 future syncs until you remove it with **Re-block**.
 
+## Sync warnings
+
+If any of the six iCal feeds stops working — a dead or rotated export
+link being the most common cause, as happened with Booking.com's Unit
+1 and Unit 2 links — a red warning banner appears at the top of the
+dashboard automatically, naming exactly which unit and platform is
+affected and why. This is checked every time you open the dashboard or
+the Calendar tab, so a broken feed won't sit silently missing bookings
+without you knowing.
+
 ## Invoices
 
 Once you give final confirmation, an invoice PDF is automatically

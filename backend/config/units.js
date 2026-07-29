@@ -45,7 +45,7 @@ module.exports = {
       photo: "",
       sources: {
         airbnb: "https://www.airbnb.co.za/calendar/ical/1543967224420154478.ics?t=7cac96d84cd84b29ac746cabaf8a60e9",
-        booking: "https://ical.booking.com/v1/export?t=5743af40-d68e-4ddb-94ea-ed06db29854b",
+        booking: "https://ical.booking.com/v1/export?t=46c3df03-7668-413d-8e94-c9591a840c1d",
         lekkeslaap: "https://www.lekkeslaap.co.za/suppliers/icalendar.ics?t=aVQxMmFidC9Bc3dZaE1WZ3oyalFhZz09"
       }
     }

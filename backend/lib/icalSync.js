@@ -3,12 +3,14 @@ const { units } = require("../config/units");
 const { mergeRanges } = require("./rangeUtils");
 
 /**
- * Fetches one .ics feed and returns an array of { start, end, source } busy ranges.
- * Dates are normalized to YYYY-MM-DD (calendar days), inclusive of start,
- * exclusive of end — matching iCal's own convention for all-day events.
+ * Fetches one .ics feed. Returns both the busy ranges AND a health
+ * status — a broken feed (dead token, revoked link, network error)
+ * never takes the whole sync down, but it's reported back so the admin
+ * dashboard can warn about it instead of silently showing an
+ * incomplete calendar.
  */
 async function fetchFeed(url, sourceLabel) {
-  if (!url) return [];
+  if (!url) return { ranges: [], health: { ok: true, skipped: true, error: null } };
   try {
     const data = await ical.async.fromURL(url);
     const ranges = [];
@@ -21,11 +23,11 @@ async function fetchFeed(url, sourceLabel) {
         source: sourceLabel
       });
     }
-    return ranges;
+    return { ranges, health: { ok: true, skipped: false, error: null } };
   } catch (err) {
     console.error(`[icalSync] Failed to fetch ${sourceLabel} feed:`, err.message);
     // A single broken feed should never take the whole sync down.
-    return [];
+    return { ranges: [], health: { ok: false, skipped: false, error: err.message } };
   }
 }
 
@@ -38,7 +40,7 @@ function toDateOnly(d) {
  * Pulls all three external feeds for a single unit + adds this platform's
  * own confirmed direct bookings (passed in separately), then returns one
  * merged, deduplicated list of busy ranges for that unit, each tagged
- * with which source(s) caused it.
+ * with which source(s) caused it, plus a health report per feed.
  */
 async function syncUnit(unitConfig, ownConfirmedRanges = []) {
   const { sources } = unitConfig;
@@ -49,13 +51,18 @@ async function syncUnit(unitConfig, ownConfirmedRanges = []) {
   ]);
 
   const own = ownConfirmedRanges.map(r => ({ ...r, source: "direct", detail: r.guestName }));
-  const merged = mergeRanges([...airbnb, ...booking, ...lekkeslaap, ...own]);
+  const merged = mergeRanges([...airbnb.ranges, ...booking.ranges, ...lekkeslaap.ranges, ...own]);
 
   return {
     unitId: unitConfig.id,
     unitName: unitConfig.name,
     busyRanges: merged,
-    lastSyncedAt: new Date().toISOString()
+    lastSyncedAt: new Date().toISOString(),
+    feedHealth: {
+      airbnb: airbnb.health,
+      "booking.com": booking.health,
+      lekkeslaap: lekkeslaap.health
+    }
   };
 }
 
