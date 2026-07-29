@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Upload proof of payment — Welverdiend Accommodation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --taupe:#8A7E68; --taupe-dark:#6B6151; --taupe-deep:#4A4436;
+    --ink:#2B2A26; --ink-soft:#66604F; --line:#E5E0D2; --surface:#FAF8F3;
+    --white:#FFFFFF; --danger:#A3402F; --success:#4B6B3C;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--surface);color:var(--ink);margin:0;padding:32px 16px;}
+  .wrap{max-width:480px;margin:0 auto;background:var(--white);border:1px solid var(--line);border-radius:8px;padding:32px;}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;color:var(--taupe-deep);margin:0 0 4px;}
+  .sub{font-size:13px;color:var(--ink-soft);margin:0 0 20px;}
+  .summary{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:20px;font-size:13.5px;}
+  .summary-line{display:flex;justify-content:space-between;padding:3px 0;color:var(--ink-soft);}
+  .summary-total{display:flex;justify-content:space-between;font-weight:600;font-size:16px;color:var(--ink);border-top:1px solid var(--line);padding-top:8px;margin-top:6px;}
+  .bank{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-bottom:20px;font-size:13px;line-height:1.6;}
+  .bank b{color:var(--taupe-deep);}
+  .file-drop{border:1.5px dashed var(--line);border-radius:6px;padding:20px;text-align:center;font-size:13px;color:var(--ink-soft);cursor:pointer;margin-bottom:16px;}
+  .file-drop.has-file{border-color:var(--taupe);color:var(--ink);}
+  .btn{width:100%;font-family:'Inter',sans-serif;font-weight:600;font-size:14px;background:var(--taupe-deep);color:var(--white);border:none;padding:12px;border-radius:6px;cursor:pointer;}
+  .btn:hover{background:var(--ink);}
+  .btn:disabled{background:var(--line);cursor:not-allowed;}
+  .msg{font-size:13px;margin-top:12px;text-align:center;}
+  .msg.error{color:var(--danger);}
+  .msg.success{color:var(--success);}
+  .state-note{font-size:14px;color:var(--ink-soft);text-align:center;padding:20px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Upload proof of payment</h1>
+  <p class="sub">Welverdiend Accommodation</p>
+  <div id="content">
+    <p class="state-note">Loading your booking details…</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
+
+  const params = new URLSearchParams(window.location.search);
+  const bookingId = params.get("booking");
+  const content = document.getElementById("content");
+  const rand = n => `R${Number(n||0).toFixed(2)}`;
+  let selectedFile = null;
+
+  if(!bookingId){
+    content.innerHTML = `<p class="state-note">This link is missing a booking reference — please use the link from your approval email.</p>`;
+    return;
+  }
+
+  async function load(){
+    try{
+      const [summaryRes, configRes] = await Promise.all([
+        fetch(`${API_BASE}/api/bookings/${bookingId}/summary`).then(r => r.json()),
+        fetch(`${API_BASE}/api/config`).then(r => r.json())
+      ]);
+      const data = summaryRes;
+      const bankDetails = configRes.ok ? configRes.bankDetails : "Contact us for our banking details.";
+      if(!data.ok){
+        content.innerHTML = `<p class="state-note">We couldn't find that booking. Please check the link from your email, or contact us directly.</p>`;
+        return;
+      }
+      if(data.status === "submitted" || data.status === "confirmed"){
+        content.innerHTML = `<p class="state-note">Thanks — your proof of payment has already been received for this booking. We'll be in touch with final confirmation shortly.</p>`;
+        return;
+      }
+      if(data.status !== "awaiting_payment"){
+        content.innerHTML = `<p class="state-note">This booking isn't currently waiting for proof of payment.</p>`;
+        return;
+      }
+
+      const lines = (data.lineItems || []).map(l => `<div class="summary-line"><span>${l.label}</span><span>${rand(l.amount)}</span></div>`).join("");
+      content.innerHTML = `
+        <div class="summary">
+          <div class="summary-line"><span>${data.unitName}</span><span>${data.checkIn} → ${data.checkOut}</span></div>
+          ${lines}
+          <div class="summary-total"><span>Total due</span><span>${rand(data.totalAmount)}</span></div>
+        </div>
+        <div class="bank"><b>Pay by EFT to:</b><br>${bankDetails}</div>
+        <div class="file-drop" id="file-drop">Click to upload a screenshot or PDF of your EFT payment</div>
+        <input type="file" id="file-input" accept="image/*,application/pdf" style="display:none">
+        <button class="btn" id="submit-btn">Submit proof of payment</button>
+        <div class="msg" id="msg"></div>
+      `;
+
+      const fileDrop = document.getElementById("file-drop");
+      const fileInput = document.getElementById("file-input");
+      fileDrop.onclick = () => fileInput.click();
+      fileInput.onchange = (e) => {
+        const f = e.target.files[0];
+        if(f){
+          selectedFile = f;
+          fileDrop.textContent = `Selected: ${f.name}`;
+          fileDrop.classList.add("has-file");
+        }
+      };
+
+      document.getElementById("submit-btn").onclick = async () => {
+        const msg = document.getElementById("msg");
+        const btn = document.getElementById("submit-btn");
+        msg.className = "msg";
+        msg.textContent = "";
+        if(!selectedFile){
+          msg.className = "msg error";
+          msg.textContent = "Please attach your proof of payment first.";
+          return;
+        }
+        btn.disabled = true; btn.textContent = "Uploading…";
+        try{
+          const fd = new FormData();
+          fd.append("proof", selectedFile);
+          const res = await fetch(`${API_BASE}/api/bookings/${bookingId}/proof`, { method: "POST", body: fd });
+          const result = await res.json();
+          if(result.ok){
+            msg.className = "msg success";
+            msg.textContent = result.message;
+            btn.style.display = "none";
+            fileDrop.style.display = "none";
+          } else {
+            msg.className = "msg error";
+            msg.textContent = result.error || "Something went wrong — please try again.";
+            btn.disabled = false; btn.textContent = "Submit proof of payment";
+          }
+        }catch(err){
+          msg.className = "msg error";
+          msg.textContent = "Could not reach the server — please try again shortly.";
+          btn.disabled = false; btn.textContent = "Submit proof of payment";
+        }
+      };
+    }catch(err){
+      content.innerHTML = `<p class="state-note">Could not load your booking right now — please refresh, or contact us directly.</p>`;
+    }
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const { units, extras } = require("../config/units");
+const { units, extras, bankDetails } = require("../config/units");
 
-// GET /api/config -> pricing + extras, so the widget never hardcodes
-// numbers that could drift out of sync with what the server charges.
+// GET /api/config -> pricing + extras + bank details, so nothing guest-facing
+// hardcodes numbers or details that could drift out of sync with the server.
 router.get("/config", (req, res) => {
   res.json({
     ok: true,
@@ -17,7 +17,8 @@ router.get("/config", (req, res) => {
       amenities: u.amenities,
       photo: u.photo
     })),
-    extras
+    extras,
+    bankDetails
   });
 });
 

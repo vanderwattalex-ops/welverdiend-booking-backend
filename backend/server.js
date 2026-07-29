@@ -7,6 +7,7 @@ const app = express();
 app.use(cors()); // widget is embedded cross-origin on Squarespace — allow it
 app.use(express.json());
 app.use("/assets", express.static(path.join(__dirname, "public"))); // unit photos
+app.use(express.static(path.join(__dirname, "site"))); // booking-widget.html, admin-dashboard.html, upload-proof.html
 
 app.get("/", (req, res) => res.json({ ok: true, service: "welverdiend-booking-backend" }));
 app.get("/healthz", (req, res) => res.json({ ok: true }));

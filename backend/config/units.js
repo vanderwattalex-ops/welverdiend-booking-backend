@@ -41,6 +41,7 @@ module.exports = {
       description: "Wildlife, tranquillity, and city convenience — your perfect escape. Two cozy bedrooms (one double, one with two singles), a spacious bathroom, a serene reading nook, and a dedicated work area. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen. Step outside to a tranquil setting where wildlife roams freely. Pet-friendly and peaceful — the perfect blend of comfort and wilderness, just minutes from the city.",
       beds: 3,
       bathrooms: 1,
+      amenities: ["WiFi", "Pet-friendly", "Braai facilities", "Wildlife on the property"],
       photo: "/assets/unit2-exterior.jpg",
       sources: {
         airbnb: "https://www.airbnb.co.za/calendar/ical/1337503040346302823.ics?t=50fab091ad904775847a5324962b96b3",
@@ -63,10 +64,23 @@ module.exports = {
 
   // How often Cloud Scheduler should hit /api/sync (informational — the
   // actual cadence is set on the Cloud Scheduler job, see README).
-  syncIntervalMinutes: 10,
+  syncIntervalMinutes: 5,
 
   // Simple bearer token used to protect /api/admin/* and /api/sync.
   // Set the real value via the ADMIN_TOKEN environment variable — never
   // commit a real token to this file.
-  adminTokenEnvVar: "ADMIN_TOKEN"
+  adminTokenEnvVar: "ADMIN_TOKEN",
+
+  // Where booking-request emails get sent for you to review.
+  ownerNotificationEmail: "bookings@welverdiendaccommodation.com",
+
+  // Shown to guests by email once you approve their dates, so they know
+  // how to pay before uploading proof of payment.
+  bankDetails: "Account: Welverdiend Accommodation | Bank: [your bank] | Acc no: [your account] | Ref: your name + check-in date",
+
+  // The web address where you've hosted frontend/upload-proof.html (e.g.
+  // your Firebase Hosting URL). Required for the "upload proof of
+  // payment" link in approval emails to work — leave blank while you're
+  // still testing locally, but you must set this before going live.
+  frontendBaseUrl: "https://welverdiend-booking-478269051372.europe-west1.run.app"
 };
