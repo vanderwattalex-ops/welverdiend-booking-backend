@@ -25,7 +25,7 @@ module.exports = {
       photo: "/assets/unit2-exterior.jpg",
       sources: {
         airbnb: "https://www.airbnb.co.za/calendar/ical/1337503040346302823.ics?t=50fab091ad904775847a5324962b96b3",
-        booking: "https://ical.booking.com/v1/export?t=b20183f7-adae-435f-a440-124fe88cd5be",
+        booking: "https://ical.booking.com/v1/export?t=eb733c15-159a-47b2-9c18-de39b684ccca",
         lekkeslaap: "https://www.lekkeslaap.co.za/suppliers/icalendar.ics?t=U1JHUEhQUkl0L2tQTWU4TUZJSEEzdz09"
       }
     },
