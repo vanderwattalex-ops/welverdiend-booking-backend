@@ -72,6 +72,19 @@
   .override-form label{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
   .override-form input,.override-form select{padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;}
   .no-ranges{font-size:13px;color:var(--ink-soft);font-style:italic;}
+  .reason-modal-overlay{
+    position:fixed;inset:0;background:rgba(43,42,38,.55);
+    display:none;align-items:center;justify-content:center;padding:20px;z-index:999;
+  }
+  .reason-modal-overlay.show{display:flex;}
+  .reason-modal{background:var(--white);border-radius:8px;max-width:440px;width:100%;padding:26px 28px;}
+  .reason-modal h3{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;margin:0 0 6px;color:var(--taupe-deep);}
+  .reason-modal p{font-size:13px;color:var(--ink-soft);margin:0 0 16px;}
+  .reason-modal textarea{width:100%;min-height:90px;padding:10px 12px;border:1px solid var(--line);border-radius:5px;font-family:'Inter',sans-serif;font-size:13.5px;resize:vertical;}
+  .reason-modal-actions{display:flex;gap:10px;margin-top:16px;}
+  .reason-modal-actions button{flex:1;padding:10px;border-radius:5px;font-size:13.5px;font-weight:600;cursor:pointer;border:none;}
+  .reason-modal-actions .cancel-btn{background:var(--surface);border:1px solid var(--line) !important;color:var(--ink);}
+  .reason-modal-actions .confirm-btn{background:var(--danger);color:white;}
   .settings-field{margin-bottom:14px;}
   .settings-field label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--ink);}
   .settings-field input,.settings-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:4px;font-size:13.5px;font-family:'Inter',sans-serif;}
@@ -328,13 +341,41 @@
     }
   }
 
+  function askReason(title){
+    return new Promise(resolve => {
+      const overlay = document.getElementById("reason-modal-overlay");
+      const input = document.getElementById("reason-modal-input");
+      document.getElementById("reason-modal-title").textContent = title;
+      input.value = "";
+      overlay.classList.add("show");
+      input.focus();
+
+      function cleanup(result){
+        overlay.classList.remove("show");
+        confirmBtn.removeEventListener("click", onConfirm);
+        cancelBtn.removeEventListener("click", onCancel);
+        resolve(result);
+      }
+      const confirmBtn = document.getElementById("reason-modal-confirm");
+      const cancelBtn = document.getElementById("reason-modal-cancel");
+      function onConfirm(){ cleanup({ confirmed: true, reason: input.value.trim() }); }
+      function onCancel(){ cleanup({ confirmed: false, reason: "" }); }
+      confirmBtn.addEventListener("click", onConfirm);
+      cancelBtn.addEventListener("click", onCancel);
+    });
+  }
+
   async function decide(id, action){
-    const labels = { approve: "Approve this request (confirms the dates are available and emails the guest)", decline: "Decline this request", confirm: "Give final confirmation (this blocks the dates on the calendar)", reject: "Reject this booking" };
+    const titles = { decline: "Decline this request", reject: "Reject this booking" };
+    const confirmLabels = { approve: "Approve this request (confirms the dates are available and emails the guest)", confirm: "Give final confirmation (this blocks the dates on the calendar)" };
     let reason = "";
     if(action === "decline" || action === "reject"){
-      reason = prompt("Optional: add a short reason to include in the email to the guest (leave blank to skip).") || "";
+      const result = await askReason(titles[action]);
+      if(!result.confirmed) return;
+      reason = result.reason;
+    } else {
+      if(!confirm(confirmLabels[action] + "?")) return;
     }
-    if(!confirm(labels[action] + "?")) return;
     const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/${action}`, {
       method: "POST",
       headers: { "x-admin-token": token(), "Content-Type": "application/json" },
@@ -500,8 +541,12 @@
         <h2>${esc(u.name)}</h2>
         <div class="settings-row">
           <div class="settings-field"><label>Nightly rate (R)</label><input type="number" id="price-${u.id}" value="${u.pricePerNight}"></div>
+          <div class="settings-field"><label>Bedrooms</label><input type="number" id="bedrooms-${u.id}" value="${u.bedrooms ?? ''}"></div>
           <div class="settings-field"><label>Beds</label><input type="number" id="beds-${u.id}" value="${u.beds ?? ''}"></div>
+        </div>
+        <div class="settings-row">
           <div class="settings-field"><label>Bathrooms</label><input type="number" id="baths-${u.id}" value="${u.bathrooms ?? ''}"></div>
+          <div class="settings-field"><label>Sleeps (max guests)</label><input type="number" id="sleeps-${u.id}" value="${u.sleeps ?? ''}"></div>
         </div>
         <div class="settings-field"><label>Description</label><textarea id="desc-${u.id}">${esc(u.description)}</textarea></div>
         <div class="settings-field"><label>Amenities (comma-separated)</label><input type="text" id="amen-${u.id}" value="${esc((u.amenities||[]).join(', '))}"></div>
@@ -581,8 +626,10 @@
     const units = settingsState.units.map(u => ({
       id: u.id,
       pricePerNight: Number(document.getElementById(`price-${u.id}`).value) || 0,
+      bedrooms: Number(document.getElementById(`bedrooms-${u.id}`).value) || null,
       beds: Number(document.getElementById(`beds-${u.id}`).value) || null,
       bathrooms: Number(document.getElementById(`baths-${u.id}`).value) || null,
+      sleeps: Number(document.getElementById(`sleeps-${u.id}`).value) || null,
       description: document.getElementById(`desc-${u.id}`).value,
       amenities: document.getElementById(`amen-${u.id}`).value.split(",").map(a => a.trim()).filter(Boolean),
       photo: u.photo
@@ -642,6 +689,18 @@
     btn.disabled = false; btn.textContent = "Send test email to this address";
   }
 </script>
+
+<div class="reason-modal-overlay" id="reason-modal-overlay">
+  <div class="reason-modal">
+    <h3 id="reason-modal-title">Decline this request</h3>
+    <p>Optional — let the guest know why. This gets included in the email sent to them.</p>
+    <textarea id="reason-modal-input" placeholder="e.g. Those dates are already booked elsewhere"></textarea>
+    <div class="reason-modal-actions">
+      <button type="button" class="cancel-btn" id="reason-modal-cancel">Cancel</button>
+      <button type="button" class="confirm-btn" id="reason-modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>

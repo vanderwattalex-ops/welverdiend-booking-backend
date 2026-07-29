@@ -404,8 +404,10 @@
           if(cfg){
             u.pricePerNight = cfg.pricePerNight;
             u.description = cfg.description;
+            u.bedrooms = cfg.bedrooms;
             u.beds = cfg.beds;
             u.bathrooms = cfg.bathrooms;
+            u.sleeps = cfg.sleeps;
             u.amenities = cfg.amenities;
             u.photo = cfg.photo;
           }
@@ -445,8 +447,10 @@
     if(!u){ wrap.innerHTML = ""; return; }
     const wasOpen = wrap.querySelector(".wa-details-panel.show");
     const metaBits = [];
+    if(u.bedrooms) metaBits.push(`${u.bedrooms} bedroom${u.bedrooms===1?"":"s"}`);
     if(u.beds) metaBits.push(`${u.beds} bed${u.beds===1?"":"s"}`);
     if(u.bathrooms) metaBits.push(`${u.bathrooms} bathroom${u.bathrooms===1?"":"s"}`);
+    if(u.sleeps) metaBits.push(`Sleeps ${u.sleeps}`);
     const amenityChips = (u.amenities||[]).map(a => `<span>${a}</span>`).join("");
     const photoUrl = u.photo ? (u.photo.startsWith("http") ? u.photo : `${API_BASE}${u.photo}`) : "";
     wrap.innerHTML = `

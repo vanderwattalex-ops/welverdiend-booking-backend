@@ -60,7 +60,7 @@ async function notifyOwnerNewRequest(booking, unitName) {
   });
 }
 
-async function notifyGuestApproved(booking, unitName) {
+async function notifyGuestApproved(booking, unitName, invoiceBuffer) {
   const { bankDetails, frontendBaseUrl } = await getSettings();
   const uploadUrl = frontendBaseUrl
     ? `${frontendBaseUrl}/upload-proof.html?booking=${booking.id}`
@@ -71,13 +71,14 @@ async function notifyGuestApproved(booking, unitName) {
     html: `
       <p>Hi ${booking.guestName},</p>
       <p>We've checked and your dates are available: <b>${fmtDate(booking.checkIn)} → ${fmtDate(booking.checkOut)}</b> at ${unitName}.</p>
-      <p>A <b>50% deposit of ${rand(booking.depositAmount)}</b> secures your booking (the remaining ${rand(booking.balanceAmount)} balance is due before check-in).</p>
+      <p>A <b>50% deposit of ${rand(booking.depositAmount)}</b> secures your booking (the remaining ${rand(booking.balanceAmount)} balance is due before check-in). Your invoice is attached, showing the full amount outstanding.</p>
       <p>Please pay the deposit by EFT to:<br>${bankDetails}</p>
       ${uploadUrl
         ? `<p>Once you've paid, upload your proof of payment here to secure your booking:<br><a href="${uploadUrl}">${uploadUrl}</a></p>`
         : `<p>Please reply to this email with your proof of payment to secure your booking.</p>`}
       <p>We'll send a final confirmation as soon as we've checked it.</p>
-    `
+    `,
+    attachments: invoiceBuffer ? [{ filename: `invoice-${booking.id.slice(0, 8)}.pdf`, content: invoiceBuffer }] : undefined
   });
 }
 
@@ -160,6 +161,20 @@ async function notifyGuestCheckinReminder(booking, unitName) {
   });
 }
 
+async function notifyGuestPaidInFull(booking, unitName, invoiceBuffer) {
+  return sendMail({
+    to: booking.email,
+    subject: `Paid in full — see you soon at Welverdiend Accommodation`,
+    html: `
+      <p>Hi ${booking.guestName},</p>
+      <p>We've received your final payment — you're all paid up for <b>${unitName}, ${fmtDate(booking.checkIn)} → ${fmtDate(booking.checkOut)}</b>.</p>
+      <p>Your receipt is attached for your records.</p>
+      <p>We look forward to hosting you!</p>
+    `,
+    attachments: invoiceBuffer ? [{ filename: `receipt-${booking.id.slice(0, 8)}.pdf`, content: invoiceBuffer }] : undefined
+  });
+}
+
 async function notifyOwnerBalanceProofUploaded(booking, unitName) {
   const { ownerNotificationEmail } = await getSettings();
   return sendMail({
@@ -188,6 +203,7 @@ module.exports = {
   notifyGuestDeclined,
   notifyGuestBalanceDue,
   notifyGuestCheckinReminder,
+  notifyGuestPaidInFull,
   notifyOwnerBalanceProofUploaded,
   sendTestEmail
 };

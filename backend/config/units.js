@@ -18,14 +18,16 @@ module.exports = {
       id: "unit2",
       name: "Unit 2",
       pricePerNight: 950,
-      description: "Wildlife, tranquillity, and city convenience — your perfect escape. Two cozy bedrooms (one double, one with two singles), a spacious bathroom, a serene reading nook, and a dedicated work area. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen. Step outside to a tranquil setting where wildlife roams freely. Pet-friendly and peaceful — the perfect blend of comfort and wilderness, just minutes from the city.",
+      description: "Wildlife, tranquillity, and city convenience — your perfect escape. Two bedrooms — one with a double bed, one with two single beds — sleeping up to 4 guests, with one bathroom, a serene reading nook, and a dedicated work area. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen. Step outside to a tranquil setting where wildlife roams freely. Pet-friendly and peaceful — the perfect blend of comfort and wilderness, just minutes from the city.",
+      bedrooms: 2,
       beds: 3,
       bathrooms: 1,
+      sleeps: 4,
       amenities: ["WiFi", "Pet-friendly", "Braai facilities", "Wildlife on the property"],
       photo: "/assets/unit2-exterior.jpg",
       sources: {
         airbnb: "https://www.airbnb.co.za/calendar/ical/1337503040346302823.ics?t=50fab091ad904775847a5324962b96b3",
-        booking: "https://ical.booking.com/v1/export?t=eb733c15-159a-47b2-9c18-de39b684ccca",
+        booking: "https://ical.booking.com/v1/export?t=813dcf6b-0888-481b-805e-d1a2643445d2",
         lekkeslaap: "https://www.lekkeslaap.co.za/suppliers/icalendar.ics?t=U1JHUEhQUkl0L2tQTWU4TUZJSEEzdz09"
       }
     },
@@ -38,14 +40,16 @@ module.exports = {
       // Shown in the "Learn more about this unit" panel. Replace the
       // placeholders below with your real write-up, bed/bath counts,
       // amenities and a photo once you send them through.
-      description: "A guest favourite, expanded. Following the success of our first Welverdiend house, we're excited to introduce this brand-new addition — the same peaceful retreat our guests love: private, tranquil, and surrounded by nature, yet just minutes from Bloemfontein's shops and attractions. Two cozy bedrooms — one with a double bed, the other with two single beds — perfect for families or friends. A spacious bathroom, a serene reading nook, and a dedicated work area for comfort and convenience. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen for effortless meals. Step outside to a tranquil setting where wildlife roams freely.",
+      description: "A guest favourite, expanded. Following the success of our first Welverdiend house, we're excited to introduce this brand-new addition — the same peaceful retreat our guests love: private, tranquil, and surrounded by nature, yet just minutes from Bloemfontein's shops and attractions. Two bedrooms — one with a double bed, one with two single beds — sleeping up to 4 guests, with one bathroom, a serene reading nook, and a dedicated work area. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen for effortless meals. Step outside to a tranquil setting where wildlife roams freely.",
+      bedrooms: 2,
       beds: 3,
       bathrooms: 1,
+      sleeps: 4,
       amenities: ["WiFi", "Pet-friendly", "Braai facilities", "Wildlife on the property"],
       photo: "",
       sources: {
         airbnb: "https://www.airbnb.co.za/calendar/ical/1543967224420154478.ics?t=7cac96d84cd84b29ac746cabaf8a60e9",
-        booking: "https://ical.booking.com/v1/export?t=46c3df03-7668-413d-8e94-c9591a840c1d",
+        booking: "https://ical.booking.com/v1/export?t=4fdee092-a0fe-4b1a-a593-e4da3076d6b6",
         lekkeslaap: "https://www.lekkeslaap.co.za/suppliers/icalendar.ics?t=aVQxMmFidC9Bc3dZaE1WZ3oyalFhZz09"
       }
     }

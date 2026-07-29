@@ -7,7 +7,7 @@ const { rangesOverlap, subtractRanges } = require("../lib/rangeUtils");
 const { v4: uuidv4 } = require("uuid");
 const {
   notifyGuestApproved, notifyGuestConfirmed, notifyGuestDeclined,
-  notifyGuestBalanceDue, sendTestEmail
+  notifyGuestBalanceDue, notifyGuestPaidInFull, sendTestEmail
 } = require("../lib/email");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { generateInvoice } = require("../lib/invoice");
@@ -88,8 +88,8 @@ router.get("/admin/bookings/:id/invoice", async (req, res) => {
     const doc = await bookingsCollection.doc(req.params.id).get();
     if (!doc.exists) return res.status(404).json({ ok: false, error: "Not found" });
     const booking = doc.data();
-    if (booking.status !== "confirmed") {
-      return res.status(409).json({ ok: false, error: "An invoice is only available once a booking is confirmed." });
+    if (!["awaiting_payment", "submitted", "confirmed"].includes(booking.status)) {
+      return res.status(409).json({ ok: false, error: "An invoice is only available once a booking has been approved." });
     }
     const buffer = await generateInvoice(booking, unitName(booking.unitId));
     res.setHeader("Content-Type", "application/pdf");
@@ -132,7 +132,10 @@ router.post("/admin/bookings/:id/approve", async (req, res) => {
     }
 
     await ref.update({ status: "awaiting_payment", approvedAt: new Date().toISOString() });
-    notifyGuestApproved(booking, unitName(booking.unitId)).catch(logEmailFail("approve"));
+    const uName = unitName(booking.unitId);
+    generateInvoice({ ...booking, status: "awaiting_payment" }, uName)
+      .then(invoiceBuffer => notifyGuestApproved(booking, uName, invoiceBuffer))
+      .catch(logEmailFail("approve"));
     res.json({ ok: true });
   } catch (err) {
     console.error("[admin] approve failed:", err);
@@ -236,7 +239,12 @@ router.post("/admin/bookings/:id/balance/mark-paid", async (req, res) => {
     const ref = bookingsCollection.doc(req.params.id);
     const doc = await ref.get();
     if (!doc.exists) return res.status(404).json({ ok: false, error: "Not found" });
+    const booking = doc.data();
     await ref.update({ balanceStatus: "paid", balancePaidAt: new Date().toISOString() });
+    const uName = unitName(booking.unitId);
+    generateInvoice({ ...booking, balanceStatus: "paid" }, uName)
+      .then(invoiceBuffer => notifyGuestPaidInFull(booking, uName, invoiceBuffer))
+      .catch(logEmailFail("balance-paid"));
     res.json({ ok: true });
   } catch (err) {
     console.error("[admin] mark balance paid failed:", err);

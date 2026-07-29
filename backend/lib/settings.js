@@ -25,8 +25,10 @@ async function getSettings() {
       ...u, // keeps id, name, sources (iCal URLs) from the static config
       pricePerNight: override.pricePerNight ?? u.pricePerNight,
       description: override.description ?? u.description,
+      bedrooms: override.bedrooms ?? u.bedrooms,
       beds: override.beds ?? u.beds,
       bathrooms: override.bathrooms ?? u.bathrooms,
+      sleeps: override.sleeps ?? u.sleeps,
       amenities: override.amenities ?? u.amenities,
       photo: override.photo ?? u.photo
     };

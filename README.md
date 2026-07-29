@@ -215,14 +215,6 @@ affected and why. This is checked every time you open the dashboard or
 the Calendar tab, so a broken feed won't sit silently missing bookings
 without you knowing.
 
-## Invoices
-
-Once you give final confirmation, an invoice PDF is automatically
-attached to the guest's confirmation email — no separate step needed.
-You can also download it any time from a confirmed booking's card in
-the dashboard (**Download invoice**) — it's generated fresh each time,
-so it always reflects the current balance status.
-
 ## Automatic check-in reminders
 
 Two days before a confirmed booking's check-in date, the system emails
@@ -244,6 +236,36 @@ This runs daily at 9am and only emails each booking once (it tracks
 this internally), so it's safe to leave running indefinitely. You can
 also still send a balance reminder manually any time from a booking's
 card, regardless of how close check-in is.
+
+## Invoices
+
+You now get a real, letterhead-branded PDF at every payment stage —
+each one generated fresh and attached automatically, no manual step:
+
+1. **When you approve a request** — an invoice showing the full amount
+   outstanding (deposit + balance), attached to the approval email.
+2. **When you give final confirmation** — an updated invoice showing
+   the deposit as paid and the balance still due, attached to the
+   confirmation email.
+3. **When you mark the balance as received** — a "Paid in Full" receipt,
+   attached to a final email to the guest.
+
+You can also download the current invoice for any booking past the
+"requested" stage at any time from its card in the dashboard. The
+letterhead logo is `backend/public/letterhead-logo.png` — replace that
+file if you ever want to update the branding (no code change needed).
+
+## Declining or rejecting with a reason
+
+Clicking Decline or Reject now opens a proper in-app text box instead
+of a browser popup, where you can add an optional note — it's included
+in the email sent to the guest.
+
+## Unit details: bedrooms, beds, sleeps
+
+Alongside bed and bathroom counts, units now also show **bedrooms**
+and **max occupancy (sleeps)** — editable in the Settings tab, and
+shown to guests in the "View details" panel on the booking widget.
 
 ## Deposits and balance payments
 

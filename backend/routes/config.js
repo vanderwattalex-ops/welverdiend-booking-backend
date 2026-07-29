@@ -14,8 +14,10 @@ router.get("/config", async (req, res) => {
         name: u.name,
         pricePerNight: u.pricePerNight,
         description: u.description,
+        bedrooms: u.bedrooms,
         beds: u.beds,
         bathrooms: u.bathrooms,
+        sleeps: u.sleeps,
         amenities: u.amenities,
         photo: u.photo
       })),
