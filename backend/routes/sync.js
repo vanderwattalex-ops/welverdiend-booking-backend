@@ -1,14 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const { syncAllUnits } = require("../lib/icalSync");
-const { availabilityCollection, bookingsCollection } = require("../lib/db");
+const { availabilityCollection, bookingsCollection, overridesCollection } = require("../lib/db");
+const { subtractRanges } = require("../lib/rangeUtils");
 const { requireAdmin } = require("./adminAuth");
 
 /**
  * Fetches this unit's CONFIRMED direct bookings from Firestore, as
- * {start, end} ranges, so they get folded into the merged availability
- * (and so a direct booking blocks the unit even before it round-trips
- * through Airbnb/Booking.com's own feeds).
+ * {start, end, guestName} ranges, so they get folded into the merged
+ * availability (and so a direct booking blocks the unit even before it
+ * round-trips through Airbnb/Booking.com's own feeds). Carrying the
+ * guest name lets the admin dashboard show who a direct block is for.
  */
 async function getOwnConfirmedRanges(unitId) {
   const snap = await bookingsCollection
@@ -17,7 +19,19 @@ async function getOwnConfirmedRanges(unitId) {
     .get();
   return snap.docs.map(d => {
     const b = d.data();
-    return { start: b.checkIn, end: b.checkOut };
+    return { start: b.checkIn, end: b.checkOut, guestName: b.guestName };
+  });
+}
+
+/**
+ * Fetches any manual "unblock this" overrides for a unit, as plain
+ * {start, end} ranges.
+ */
+async function getOverrides(unitId) {
+  const snap = await overridesCollection.where("unitId", "==", unitId).get();
+  return snap.docs.map(d => {
+    const o = d.data();
+    return { start: o.start, end: o.end };
   });
 }
 
@@ -27,6 +41,10 @@ async function getOwnConfirmedRanges(unitId) {
 router.get("/sync", requireAdmin, async (req, res) => {
   try {
     const results = await syncAllUnits(getOwnConfirmedRanges);
+    for (const r of results) {
+      const overrides = await getOverrides(r.unitId);
+      if (overrides.length) r.busyRanges = subtractRanges(r.busyRanges, overrides);
+    }
     const batch = availabilityCollection.firestore.batch();
     for (const r of results) {
       batch.set(availabilityCollection.doc(r.unitId), r);

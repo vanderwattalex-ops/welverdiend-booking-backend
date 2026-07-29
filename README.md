@@ -165,6 +165,24 @@ buttons shown change depending on where a booking is in the flow:
 Declining or rejecting lets you type an optional short reason, which
 gets included in the email sent to the guest.
 
+## Seeing why a day is blocked, and unblocking one if needed
+
+The **Calendar** tab in `admin-dashboard.html` lists every booked date
+range per unit, showing exactly which platform(s) caused it (Airbnb,
+Booking.com, Lekkeslaap, or a direct booking — with the guest's name for
+direct bookings). Guests browsing `booking-widget.html` see a lighter
+version of this too: hovering a booked day shows "Booked via Airbnb"
+etc, without any guest name attached.
+
+If a day is showing as booked but shouldn't be (a cancelled reservation
+that hasn't cleared from a platform's feed yet, or a sync delay), use
+**Unblock** next to that range, or the date-range form at the bottom of
+each unit's card for a custom range. This only affects what your own
+calendar shows and lets guests book — it does **not** cancel anything on
+Airbnb, Booking.com or Lekkeslaap themselves, so only use it when you're
+sure the dates are genuinely free. An unblock sticks around through
+future syncs until you remove it with **Re-block**.
+
 ## Costs
 
 Cloud Run, Firestore, Cloud Storage, Cloud Scheduler and Gmail sending

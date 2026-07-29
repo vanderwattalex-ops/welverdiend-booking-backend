@@ -269,7 +269,7 @@
       <span id="wa-selection-text">Select your check-in and check-out dates above.</span>
       <button class="wa-btn" id="wa-open-modal" disabled>Reserve these dates</button>
     </div>
-    <p class="wa-sync-note" id="wa-sync-note">Availability syncs automatically from Airbnb, Booking.com and Lekkeslaap every 10 minutes.</p>
+    <p class="wa-sync-note" id="wa-sync-note">Availability syncs automatically from Airbnb, Booking.com and Lekkeslaap every 5 minutes.</p>
   </div>
 
   <div class="wa-footer">Welverdiend Accommodation · 4 Kenilworth Road · 079 118 3173 · bookings@welverdiendaccommodation.com</div>
@@ -374,6 +374,14 @@
     return (unit.busyRanges||[]).some(r => dateStr >= r.start && dateStr < r.end);
   }
 
+  const sourceLabels = { airbnb: "Airbnb", "booking.com": "Booking.com", lekkeslaap: "Lekkeslaap", direct: "Direct booking" };
+  function busyLabel(dateStr, unit){
+    const range = (unit.busyRanges||[]).find(r => dateStr >= r.start && dateStr < r.end);
+    if(!range) return "";
+    const names = (range.sources||[]).map(s => sourceLabels[s] || s);
+    return names.length ? `Booked via ${names.join(" + ")}` : "Booked";
+  }
+
   async function loadAll(retryCount){
     retryCount = retryCount || 0;
     try{
@@ -459,7 +467,7 @@
     const unit = activeUnit();
     if(unit && unit.lastSyncedAt){
       const t = new Date(unit.lastSyncedAt);
-      $("wa-sync-note").textContent = `Availability last synced ${t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} — refreshes automatically every 10 minutes.`;
+      $("wa-sync-note").textContent = `Availability last synced ${t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} — refreshes automatically every 5 minutes.`;
     }
   }
 
@@ -519,6 +527,7 @@
       if(state.selectStart && state.selectEnd && dateStr > state.selectStart && dateStr < state.selectEnd) cls += " in-range";
 
       el.className = cls;
+      if(busy) el.title = busyLabel(dateStr, unit);
       if(!past){
         if(!busy){
           el.onclick = () => handleDayClick(dateStr, unit, false);

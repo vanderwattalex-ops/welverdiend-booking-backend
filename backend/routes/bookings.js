@@ -4,6 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const router = express.Router();
 const { bookingsCollection, bucket, availabilityCollection } = require("../lib/db");
 const { units, extras } = require("../config/units");
+const { rangesOverlap } = require("../lib/rangeUtils");
 const { notifyOwnerNewRequest, notifyOwnerProofUploaded } = require("../lib/email");
 
 const upload = multer({
@@ -14,10 +15,6 @@ const upload = multer({
     cb(ok ? null : new Error("Proof of payment must be an image or PDF"), ok);
   }
 });
-
-function rangesOverlap(aStart, aEnd, bStart, bEnd) {
-  return aStart < bEnd && bStart < aEnd;
-}
 
 function nightsBetween(checkIn, checkOut) {
   const ms = new Date(checkOut) - new Date(checkIn);

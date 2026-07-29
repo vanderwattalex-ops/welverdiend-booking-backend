@@ -1,5 +1,6 @@
 const ical = require("node-ical");
 const { units } = require("../config/units");
+const { mergeRanges } = require("./rangeUtils");
 
 /**
  * Fetches one .ics feed and returns an array of { start, end, source } busy ranges.
@@ -34,31 +35,10 @@ function toDateOnly(d) {
 }
 
 /**
- * Merges overlapping/adjacent busy ranges into a minimal set, so the
- * frontend calendar doesn't have to reason about overlaps from three
- * different platforms.
- */
-function mergeRanges(ranges) {
-  if (ranges.length === 0) return [];
-  const sorted = [...ranges].sort((a, b) => a.start.localeCompare(b.start));
-  const merged = [{ ...sorted[0], sources: [sorted[0].source] }];
-  for (let i = 1; i < sorted.length; i++) {
-    const last = merged[merged.length - 1];
-    const cur = sorted[i];
-    if (cur.start <= last.end) {
-      if (cur.end > last.end) last.end = cur.end;
-      last.sources = [...new Set([...(last.sources || [last.source]), cur.source])];
-    } else {
-      merged.push({ ...cur, sources: [cur.source] });
-    }
-  }
-  return merged.map(({ start, end, sources }) => ({ start, end, sources }));
-}
-
-/**
  * Pulls all three external feeds for a single unit + adds this platform's
  * own confirmed direct bookings (passed in separately), then returns one
- * merged, deduplicated list of busy ranges for that unit.
+ * merged, deduplicated list of busy ranges for that unit, each tagged
+ * with which source(s) caused it.
  */
 async function syncUnit(unitConfig, ownConfirmedRanges = []) {
   const { sources } = unitConfig;
@@ -68,7 +48,7 @@ async function syncUnit(unitConfig, ownConfirmedRanges = []) {
     fetchFeed(sources.lekkeslaap, "lekkeslaap")
   ]);
 
-  const own = ownConfirmedRanges.map(r => ({ ...r, source: "direct" }));
+  const own = ownConfirmedRanges.map(r => ({ ...r, source: "direct", detail: r.guestName }));
   const merged = mergeRanges([...airbnb, ...booking, ...lekkeslaap, ...own]);
 
   return {
@@ -90,4 +70,4 @@ async function syncAllUnits(getOwnConfirmedRangesForUnit) {
   return results;
 }
 
-module.exports = { syncAllUnits, syncUnit, mergeRanges };
+module.exports = { syncAllUnits, syncUnit };

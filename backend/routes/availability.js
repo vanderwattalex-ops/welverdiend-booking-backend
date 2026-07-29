@@ -11,11 +11,15 @@ router.get("/availability", async (req, res) => {
     snap.forEach(doc => (byUnit[doc.id] = doc.data()));
 
     // Always return an entry per configured unit, even before the first sync.
-    const result = units.map(u => byUnit[u.id] || {
-      unitId: u.id,
-      unitName: u.name,
-      busyRanges: [],
-      lastSyncedAt: null
+    // "details" (e.g. a direct-booking guest's name) is admin-only — strip
+    // it here so this public endpoint never leaks a guest's identity to
+    // other site visitors. "sources" (which platform) is fine to show.
+    const result = units.map(u => {
+      const data = byUnit[u.id] || { unitId: u.id, unitName: u.name, busyRanges: [], lastSyncedAt: null };
+      return {
+        ...data,
+        busyRanges: (data.busyRanges || []).map(({ start, end, sources }) => ({ start, end, sources }))
+      };
     });
 
     res.json({ ok: true, units: result });

@@ -11,11 +11,13 @@ const bucket = storage.bucket(BUCKET_NAME);
 
 const availabilityCollection = firestore.collection("availability");
 const bookingsCollection = firestore.collection("bookings");
+const overridesCollection = firestore.collection("overrides");
 
 module.exports = {
   firestore,
   storage,
   bucket,
   availabilityCollection,
-  bookingsCollection
+  bookingsCollection,
+  overridesCollection
 };

@@ -46,6 +46,25 @@
   .waiting-note{font-size:12.5px;color:var(--ink-soft);font-style:italic;margin-top:12px;}
   #empty{color:var(--ink-soft);font-size:13px;padding:20px;}
   .notes{font-size:12.5px;color:var(--ink-soft);margin-top:8px;font-style:italic;}
+  .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--line);}
+  .tabs button{padding:9px 4px;margin-right:20px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--ink-soft);border-bottom:2px solid transparent;font-weight:500;}
+  .tabs button.active{color:var(--taupe-deep);border-bottom-color:var(--taupe-deep);}
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  .unit-block{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:16px 20px;margin-bottom:16px;}
+  .unit-block h2{font-family:'Cormorant Garamond',serif;font-size:20px;margin:0 0 12px;font-weight:600;color:var(--taupe-deep);}
+  .range-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .range-row:last-child{border-bottom:none;}
+  .range-dates{font-size:13.5px;font-weight:500;}
+  .range-source{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .btn-unblock{padding:6px 12px;border:none;border-radius:4px;font-size:12px;cursor:pointer;font-weight:600;background:var(--surface);border:1px solid var(--line) !important;color:var(--ink);}
+  .btn-reblock{padding:6px 12px;border:none;border-radius:4px;font-size:12px;cursor:pointer;font-weight:600;background:var(--danger);color:white;}
+  .override-tag{display:inline-block;background:#EAE3F5;color:#5A3E99;font-size:11px;padding:2px 8px;border-radius:10px;margin-top:4px;}
+  .override-form{display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);}
+  .override-form .field{display:flex;flex-direction:column;gap:4px;}
+  .override-form label{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;}
+  .override-form input,.override-form select{padding:8px 10px;border:1px solid var(--line);border-radius:4px;font-size:13px;}
+  .no-ranges{font-size:13px;color:var(--ink-soft);font-style:italic;}
 </style>
 </head>
 <body>
@@ -59,17 +78,29 @@
   <button id="load-btn">Load bookings</button>
 </div>
 
-<div class="filters">
-  <button class="active" data-status="">All</button>
-  <button data-status="requested">New requests</button>
-  <button data-status="awaiting_payment">Awaiting payment</button>
-  <button data-status="submitted">Ready to confirm</button>
-  <button data-status="confirmed">Confirmed</button>
-  <button data-status="rejected">Rejected</button>
+<div class="tabs">
+  <button class="active" data-tab="bookings">Bookings</button>
+  <button data-tab="calendar">Calendar</button>
 </div>
 
-<div class="cards" id="cards"></div>
-<div id="empty">Enter your admin token and load bookings.</div>
+<div class="tab-panel active" id="panel-bookings">
+  <div class="filters">
+    <button class="active" data-status="">All</button>
+    <button data-status="requested">New requests</button>
+    <button data-status="awaiting_payment">Awaiting payment</button>
+    <button data-status="submitted">Ready to confirm</button>
+    <button data-status="confirmed">Confirmed</button>
+    <button data-status="rejected">Rejected</button>
+  </div>
+  <div class="cards" id="cards"></div>
+  <div id="empty">Enter your admin token and load bookings.</div>
+</div>
+
+<div class="tab-panel" id="panel-calendar">
+  <div id="calendar-content">
+    <p class="no-ranges">Enter your admin token above and open this tab to load the calendar.</p>
+  </div>
+</div>
 
 <script>
   const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app"; // same backend URL as the widget
@@ -85,6 +116,16 @@
   });
 
   document.getElementById("load-btn").onclick = loadBookings;
+
+  document.querySelectorAll(".tabs button").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      document.getElementById(`panel-${btn.dataset.tab}`).classList.add("active");
+      if(btn.dataset.tab === "calendar" && token()) loadCalendar();
+    };
+  });
   document.getElementById("token-toggle").onclick = () => {
     const input = document.getElementById("token");
     const btn = document.getElementById("token-toggle");
@@ -196,6 +237,105 @@
     const data = await res.json();
     if(data.ok) loadBookings();
     else alert(data.error || "Action failed.");
+  }
+
+  const sourceLabels = { airbnb: "Airbnb", "booking.com": "Booking.com", lekkeslaap: "Lekkeslaap", direct: "Direct booking" };
+
+  async function loadCalendar(){
+    const content = document.getElementById("calendar-content");
+    if(!token()){ alert("Enter your admin token first."); return; }
+    let res, data;
+    try{
+      res = await fetch(`${API_BASE}/api/admin/calendar`, { headers: { "x-admin-token": token() } });
+      data = await res.json();
+    }catch(err){
+      content.innerHTML = `<p class="no-ranges">Could not reach the server.</p>`;
+      return;
+    }
+    if(!data.ok){
+      content.innerHTML = `<p class="no-ranges">Could not load the calendar — check your admin token.</p>`;
+      return;
+    }
+
+    content.innerHTML = data.units.map(u => {
+      const rows = (u.busyRanges || []).map(r => {
+        const names = (r.sources||[]).map(s => sourceLabels[s] || s).join(" + ");
+        const who = (r.details||[]).length ? ` — ${r.details.map(esc).join(", ")}` : "";
+        return `
+          <div class="range-row">
+            <div>
+              <div class="range-dates">${r.start} → ${r.end}</div>
+              <div class="range-source">Booked via ${names}${who}</div>
+            </div>
+            <button class="btn-unblock" data-unit="${u.unitId}" data-start="${r.start}" data-end="${r.end}">Unblock</button>
+          </div>
+        `;
+      }).join("") || `<p class="no-ranges">No booked dates right now.</p>`;
+
+      const overrideRows = (u.overrides || []).map(o => `
+        <div class="range-row">
+          <div>
+            <div class="range-dates">${o.start} → ${o.end}</div>
+            <div class="range-source">Manually unblocked${o.reason ? " — " + esc(o.reason) : ""}</div>
+          </div>
+          <button class="btn-reblock" data-id="${o.id}">Re-block</button>
+        </div>
+      `).join("");
+
+      return `
+        <div class="unit-block">
+          <h2>${esc(u.unitName)}</h2>
+          ${rows}
+          ${overrideRows ? `<div style="margin-top:12px;"><div class="range-source" style="margin-bottom:6px;">Active manual unblocks:</div>${overrideRows}</div>` : ""}
+          <div class="override-form">
+            <div class="field"><label>From</label><input type="date" id="ov-start-${u.unitId}"></div>
+            <div class="field"><label>To</label><input type="date" id="ov-end-${u.unitId}"></div>
+            <div class="field"><label>Reason (optional)</label><input type="text" id="ov-reason-${u.unitId}" placeholder="e.g. cancelled, sync error" style="width:200px;"></div>
+            <button class="btn-unblock" data-manual-unit="${u.unitId}">Unblock these dates</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+
+    content.querySelectorAll("[data-unit]").forEach(btn => {
+      btn.onclick = () => unblockRange(btn.dataset.unit, btn.dataset.start, btn.dataset.end);
+    });
+    content.querySelectorAll("[data-id]").forEach(btn => {
+      btn.onclick = () => reblockRange(btn.dataset.id);
+    });
+    content.querySelectorAll("[data-manual-unit]").forEach(btn => {
+      btn.onclick = () => {
+        const unitId = btn.dataset.manualUnit;
+        const start = document.getElementById(`ov-start-${unitId}`).value;
+        const end = document.getElementById(`ov-end-${unitId}`).value;
+        const reason = document.getElementById(`ov-reason-${unitId}`).value;
+        if(!start || !end || start >= end){ alert("Pick a valid From/To date range first."); return; }
+        unblockRange(unitId, start, end, reason);
+      };
+    });
+  }
+
+  async function unblockRange(unitId, start, end, reason){
+    if(!confirm(`Unblock ${start} → ${end} for this unit? This only affects your own calendar — it does not cancel anything on Airbnb, Booking.com or Lekkeslaap themselves.`)) return;
+    const res = await fetch(`${API_BASE}/api/admin/overrides`, {
+      method: "POST",
+      headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+      body: JSON.stringify({ unitId, start, end, reason: reason || "" })
+    });
+    const data = await res.json();
+    if(data.ok) loadCalendar();
+    else alert(data.error || "Could not unblock those dates.");
+  }
+
+  async function reblockRange(overrideId){
+    if(!confirm("Remove this manual unblock? The dates will go back to blocked if the source booking is still there.")) return;
+    const res = await fetch(`${API_BASE}/api/admin/overrides/${overrideId}`, {
+      method: "DELETE",
+      headers: { "x-admin-token": token() }
+    });
+    const data = await res.json();
+    if(data.ok) loadCalendar();
+    else alert(data.error || "Could not remove that unblock.");
   }
 </script>
 
