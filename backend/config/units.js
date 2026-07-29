@@ -82,5 +82,5 @@ module.exports = {
   // your Firebase Hosting URL). Required for the "upload proof of
   // payment" link in approval emails to work — leave blank while you're
   // still testing locally, but you must set this before going live.
-  frontendBaseUrl: ""
+  frontendBaseUrl: "https://welverdiend-booking-478269051372.europe-west1.run.app"
 };
