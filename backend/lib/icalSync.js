@@ -11,24 +11,33 @@ const { mergeRanges } = require("./rangeUtils");
  */
 async function fetchFeed(url, sourceLabel) {
   if (!url) return { ranges: [], health: { ok: true, skipped: true, error: null } };
-  try {
-    const data = await ical.async.fromURL(url);
-    const ranges = [];
-    for (const key in data) {
-      const ev = data[key];
-      if (ev.type !== "VEVENT" || !ev.start || !ev.end) continue;
-      ranges.push({
-        start: toDateOnly(ev.start),
-        end: toDateOnly(ev.end),
-        source: sourceLabel
-      });
+
+  // Try twice with a short pause before declaring a feed genuinely
+  // broken — a single failed attempt could just be a brief network
+  // hiccup or the platform being momentarily slow, not a dead link.
+  let lastErr = null;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const data = await ical.async.fromURL(url);
+      const ranges = [];
+      for (const key in data) {
+        const ev = data[key];
+        if (ev.type !== "VEVENT" || !ev.start || !ev.end) continue;
+        ranges.push({
+          start: toDateOnly(ev.start),
+          end: toDateOnly(ev.end),
+          source: sourceLabel
+        });
+      }
+      return { ranges, health: { ok: true, skipped: false, error: null } };
+    } catch (err) {
+      lastErr = err;
+      if (attempt === 1) await new Promise(r => setTimeout(r, 2000));
     }
-    return { ranges, health: { ok: true, skipped: false, error: null } };
-  } catch (err) {
-    console.error(`[icalSync] Failed to fetch ${sourceLabel} feed:`, err.message);
-    // A single broken feed should never take the whole sync down.
-    return { ranges: [], health: { ok: false, skipped: false, error: err.message } };
   }
+  console.error(`[icalSync] Failed to fetch ${sourceLabel} feed after 2 attempts:`, lastErr.message);
+  // A single broken feed should never take the whole sync down.
+  return { ranges: [], health: { ok: false, skipped: false, error: lastErr.message } };
 }
 
 function toDateOnly(d) {
