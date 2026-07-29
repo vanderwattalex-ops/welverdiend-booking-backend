@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welverdiend Accommodation — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --taupe:#8A7E68; --taupe-dark:#6B6151; --taupe-deep:#4A4436;
+    --ink:#2B2A26; --ink-soft:#66604F; --line:#E5E0D2; --surface:#FAF8F3;
+    --white:#FFFFFF; --danger:#A3402F; --success:#4B6B3C; --warning:#8A6A1F;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--surface);color:var(--ink);margin:0;padding:32px;}
+  h1{font-family:'Cormorant Garamond',serif;font-weight:600;color:var(--taupe-deep);margin:0 0 4px;font-size:28px;}
+  .sub{color:var(--ink-soft);font-size:13px;margin:0 0 24px;}
+  .token-bar{display:flex;gap:8px;margin-bottom:24px;max-width:520px;}
+  .token-bar input{flex:1;padding:9px 11px;border:1px solid var(--line);border-radius:4px;font-size:13px;}
+  .token-bar button{padding:9px 18px;border:none;border-radius:4px;background:var(--taupe-deep);color:var(--white);cursor:pointer;font-weight:600;font-size:13px;}
+  .token-bar button#token-toggle{background:var(--white);color:var(--ink-soft);border:1px solid var(--line);padding:9px 14px;}
+  .filters{display:flex;gap:8px;margin-bottom:16px;}
+  .filters button{padding:7px 14px;border:1px solid var(--line);border-radius:20px;background:var(--white);cursor:pointer;font-size:12.5px;color:var(--ink-soft);}
+  .filters button.active{background:var(--taupe-deep);color:var(--white);border-color:var(--taupe-deep);}
+  .cards{display:flex;flex-direction:column;gap:12px;}
+  .card{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:16px 20px;}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
+  .card-head h3{font-family:'Cormorant Garamond',serif;font-size:19px;margin:0;font-weight:600;}
+  .card-head .dates{font-size:13px;color:var(--ink-soft);margin-top:2px;}
+  .status{padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.03em;height:fit-content;}
+  .status.pending{background:#F5EAD2;color:var(--warning);}
+  .status.confirmed{background:#E5EEDF;color:var(--success);}
+  .status.rejected{background:#F5E1DC;color:var(--danger);}
+  .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0;font-size:13px;}
+  .detail-grid .label{color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px;}
+  .extras-list{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
+  .total{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--taupe-deep);}
+  .actions{display:flex;gap:8px;margin-top:14px;}
+  .actions button{padding:7px 14px;border:none;border-radius:4px;font-size:12.5px;cursor:pointer;font-weight:600;}
+  .btn-confirm{background:var(--success);color:white;}
+  .btn-reject{background:var(--danger);color:white;}
+  .btn-proof{background:var(--surface);border:1px solid var(--line) !important;color:var(--ink);}
+  #empty{color:var(--ink-soft);font-size:13px;padding:20px;}
+  .notes{font-size:12.5px;color:var(--ink-soft);margin-top:8px;font-style:italic;}
+</style>
+</head>
+<body>
+
+<h1>Welverdiend Accommodation — Bookings</h1>
+<p class="sub">Review direct EFT booking requests, check proof of payment, then confirm or reject.</p>
+
+<div class="token-bar">
+  <input type="password" id="token" placeholder="Admin token" autocomplete="off" name="welverdiend-admin-token-field" data-lpignore="true" data-1p-ignore>
+  <button type="button" id="token-toggle" title="Show/hide token">Show</button>
+  <button id="load-btn">Load bookings</button>
+</div>
+
+<div class="filters">
+  <button class="active" data-status="">All</button>
+  <button data-status="pending">Pending</button>
+  <button data-status="confirmed">Confirmed</button>
+  <button data-status="rejected">Rejected</button>
+</div>
+
+<div class="cards" id="cards"></div>
+<div id="empty">Enter your admin token and load bookings.</div>
+
+<script>
+  const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app"; // same backend URL as the widget
+  let currentStatus = "";
+
+  document.querySelectorAll(".filters button").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentStatus = btn.dataset.status;
+      loadBookings();
+    };
+  });
+
+  document.getElementById("load-btn").onclick = loadBookings;
+  document.getElementById("token-toggle").onclick = () => {
+    const input = document.getElementById("token");
+    const btn = document.getElementById("token-toggle");
+    const showing = input.type === "text";
+    input.type = showing ? "password" : "text";
+    btn.textContent = showing ? "Show" : "Hide";
+  };
+  function token(){ return document.getElementById("token").value.trim(); }
+  function esc(s){ const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+  function rand(n){ return `R${Number(n||0).toFixed(2)}`; }
+
+  async function loadBookings(){
+    if(!token()){ alert("Enter your admin token first."); return; }
+    const url = `${API_BASE}/api/admin/bookings${currentStatus ? "?status="+currentStatus : ""}`;
+    let res, data;
+    try{
+      res = await fetch(url, { headers: { "x-admin-token": token() } });
+      data = await res.json();
+    }catch(err){
+      document.getElementById("empty").style.display = "block";
+      document.getElementById("empty").textContent = "Could not reach the server — check your internet connection and the API_BASE address in this file.";
+      console.error("[Welverdiend admin] network error:", err);
+      return;
+    }
+    const cards = document.getElementById("cards");
+    const empty = document.getElementById("empty");
+    cards.innerHTML = "";
+
+    if(!data.ok){
+      empty.style.display = "block";
+      empty.textContent = `Could not load bookings — check your admin token. (Sent a token that's ${token().length} characters long, HTTP status ${res.status}.)`;
+      console.error("[Welverdiend admin] auth/load failed:", { status: res.status, tokenLength: token().length, response: data });
+      return;
+    }
+    if(data.bookings.length === 0){
+      empty.style.display = "block";
+      empty.textContent = "No bookings found for this filter.";
+      return;
+    }
+    empty.style.display = "none";
+
+    data.bookings.forEach(b => {
+      const guestsLine = `${b.adults || 1} adult${(b.adults||1)===1?"":"s"}` + (b.children ? `, ${b.children} child${b.children===1?"":"ren"}${b.childrenAges ? " ("+esc(b.childrenAges)+")" : ""}` : "");
+      const petsLine = b.hasPets ? (esc(b.petDetails) || "Yes") : "No";
+      const extrasLines = (b.lineItems || []).slice(1).map(li => `${esc(li.label)} — ${rand(li.amount)}`).join("<br>") || "None";
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-head">
+          <div>
+            <h3>${esc(b.guestName)} · ${esc(b.unitId)}</h3>
+            <div class="dates">${b.checkIn} → ${b.checkOut} (${b.nights || ""} night${b.nights===1?"":"s"})${b.arrivalTime ? " · arriving " + esc(b.arrivalTime) : ""}</div>
+          </div>
+          <span class="status ${b.status}">${b.status}</span>
+        </div>
+        <div class="detail-grid">
+          <div><div class="label">Contact</div>${esc(b.email)}<br>${esc(b.phone)}</div>
+          <div><div class="label">Guests</div>${guestsLine}</div>
+          <div><div class="label">Pets</div>${petsLine}</div>
+          <div><div class="label">Extras</div><div class="extras-list">${extrasLines}</div></div>
+          <div><div class="label">Total due</div><div class="total">${rand(b.totalAmount)}</div></div>
+        </div>
+        ${b.notes ? `<div class="notes">"${esc(b.notes)}"</div>` : ""}
+        <div class="actions">
+          <button class="btn-proof" data-id="${b.id}">View proof of payment</button>
+          ${b.status === "pending" ? `<button class="btn-confirm" data-id="${b.id}">Confirm</button><button class="btn-reject" data-id="${b.id}">Reject</button>` : ""}
+        </div>
+      `;
+      cards.appendChild(card);
+    });
+
+    cards.querySelectorAll(".btn-proof").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id));
+    cards.querySelectorAll(".btn-confirm").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "confirm"));
+    cards.querySelectorAll(".btn-reject").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "reject"));
+  }
+
+  async function viewProof(id){
+    const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/proof`, { headers: { "x-admin-token": token() } });
+    const data = await res.json();
+    if(data.ok) window.open(data.url, "_blank");
+    else alert("Could not load proof of payment file.");
+  }
+
+  async function decide(id, action){
+    if(!confirm(`${action === "confirm" ? "Confirm" : "Reject"} this booking?`)) return;
+    const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/${action}`, { method: "POST", headers: { "x-admin-token": token() } });
+    const data = await res.json();
+    if(data.ok) loadBookings();
+    else alert("Action failed.");
+  }
+</script>
+
+</body>
+</html>
