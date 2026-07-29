@@ -18,10 +18,13 @@ function unitName(unitId) {
 // GET /api/admin/bookings?status=requested
 router.get("/admin/bookings", async (req, res) => {
   try {
-    let q = bookingsCollection.orderBy("createdAt", "desc");
+    // Filtering by status AND sorting by date in the same Firestore query
+    // needs a manually-created composite index. Simpler and just as fast
+    // at this scale: filter in Firestore, sort here instead.
+    let q = bookingsCollection;
     if (req.query.status) q = q.where("status", "==", req.query.status);
     const snap = await q.get();
-    const bookings = snap.docs.map(d => d.data());
+    const bookings = snap.docs.map(d => d.data()).sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
     res.json({ ok: true, bookings });
   } catch (err) {
     console.error("[admin] list bookings failed:", err);
