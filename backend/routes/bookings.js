@@ -146,24 +146,29 @@ router.post("/bookings", express.json(), async (req, res) => {
 // GET /api/bookings/:id/summary
 // ---------------------------------------------------------------------
 router.get("/bookings/:id/summary", async (req, res) => {
-  const doc = await bookingsCollection.doc(req.params.id).get();
-  if (!doc.exists) return res.status(404).json({ ok: false, error: "Booking not found" });
-  const b = doc.data();
-  const { units } = await getSettings();
-  const unit = units.find(u => u.id === b.unitId);
-  res.json({
-    ok: true,
-    unitName: unit ? unit.name : b.unitId,
-    checkIn: b.checkIn,
-    checkOut: b.checkOut,
-    nights: b.nights,
-    totalAmount: b.totalAmount,
-    depositAmount: b.depositAmount,
-    balanceAmount: b.balanceAmount,
-    balanceStatus: b.balanceStatus,
-    lineItems: b.lineItems,
-    status: b.status
-  });
+  try {
+    const doc = await bookingsCollection.doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ ok: false, error: "Booking not found" });
+    const b = doc.data();
+    const { units } = await getSettings();
+    const unit = units.find(u => u.id === b.unitId);
+    res.json({
+      ok: true,
+      unitName: unit ? unit.name : b.unitId,
+      checkIn: b.checkIn,
+      checkOut: b.checkOut,
+      nights: b.nights,
+      totalAmount: b.totalAmount,
+      depositAmount: b.depositAmount,
+      balanceAmount: b.balanceAmount,
+      balanceStatus: b.balanceStatus,
+      lineItems: b.lineItems,
+      status: b.status
+    });
+  } catch (err) {
+    console.error("[bookings] summary failed:", err);
+    res.status(500).json({ ok: false, error: "Could not load booking details" });
+  }
 });
 
 // ---------------------------------------------------------------------

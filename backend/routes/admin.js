@@ -177,6 +177,9 @@ router.post("/admin/bookings/:id/decline", async (req, res) => {
     const doc = await ref.get();
     if (!doc.exists) return res.status(404).json({ ok: false, error: "Not found" });
     const booking = doc.data();
+    if (booking.status !== "requested" && booking.status !== "awaiting_payment") {
+      return res.status(409).json({ ok: false, error: `This booking is "${booking.status}" — decline is only for requests that haven't been confirmed yet.` });
+    }
 
     await ref.update({ status: "rejected", decidedAt: new Date().toISOString(), declineReason: req.body.reason || "" });
     notifyGuestDeclined(booking, unitName(booking.unitId), req.body.reason).catch(logEmailFail("decline"));
@@ -227,6 +230,9 @@ router.post("/admin/bookings/:id/reject", async (req, res) => {
     const doc = await ref.get();
     if (!doc.exists) return res.status(404).json({ ok: false, error: "Not found" });
     const booking = doc.data();
+    if (booking.status !== "submitted") {
+      return res.status(409).json({ ok: false, error: `This booking is "${booking.status}" — reject is only for bookings awaiting final confirmation.` });
+    }
 
     await ref.update({ status: "rejected", decidedAt: new Date().toISOString(), declineReason: req.body.reason || "" });
     notifyGuestDeclined(booking, unitName(booking.unitId), req.body.reason).catch(logEmailFail("reject"));
@@ -267,6 +273,9 @@ router.post("/admin/bookings/:id/balance/mark-paid", async (req, res) => {
     const doc = await ref.get();
     if (!doc.exists) return res.status(404).json({ ok: false, error: "Not found" });
     const booking = doc.data();
+    if (booking.status !== "confirmed") {
+      return res.status(409).json({ ok: false, error: "This booking isn't confirmed yet — there's no balance to mark paid." });
+    }
     await ref.update({ balanceStatus: "paid", balancePaidAt: new Date().toISOString() });
     const uName = unitName(booking.unitId);
     generateInvoice({ ...booking, balanceStatus: "paid" }, uName)
