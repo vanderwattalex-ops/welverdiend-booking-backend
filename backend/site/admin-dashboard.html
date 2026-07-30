@@ -761,7 +761,7 @@
             </div>
             <input type="file" accept="image/*" id="hero-input-${slot.key}" style="display:none">
             <button type="button" class="photo-upload-btn" id="hero-upload-btn-${slot.key}">Replace this photo</button>
-            <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — up to 8MB. (iPhone photos saved as HEIC will need to be converted or shared as JPG first.)</div>
+            <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — any size, they'll be automatically resized. (iPhone photos saved as HEIC will need to be converted or shared as JPG first.)</div>
             <div class="settings-msg" id="hero-msg-${slot.key}"></div>
           </div>
         `).join("")}
@@ -780,7 +780,7 @@
           </div>
           <input type="file" accept="image/*" id="photo-input-${unitId}" style="display:none">
           <button type="button" class="photo-upload-btn" data-gallery="${unitId}" id="upload-btn-${unitId}">+ Upload a photo</button>
-          <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — up to 8MB. (iPhone photos saved as HEIC will need to be converted or shared as JPG first.)</div>
+          <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — any size, they'll be automatically resized. (iPhone photos saved as HEIC will need to be converted or shared as JPG first.)</div>
           <div class="settings-msg" id="photo-msg-${unitId}"></div>
         </div>
       `).join("")}

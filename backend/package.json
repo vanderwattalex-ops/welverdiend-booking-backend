@@ -20,6 +20,7 @@
     "node-ical": "^0.18.0",
     "nodemailer": "^6.9.14",
     "pdfkit": "^0.15.0",
+    "sharp": "^0.33.4",
     "uuid": "^9.0.1"
   },
   "engines": {

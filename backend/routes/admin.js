@@ -6,6 +6,7 @@ const { units } = require("../config/units");
 const { rangesOverlap, subtractRanges } = require("../lib/rangeUtils");
 const { v4: uuidv4 } = require("uuid");
 const multer = require("multer");
+const sharp = require("sharp");
 const {
   notifyGuestApproved, notifyGuestConfirmed, notifyGuestDeclined,
   notifyGuestBalanceDue, notifyGuestPaidInFull, sendTestEmail
@@ -16,12 +17,26 @@ const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, setHeroPhoto, 
 
 const photoUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB — generous, since every upload gets auto-compressed below anyway
   fileFilter: (req, file, cb) => {
     const ok = ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype);
     cb(ok ? null : new Error("Please upload a JPG, PNG, or WebP image"), ok);
   }
 });
+
+/**
+ * Resizes and compresses an uploaded photo before it's stored — so
+ * nobody ever has to manually shrink a photo before uploading it.
+ * Caps width at 1600px (plenty for a website gallery) and re-encodes
+ * as a reasonably-compressed JPEG.
+ */
+async function compressPhoto(buffer) {
+  return sharp(buffer)
+    .rotate() // respects the photo's original orientation (important for phone photos)
+    .resize({ width: 1600, withoutEnlargement: true })
+    .jpeg({ quality: 82 })
+    .toBuffer();
+}
 
 router.use(requireAdmin);
 router.use(express.json());
@@ -431,10 +446,10 @@ router.post("/admin/site-content/photos", photoUpload.single("photo"), async (re
     if (!["unit1", "unit2"].includes(gallery)) return res.status(400).json({ ok: false, error: "gallery must be unit1 or unit2" });
     if (!req.file) return res.status(400).json({ ok: false, error: "No photo attached" });
 
-    const ext = (req.file.originalname.split(".").pop() || "jpg").toLowerCase();
-    const objectPath = `gallery-photos/${gallery}/${uuidv4()}.${ext}`;
-    await siteAssetsBucket.file(objectPath).save(req.file.buffer, {
-      contentType: req.file.mimetype,
+    const objectPath = `gallery-photos/${gallery}/${uuidv4()}.jpg`;
+    const compressed = await compressPhoto(req.file.buffer);
+    await siteAssetsBucket.file(objectPath).save(compressed, {
+      contentType: "image/jpeg",
       public: true
     });
     const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
@@ -468,9 +483,9 @@ router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async
     if (!["homeTop", "homeSecond"].includes(slot)) return res.status(400).json({ ok: false, error: "slot must be homeTop or homeSecond" });
     if (!req.file) return res.status(400).json({ ok: false, error: "No photo attached" });
 
-    const ext = (req.file.originalname.split(".").pop() || "jpg").toLowerCase();
-    const objectPath = `hero-photos/${slot}/${uuidv4()}.${ext}`;
-    await siteAssetsBucket.file(objectPath).save(req.file.buffer, { contentType: req.file.mimetype });
+    const objectPath = `hero-photos/${slot}/${uuidv4()}.jpg`;
+    const compressed = await compressPhoto(req.file.buffer);
+    await siteAssetsBucket.file(objectPath).save(compressed, { contentType: "image/jpeg" });
     const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
     const heroPhotos = await setHeroPhoto(slot, publicUrl);
     res.json({ ok: true, url: publicUrl, heroPhotos });
