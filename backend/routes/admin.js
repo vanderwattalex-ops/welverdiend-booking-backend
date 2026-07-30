@@ -12,7 +12,7 @@ const {
 } = require("../lib/email");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { generateInvoice } = require("../lib/invoice");
-const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto } = require("../lib/siteContent");
+const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, setHeroPhoto, addReview, removeReview } = require("../lib/siteContent");
 
 const photoUpload = multer({
   storage: multer.memoryStorage(),
@@ -434,7 +434,8 @@ router.post("/admin/site-content/photos", photoUpload.single("photo"), async (re
     const ext = (req.file.originalname.split(".").pop() || "jpg").toLowerCase();
     const objectPath = `gallery-photos/${gallery}/${uuidv4()}.${ext}`;
     await siteAssetsBucket.file(objectPath).save(req.file.buffer, {
-      contentType: req.file.mimetype
+      contentType: req.file.mimetype,
+      public: true
     });
     const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
     const updated = await addGalleryPhoto(gallery, publicUrl);
@@ -455,6 +456,52 @@ router.delete("/admin/site-content/photos", async (req, res) => {
   } catch (err) {
     console.error("[admin] photo remove failed:", err);
     res.status(500).json({ ok: false, error: "Could not remove photo" });
+  }
+});
+
+// POST /api/admin/site-content/hero-photo   multipart/form-data: slot ('homeTop'|'homeSecond'), file "photo"
+// A single-slot replace, not a gallery add — uploading here REPLACES
+// that specific named photo on the Home page.
+router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async (req, res) => {
+  try {
+    const { slot } = req.body;
+    if (!["homeTop", "homeSecond"].includes(slot)) return res.status(400).json({ ok: false, error: "slot must be homeTop or homeSecond" });
+    if (!req.file) return res.status(400).json({ ok: false, error: "No photo attached" });
+
+    const ext = (req.file.originalname.split(".").pop() || "jpg").toLowerCase();
+    const objectPath = `hero-photos/${slot}/${uuidv4()}.${ext}`;
+    await siteAssetsBucket.file(objectPath).save(req.file.buffer, { contentType: req.file.mimetype });
+    const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
+    const heroPhotos = await setHeroPhoto(slot, publicUrl);
+    res.json({ ok: true, url: publicUrl, heroPhotos });
+  } catch (err) {
+    console.error("[admin] hero photo upload failed:", err);
+    res.status(500).json({ ok: false, error: "Could not upload photo" });
+  }
+});
+
+// POST /api/admin/site-content/reviews   body: { name, rating, text }
+router.post("/admin/site-content/reviews", async (req, res) => {
+  try {
+    const { name, rating, text } = req.body;
+    if (!name || !text) return res.status(400).json({ ok: false, error: "Name and review text are required" });
+    const reviews = await addReview({ name, rating, text });
+    res.json({ ok: true, reviews });
+  } catch (err) {
+    console.error("[admin] add review failed:", err);
+    res.status(500).json({ ok: false, error: "Could not add review" });
+  }
+});
+
+// DELETE /api/admin/site-content/reviews   body: { id }
+router.delete("/admin/site-content/reviews", async (req, res) => {
+  try {
+    const { id } = req.body;
+    const reviews = await removeReview(id);
+    res.json({ ok: true, reviews });
+  } catch (err) {
+    console.error("[admin] remove review failed:", err);
+    res.status(500).json({ ok: false, error: "Could not remove review" });
   }
 });
 

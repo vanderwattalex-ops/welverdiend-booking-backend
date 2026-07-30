@@ -3,6 +3,16 @@ module.exports = {
     "Our journey began in 2021 when we fell in love with this peaceful piece of land and decided to make it our home. In 2025, we expanded the property, embracing even more of the natural beauty that surrounds it. Wanting to share this unique setting, we transformed one of the existing homes into a welcoming rental space — giving others the chance to experience the tranquillity, wildlife, and convenience of being close to the city.",
     "Whether you're traveling for business, a pet show, a vacation, or simply need a break, our home offers a perfect retreat where comfort meets nature. We look forward to hosting you!"
   ],
+  // Named, single-slot photos (not a gallery) — each one is a specific
+  // spot on the Home page, clearly labeled in the Website tab so it's
+  // obvious which photo controls which part of the page.
+  heroPhotos: {
+    homeTop: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/b4afe026-ecd6-4263-8dcc-e3f25c3c9899/DSC_9863.jpg",
+    homeSecond: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/8fdc984d-f829-415a-8dac-45f0aebf2c7e/DSC_9860.jpg"
+  },
+  reviews: [
+    { id: "seed-1", name: "A recent guest", rating: 5, text: "A truly peaceful stay — beautifully kept, quiet, and close enough to town to be convenient. We'd happily come back." }
+  ],
   galleries: {
     unit1: [],
     unit2: [

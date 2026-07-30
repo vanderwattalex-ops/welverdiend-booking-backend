@@ -734,6 +734,12 @@
     const content = document.getElementById("website-content");
     const paras = websiteContentState.aboutParagraphs || [];
     const galleries = websiteContentState.galleries || { unit1: [], unit2: [] };
+    const heroPhotos = websiteContentState.heroPhotos || {};
+    const reviews = websiteContentState.reviews || [];
+    const heroSlots = [
+      { key: "homeTop", label: "Home page — top hero photo (the big banner photo at the very top)" },
+      { key: "homeSecond", label: "Home page — second photo (the wide photo further down, of the grounds)" }
+    ];
 
     content.innerHTML = `
       <div class="unit-block">
@@ -744,9 +750,25 @@
         <div class="settings-msg" id="about-msg"></div>
       </div>
 
+      <div class="unit-block">
+        <h2>Home page photos</h2>
+        <p class="range-source" style="margin-bottom:10px;">Each photo below is clearly labeled with exactly where it appears on the Home page — replacing one only changes that specific spot.</p>
+        ${heroSlots.map(slot => `
+          <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--line);">
+            <div class="label" style="margin-bottom:8px;font-weight:600;color:var(--ink);">${slot.label}</div>
+            <div class="photo-grid" style="grid-template-columns:220px;">
+              <div class="photo-tile"><img src="${heroPhotos[slot.key]||''}" alt="${slot.key}"></div>
+            </div>
+            <input type="file" accept="image/*" id="hero-input-${slot.key}" style="display:none">
+            <button type="button" class="photo-upload-btn" id="hero-upload-btn-${slot.key}">Replace this photo</button>
+            <div class="settings-msg" id="hero-msg-${slot.key}"></div>
+          </div>
+        `).join("")}
+      </div>
+
       ${["unit1","unit2"].map(unitId => `
         <div class="unit-block">
-          <h2>${unitId === "unit1" ? "Unit 1" : "Unit 2"} photos</h2>
+          <h2>${unitId === "unit1" ? "Unit 1" : "Unit 2"} gallery photos</h2>
           <div class="photo-grid" id="photo-grid-${unitId}">
             ${(galleries[unitId]||[]).map(url => `
               <div class="photo-tile">
@@ -760,6 +782,36 @@
           <div class="settings-msg" id="photo-msg-${unitId}"></div>
         </div>
       `).join("")}
+
+      <div class="unit-block">
+        <h2>Guest reviews</h2>
+        <div id="reviews-manager-list">
+          ${reviews.length === 0 ? `<p class="no-ranges">No reviews yet.</p>` : reviews.map(r => `
+            <div class="range-row">
+              <div>
+                <div class="range-dates">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)} — ${esc(r.name)}</div>
+                <div class="range-source">"${esc(r.text)}"</div>
+              </div>
+              <button class="btn-reblock" data-review-id="${r.id}">Remove</button>
+            </div>
+          `).join("")}
+        </div>
+        <div class="override-form" style="margin-top:16px;">
+          <div class="field"><label>Guest name</label><input type="text" id="new-review-name" placeholder="e.g. Sarah M."></div>
+          <div class="field"><label>Rating</label>
+            <select id="new-review-rating">
+              <option value="5">★★★★★ (5)</option>
+              <option value="4">★★★★☆ (4)</option>
+              <option value="3">★★★☆☆ (3)</option>
+              <option value="2">★★☆☆☆ (2)</option>
+              <option value="1">★☆☆☆☆ (1)</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1;min-width:220px;"><label>Review text</label><input type="text" id="new-review-text" placeholder="What they said"></div>
+          <button class="btn-unblock" id="add-review-btn">+ Add review</button>
+        </div>
+        <div class="settings-msg" id="review-msg"></div>
+      </div>
     `;
 
     document.getElementById("save-about-btn").onclick = saveAboutText;
@@ -771,6 +823,94 @@
     content.querySelectorAll(".remove-photo-btn").forEach(btn => {
       btn.onclick = () => removePhoto(btn.dataset.gallery, btn.dataset.url);
     });
+    heroSlots.forEach(slot => {
+      const input = document.getElementById(`hero-input-${slot.key}`);
+      document.getElementById(`hero-upload-btn-${slot.key}`).onclick = () => input.click();
+      input.onchange = (e) => { if(e.target.files[0]) uploadHeroPhoto(slot.key, e.target.files[0]); };
+    });
+    document.getElementById("add-review-btn").onclick = addReviewFromForm;
+    content.querySelectorAll("[data-review-id]").forEach(btn => {
+      btn.onclick = () => removeReviewById(btn.dataset.reviewId);
+    });
+  }
+
+  async function uploadHeroPhoto(slot, file){
+    const msg = document.getElementById(`hero-msg-${slot}`);
+    const btn = document.getElementById(`hero-upload-btn-${slot}`);
+    msg.className = "settings-msg"; msg.textContent = "";
+    btn.disabled = true; btn.textContent = "Uploading…";
+    try{
+      const fd = new FormData();
+      fd.append("slot", slot);
+      fd.append("photo", file);
+      const res = await fetch(`${API_BASE}/api/admin/site-content/hero-photo`, {
+        method: "POST",
+        headers: { "x-admin-token": token() },
+        body: fd
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.heroPhotos = data.heroPhotos;
+        renderWebsiteContent();
+      } else {
+        msg.className = "settings-msg error";
+        msg.textContent = data.error || "Upload failed.";
+      }
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server.";
+    }
+    btn.disabled = false; btn.textContent = "Replace this photo";
+  }
+
+  async function addReviewFromForm(){
+    const msg = document.getElementById("review-msg");
+    const name = document.getElementById("new-review-name").value.trim();
+    const rating = document.getElementById("new-review-rating").value;
+    const text = document.getElementById("new-review-text").value.trim();
+    if(!name || !text){
+      msg.className = "settings-msg error";
+      msg.textContent = "Please fill in both the guest name and the review text.";
+      return;
+    }
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/reviews`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ name, rating, text })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.reviews = data.reviews;
+        renderWebsiteContent();
+      } else {
+        msg.className = "settings-msg error";
+        msg.textContent = data.error || "Could not add review.";
+      }
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server.";
+    }
+  }
+
+  async function removeReviewById(id){
+    if(!confirm("Remove this review from the website?")) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/reviews`, {
+        method: "DELETE",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.reviews = data.reviews;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not remove that review.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
   }
 
   async function saveAboutText(){

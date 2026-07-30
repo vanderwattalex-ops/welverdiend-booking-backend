@@ -18,44 +18,59 @@
     <a href="about.html">About</a>
     <a href="unit1.html">Unit 1</a>
     <a href="unit2.html">Unit 2</a>
+    <a href="reviews.html">Reviews</a>
     <a href="contact.html">Contact</a>
     <a href="/booking-widget.html" class="book-btn">Book now</a>
   </nav>
 </header>
 
 <div class="hero">
-  <img src="https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/b4afe026-ecd6-4263-8dcc-e3f25c3c9899/DSC_9863.jpg" alt="Welverdiend Accommodation">
+  <img id="hero-top-img" src="" alt="Welverdiend Accommodation">
+  <div class="hero-overlay">
+    <p class="eyebrow">Wildlife, tranquility, and city convenience</p>
+    <h1>Your perfect escape</h1>
+  </div>
 </div>
 
-<div class="hero-caption">
-  <p class="eyebrow">Wildlife, tranquility, and city convenience</p>
-  <h1>Your perfect escape</h1>
+<div class="watermark-band">
+  <img class="watermark-mark" src="/assets/logo-mark.png" alt="">
+  <div class="watermark-content">
+    <p class="lede">Our elegant retreat offers two unique units, each with two cozy bedrooms — one with a double bed, the other with two single beds — perfect for families or friends. A spacious bathroom, a serene reading nook, and a dedicated work area provide comfort and convenience. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen for effortless meals. Step outside to a tranquil setting where wildlife roams freely, creating a unique connection to nature. Pet-friendly and peaceful, this is the perfect blend of comfort and wilderness, just minutes from the city.</p>
+  </div>
 </div>
 
-<section class="section narrow center">
-  <p class="lede">Our elegant retreat offers two unique units, each with two cozy bedrooms — one with a double bed, the other with two single beds — perfect for families or friends. A spacious bathroom, a serene reading nook, and a dedicated work area provide comfort and convenience. The open living space features a dining table, a welcoming lounge with a smart TV, and a fully equipped kitchen for effortless meals. Step outside to a tranquil setting where wildlife roams freely, creating a unique connection to nature. Pet-friendly and peaceful, this is the perfect blend of comfort and wilderness, just minutes from the city.</p>
-</section>
-
-<section class="section">
+<section class="section center">
+  <p class="eyebrow">At a glance</p>
+  <h2>Why guests choose Welverdiend</h2>
   <div class="features">
     <div class="feature-card">
+      <div class="icon-ring">I</div>
       <h3>Modern comfort</h3>
       <p>A fully equipped home with all the modern amenities, set in a tranquil environment where nature thrives.</p>
     </div>
     <div class="feature-card">
+      <div class="icon-ring">II</div>
       <h3>Where comfort meets the wild</h3>
       <p>Enjoy a stylish and cozy stay with the unique experience of wildlife roaming freely around the property.</p>
     </div>
     <div class="feature-card">
+      <div class="icon-ring">III</div>
       <h3>Spacious, serene, and pet-friendly</h3>
       <p>With two comfortable bedrooms, a large living space, and a pet-friendly policy, our home is designed for ultimate relaxation.</p>
     </div>
   </div>
 </section>
 
-<div class="hero">
-  <img src="https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/8fdc984d-f829-415a-8dac-45f0aebf2c7e/DSC_9860.jpg" alt="Welverdiend Accommodation grounds" style="height:44vh;min-height:280px;">
-</div>
+<img id="hero-second-img" class="hero-plain" src="" alt="Welverdiend Accommodation grounds">
+
+<section class="section tinted center">
+  <p class="eyebrow">What guests say</p>
+  <h2>Guest reviews</h2>
+  <div class="review-grid" id="reviews-preview">
+    <p style="color:var(--ink-soft);">Loading reviews…</p>
+  </div>
+  <a href="reviews.html" class="back-link" style="margin-top:26px;justify-content:center;">Read all reviews →</a>
+</section>
 
 <div class="cta-band">
   <h2>Ready to book your stay?</h2>
@@ -75,6 +90,35 @@
   </div>
   <p style="margin-top:14px;">© Welverdiend Accommodation · 4 Kenilworth Road, Bloemfontein</p>
 </footer>
+
+<script>
+(function(){
+  const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
+  fetch(`${API_BASE}/api/site-content`)
+    .then(r => r.json())
+    .then(data => {
+      if(!data.ok) return;
+      if(data.heroPhotos){
+        document.getElementById("hero-top-img").src = data.heroPhotos.homeTop;
+        document.getElementById("hero-second-img").src = data.heroPhotos.homeSecond;
+      }
+      const wrap = document.getElementById("reviews-preview");
+      const reviews = (data.reviews || []).slice(0, 3);
+      if(reviews.length === 0){
+        wrap.innerHTML = `<p style="color:var(--ink-soft);">No reviews yet.</p>`;
+        return;
+      }
+      wrap.innerHTML = reviews.map(r => `
+        <div class="review-card">
+          <div class="review-stars">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</div>
+          <p class="review-text">"${r.text}"</p>
+          <div class="review-name">${r.name}</div>
+        </div>
+      `).join("");
+    })
+    .catch(() => {});
+})();
+</script>
 
 </body>
 </html>

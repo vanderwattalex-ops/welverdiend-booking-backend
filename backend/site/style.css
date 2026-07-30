@@ -3,10 +3,12 @@
   --taupe:#8A7E68;
   --taupe-dark:#6B6151;
   --taupe-deep:#4A4436;
+  --gold:#B5975A;
   --ink:#2B2A26;
   --ink-soft:#66604F;
   --bg:#FFFFFF;
   --surface:#FAF8F3;
+  --surface-deep:#F1ECDF;
   --line:#E5E0D2;
   --white:#FFFFFF;
 }
@@ -24,47 +26,79 @@ img{max-width:100%;display:block;}
 /* Header */
 .site-header{
   display:flex;align-items:center;justify-content:space-between;
-  padding:22px 5vw;border-bottom:1px solid var(--line);
-  flex-wrap:wrap;gap:16px;
+  padding:18px 5vw;border-bottom:1px solid var(--line);
+  flex-wrap:wrap;gap:16px;background:var(--white);
 }
-.site-header .logo img{height:34px;width:auto;}
-.site-nav{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
+.site-header .logo img{height:58px;width:auto;}
+.site-nav{display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
 .site-nav a{
   font-size:13px;letter-spacing:.06em;text-transform:uppercase;
   text-decoration:none;color:var(--ink-soft);
 }
 .site-nav a:hover, .site-nav a.active{color:var(--taupe-deep);}
 .site-nav .book-btn{
-  background:var(--taupe-deep);color:var(--white);padding:10px 20px;
-  border-radius:4px;font-weight:600;
+  background:var(--taupe-deep);color:var(--white);padding:11px 22px;
+  border-radius:3px;font-weight:600;
 }
 .site-nav .book-btn:hover{background:var(--ink);}
 
-/* Hero */
-.hero{position:relative;}
-.hero img{width:100%;height:56vh;min-height:340px;object-fit:cover;}
-.hero-caption{
-  max-width:900px;margin:0 auto;padding:56px 5vw 20px;text-align:center;
+/* Back link */
+.back-link{
+  display:inline-flex;align-items:center;gap:6px;font-size:12.5px;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);
+  text-decoration:none;margin:26px 5vw 0;cursor:pointer;
 }
+.back-link:hover{color:var(--taupe-deep);}
+
+/* Hero with overlay text */
+.hero{position:relative;background:var(--ink);}
+.hero img{width:100%;height:64vh;min-height:420px;object-fit:cover;opacity:.92;}
+.hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(180deg, rgba(43,42,38,.05) 0%, rgba(43,42,38,.15) 45%, rgba(43,42,38,.78) 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  text-align:center;padding:0 5vw 56px;
+}
+.hero-overlay .eyebrow{color:#E7DFCB;}
+.hero-overlay h1{color:var(--white);font-size:48px;}
+.hero-plain{width:100%;height:44vh;min-height:280px;object-fit:cover;}
+
 .eyebrow{
-  font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--taupe-dark);
-  margin:0 0 8px;
+  font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe-dark);
+  margin:0 0 10px;
 }
 h1,h2,h3{font-family:'Cormorant Garamond',serif;color:var(--taupe-deep);margin:0 0 12px;font-weight:600;}
 h1{font-size:44px;line-height:1.1;}
 h2{font-size:30px;}
 h3{font-size:20px;}
-.lede{font-size:16px;line-height:1.7;color:var(--ink-soft);max-width:780px;margin:0 auto;}
+.lede{font-size:16.5px;line-height:1.75;color:var(--ink-soft);max-width:780px;margin:0 auto;}
 
 /* Sections */
-.section{padding:60px 5vw;max-width:1100px;margin:0 auto;}
+.section{padding:64px 5vw;max-width:1100px;margin:0 auto;}
 .section.narrow{max-width:760px;}
 .section.center{text-align:center;}
 .section.tinted{background:var(--surface);}
 
-/* Feature cards */
+/* Watermark band — a large faded W between sections */
+.watermark-band{
+  position:relative;overflow:hidden;background:var(--surface);
+  padding:52px 5vw;text-align:center;
+}
+.watermark-band .watermark-mark{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:340px;opacity:.06;pointer-events:none;
+}
+.watermark-band .watermark-content{position:relative;max-width:640px;margin:0 auto;}
+
+/* At-a-glance feature cards */
 .features{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:32px;margin-top:44px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:36px;margin-top:44px;
+}
+.feature-card{text-align:center;}
+.feature-card .icon-ring{
+  width:56px;height:56px;border-radius:50%;border:1px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+  font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);
 }
 .feature-card h3{margin-bottom:8px;}
 .feature-card p{color:var(--ink-soft);font-size:14.5px;line-height:1.6;margin:0;}
@@ -82,6 +116,16 @@ h3{font-size:20px;}
   border:1px dashed var(--line);border-radius:8px;
 }
 
+/* Reviews */
+.review-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-top:36px;}
+.review-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;
+  padding:26px 24px;
+}
+.review-stars{color:var(--gold);font-size:15px;letter-spacing:2px;margin-bottom:12px;}
+.review-text{font-size:14.5px;line-height:1.7;color:var(--ink);margin:0 0 14px;font-style:italic;}
+.review-name{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);}
+
 /* Contact */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;}
 .contact-item{margin-bottom:20px;}
@@ -97,20 +141,21 @@ h3{font-size:20px;}
 
 /* CTA band */
 .cta-band{
-  background:var(--taupe-deep);color:var(--white);text-align:center;padding:56px 5vw;
+  background:var(--taupe-deep);color:var(--white);text-align:center;padding:60px 5vw;
 }
 .cta-band h2{color:var(--white);}
 .cta-band p{color:#D8D2C4;margin:0 0 24px;}
 .cta-band .book-btn{
-  display:inline-block;background:var(--white);color:var(--taupe-deep);
-  padding:13px 30px;border-radius:4px;text-decoration:none;font-weight:600;font-size:14px;
+  display:inline-block;background:var(--gold);color:var(--white);
+  padding:14px 32px;border-radius:3px;text-decoration:none;font-weight:600;font-size:14px;
+  letter-spacing:.03em;
 }
-.cta-band .book-btn:hover{background:var(--surface);}
+.cta-band .book-btn:hover{background:#9C8047;}
 
 /* Footer */
 .site-footer{
-  border-top:1px solid var(--line);padding:32px 5vw;text-align:center;
-  font-size:13px;color:var(--ink-soft);
+  border-top:1px solid var(--line);padding:36px 5vw;text-align:center;
+  font-size:13px;color:var(--ink-soft);background:var(--surface);
 }
 .site-footer .footer-links{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;margin-bottom:10px;}
 .site-footer a{text-decoration:none;}
@@ -120,5 +165,8 @@ h3{font-size:20px;}
   .features{grid-template-columns:1fr;}
   .contact-grid{grid-template-columns:1fr;}
   h1{font-size:32px;}
-  .site-nav{gap:16px;}
+  .hero-overlay h1{font-size:34px;}
+  .site-nav{gap:14px;}
+  .site-header .logo img{height:44px;}
+  .watermark-band .watermark-mark{width:220px;}
 }

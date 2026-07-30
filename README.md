@@ -169,6 +169,84 @@ buttons shown change depending on where a booking is in the flow:
 Declining or rejecting lets you type an optional short reason, which
 gets included in the email sent to the guest.
 
+## Managing your website yourself — photos and About text
+
+The **Website** tab in `admin-dashboard.html` lets you manage the
+marketing site's content directly, no code or redeploy needed:
+
+- **About page text** — edit both paragraphs and save, live immediately.
+- **Unit 1 / Unit 2 photos** — upload new photos (drag a file in, click
+  upload) or remove existing ones. Photos upload straight to their own
+  public storage bucket and appear on the live site right away.
+
+**One-time setup required** before photo uploads will work — a second,
+*public* Cloud Storage bucket (kept separate from the private
+proof-of-payment bucket on purpose, since these images need to load
+directly for site visitors):
+
+```
+gcloud storage buckets create gs://welverdiend-site-assets --location=europe-west1 --uniform-bucket-level-access
+gcloud storage buckets add-iam-policy-binding gs://welverdiend-site-assets --member=allUsers --role=roles/storage.objectViewer
+```
+
+That second command makes uploaded photos publicly viewable — this is
+intentional and expected for a photo gallery, but don't reuse this
+bucket for anything private.
+
+## Marketing site (parallel to Squarespace)
+
+Alongside the booking system, there's now a full marketing site —
+Home, About, Unit 1, Unit 2, Contact — built to match your existing
+Squarespace site's content and branding, served the same way as
+everything else (`backend/site/`, so it deploys and lives at the same
+Cloud Run URL). Source files are in `frontend/site-pages/`.
+
+**Important — this doesn't touch your live Squarespace site or domain.**
+Your actual `welverdiendaccommodation.com` keeps working exactly as
+before on Squarespace until you decide to point it elsewhere. This new
+site just gets its own working address to test freely first:
+`https://welverdiend-booking-478269051372.europe-west1.run.app/index.html`
+(and now also the bare root URL, since `index.html` auto-serves there).
+
+**Things to know:**
+- Unit 2's gallery currently shows its existing Squarespace CDN photos
+  by default — these still work today, but would stop loading if you
+  ever cancel Squarespace. Since photo management now lives in the
+  **Website tab**, the easiest fix is: download each Squarespace photo,
+  then re-upload it there — this replaces the Squarespace-hosted
+  version with one hosted on your own bucket, with zero code changes.
+- Unit 1's gallery starts empty — upload real photos there the same way.
+- If you do decide to switch your domain over later, that's a DNS
+  change at your domain registrar (pointing `welverdiendaccommodation.com`
+  at Cloud Run instead of Squarespace) — a separate, deliberate step,
+  not something that happens automatically.
+
+## Home page photos and Guest Reviews
+
+The Website tab now also covers two more things:
+
+- **Home page photos** — two specific, clearly labeled photo slots ("top
+  hero photo" and "second photo — the grounds"), each with its own
+  "Replace this photo" button. Unlike gallery photos, these are single
+  named spots, not a growing list — uploading replaces exactly that
+  one photo on the Home page and nothing else.
+- **Guest reviews** — add a name, star rating, and review text; remove
+  any review with one click. Reviews show on their own dedicated
+  **Reviews** page (linked in the nav on every page) and as a preview
+  on the Home page.
+
+## Design refresh
+
+The marketing site got a real visual pass beyond just "matching
+Squarespace": a larger, more prominent logo in the header; hero photos
+with the headline overlaid directly on the image instead of sitting
+below it; a soft, large Welverdiend "W" watermark in the section
+between the hero and the intro text; numbered "at a glance" feature
+cards; and a warm gold accent used sparingly for star ratings and call-
+to-action buttons. Every unit/about/contact/reviews page also has a
+**Back** link at the top now, so navigating away from a page and back
+feels natural instead of dead-ending.
+
 ## Editing prices, extras, and bank details
 
 The **Settings** tab in `admin-dashboard.html` covers everything you'll

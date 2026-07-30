@@ -413,7 +413,11 @@
           }
         });
       }
-      if(!state.activeUnitId && state.units.length) state.activeUnitId = state.units[0].unitId;
+      if(!state.activeUnitId && state.units.length){
+        const requestedUnit = new URLSearchParams(window.location.search).get("unit");
+        const match = state.units.find(u => u.unitId === requestedUnit);
+        state.activeUnitId = match ? match.unitId : state.units[0].unitId;
+      }
       renderUnitTabs();
       renderSyncNote();
       renderCalendar();
