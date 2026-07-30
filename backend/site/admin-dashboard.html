@@ -676,7 +676,7 @@
       }
     }catch(err){
       msg.className = "settings-msg error";
-      msg.textContent = "Could not reach the server.";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
     }
     btn.disabled = false; btn.textContent = "Save settings";
   }
@@ -704,7 +704,7 @@
       }
     }catch(err){
       msg.className = "settings-msg error";
-      msg.textContent = "Could not reach the server.";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
     }
     btn.disabled = false; btn.textContent = "Send test email to this address";
   }
@@ -761,6 +761,7 @@
             </div>
             <input type="file" accept="image/*" id="hero-input-${slot.key}" style="display:none">
             <button type="button" class="photo-upload-btn" id="hero-upload-btn-${slot.key}">Replace this photo</button>
+            <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — up to 8MB. (iPhone photos saved as HEIC will need to be converted or shared as JPG first.)</div>
             <div class="settings-msg" id="hero-msg-${slot.key}"></div>
           </div>
         `).join("")}
@@ -779,6 +780,7 @@
           </div>
           <input type="file" accept="image/*" id="photo-input-${unitId}" style="display:none">
           <button type="button" class="photo-upload-btn" data-gallery="${unitId}" id="upload-btn-${unitId}">+ Upload a photo</button>
+          <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — up to 8MB. (iPhone photos saved as HEIC will need to be converted or shared as JPG first.)</div>
           <div class="settings-msg" id="photo-msg-${unitId}"></div>
         </div>
       `).join("")}
@@ -858,7 +860,7 @@
       }
     }catch(err){
       msg.className = "settings-msg error";
-      msg.textContent = "Could not reach the server.";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
     }
     btn.disabled = false; btn.textContent = "Replace this photo";
   }
@@ -889,7 +891,7 @@
       }
     }catch(err){
       msg.className = "settings-msg error";
-      msg.textContent = "Could not reach the server.";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
     }
   }
 
@@ -932,7 +934,7 @@
       msg.textContent = data.ok ? "Saved — live on the About page immediately." : (data.error || "Could not save.");
     }catch(err){
       msg.className = "settings-msg error";
-      msg.textContent = "Could not reach the server.";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
     }
     btn.disabled = false; btn.textContent = "Save About text";
   }
@@ -961,7 +963,7 @@
       }
     }catch(err){
       msg.className = "settings-msg error";
-      msg.textContent = "Could not reach the server.";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
     }
     btn.disabled = false; btn.textContent = "+ Upload a photo";
   }

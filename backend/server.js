@@ -21,5 +21,16 @@ app.use("/api", require("./routes/sync"));
 app.use("/api", require("./routes/reminders"));
 app.use("/", require("./routes/icalExport"));
 
+// Catch-all error handler — without this, an error thrown by middleware
+// (like a rejected file upload) falls through to Express's default HTML
+// error page, which breaks every frontend fetch() call expecting JSON
+// and shows a misleading "could not reach the server" message instead
+// of the real reason.
+app.use((err, req, res, next) => {
+  console.error("[server] unhandled error:", err.message);
+  if (res.headersSent) return next(err);
+  res.status(400).json({ ok: false, error: err.message || "Something went wrong processing that request." });
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Welverdiend booking backend listening on ${PORT}`));
