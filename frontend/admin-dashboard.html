@@ -873,6 +873,8 @@
           <div class="field"><label>Name</label><input type="text" id="new-rec-name" placeholder="e.g. Mimosa Café"></div>
           <div class="field"><label>Category</label><input type="text" id="new-rec-category" placeholder="e.g. Restaurant, Attraction, Shop"></div>
           <div class="field" style="flex:1;min-width:220px;"><label>Why you recommend it</label><input type="text" id="new-rec-description" placeholder="A short note"></div>
+          <div class="field" style="flex:1;min-width:220px;"><label>Google Maps link (optional)</label><input type="text" id="new-rec-maplink" placeholder="Paste the share link from Google Maps"></div>
+          <div class="field"><label>Distance (optional)</label><input type="text" id="new-rec-distance" placeholder="e.g. 5 min drive"></div>
           <button class="btn-unblock" id="add-rec-btn">+ Add recommendation</button>
         </div>
         <div class="settings-msg" id="rec-msg"></div>
@@ -1040,6 +1042,8 @@
     const name = document.getElementById("new-rec-name").value.trim();
     const category = document.getElementById("new-rec-category").value.trim();
     const description = document.getElementById("new-rec-description").value.trim();
+    const mapLink = document.getElementById("new-rec-maplink").value.trim();
+    const distance = document.getElementById("new-rec-distance").value.trim();
     if(!name){
       msg.className = "settings-msg error";
       msg.textContent = "Please give it a name at least.";
@@ -1049,7 +1053,7 @@
       const res = await fetch(`${API_BASE}/api/admin/site-content/recommendations`, {
         method: "POST",
         headers: { "x-admin-token": token(), "Content-Type": "application/json" },
-        body: JSON.stringify({ name, category, description })
+        body: JSON.stringify({ name, category, description, mapLink, distance })
       });
       const data = await res.json();
       if(data.ok){

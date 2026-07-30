@@ -87,9 +87,9 @@ async function removeFaq(id) {
   return faqs;
 }
 
-async function addRecommendation({ name, category, description }) {
+async function addRecommendation({ name, category, description, mapLink, distance }) {
   const current = await getSiteContent();
-  const rec = { id: uuidv4(), name, category: category || "", description: description || "" };
+  const rec = { id: uuidv4(), name, category: category || "", description: description || "", mapLink: mapLink || "", distance: distance || "" };
   const recommendations = [...current.recommendations, rec];
   await settingsCollection.doc(DOC_ID).set({ recommendations }, { merge: true });
   return recommendations;

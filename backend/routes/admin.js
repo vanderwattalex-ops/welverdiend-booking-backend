@@ -557,9 +557,9 @@ router.delete("/admin/site-content/faqs", async (req, res) => {
 // POST /api/admin/site-content/recommendations   body: { name, category, description }
 router.post("/admin/site-content/recommendations", async (req, res) => {
   try {
-    const { name, category, description } = req.body;
+    const { name, category, description, mapLink, distance } = req.body;
     if (!name) return res.status(400).json({ ok: false, error: "A name is required" });
-    const recommendations = await addRecommendation({ name, category, description });
+    const recommendations = await addRecommendation({ name, category, description, mapLink, distance });
     res.json({ ok: true, recommendations });
   } catch (err) {
     console.error("[admin] add recommendation failed:", err);

@@ -115,6 +115,12 @@
           ${r.category ? `<div class="rec-category">${r.category}</div>` : ""}
           <div class="rec-name">${r.name}</div>
           ${r.description ? `<p class="rec-desc">${r.description}</p>` : ""}
+          ${(r.distance || r.mapLink) ? `
+            <div class="rec-meta">
+              <span class="rec-distance">${r.distance || ""}</span>
+              ${r.mapLink ? `<a href="${r.mapLink}" target="_blank" rel="noopener" class="rec-maplink">View on map →</a>` : ""}
+            </div>
+          ` : ""}
         </div>
       `).join("");
     })
