@@ -169,6 +169,53 @@ buttons shown change depending on where a booking is in the flow:
 Declining or rejecting lets you type an optional short reason, which
 gets included in the email sent to the guest.
 
+## WhatsApp button
+
+A floating WhatsApp button appears on every guest-facing page (the
+whole marketing site, the booking widget, and the payment page — not
+the admin dashboard), linking straight to a chat with
++27 79 118 3173, with a friendly pre-filled opening message.
+
+## FAQ page
+
+A new page, self-editable from the Website tab — add/remove
+question-and-answer pairs, shown on their own page linked in the nav
+everywhere.
+
+## Location page recommendations
+
+The Location page now has a genuine "our recommendations" section
+below the maps — your own favorite nearby restaurants, attractions,
+and shops, each with an optional category and a short note. Fully
+self-editable from the Website tab; the section only appears once
+you've added at least one.
+
+## SEO basics
+
+- `sitemap.xml` and `robots.txt` — tell search engines about every
+  page, while explicitly keeping the admin dashboard and payment page
+  out of search results.
+- Canonical URL tags on every page, pointing at your real domain — this
+  matters now that the same content is reachable at both your domain
+  and the long Cloud Run address, so search engines treat your domain
+  as the authoritative version rather than seeing duplicate content.
+- Structured data (JSON-LD) on the Home page telling Google this is a
+  lodging business, with a live price range and star rating — built
+  dynamically from your actual settings and reviews each time the page
+  loads, so it's never out of date. The rating only appears once you've
+  added real reviews (fabricating one would violate Google's
+  guidelines and risk being penalized).
+
+## Basic visit analytics
+
+A new **Analytics** tab in the dashboard — no external account, no
+cookies, no third-party scripts. Every guest-facing page quietly
+records a visit (just the page and where the visitor came from), and
+the tab shows: total views over the last 30 days, your most-visited
+pages, where traffic is coming from (Facebook, Instagram, Google,
+direct, etc.), and a day-by-day breakdown. This finally gives you
+actual visibility into whether the site is working, at zero cost.
+
 ## Photo uploads are automatically resized
 
 Every photo uploaded through the Website tab — gallery or Home page —

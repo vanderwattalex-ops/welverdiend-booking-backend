@@ -14,6 +14,11 @@ module.exports = {
   reviews: [
     { id: "seed-1", name: "A recent guest", rating: 5, text: "A truly peaceful stay — beautifully kept, quiet, and close enough to town to be convenient. We'd happily come back." }
   ],
+  faqs: [
+    { id: "seed-faq-1", question: "What time is check-in and check-out?", answer: "Please contact us to confirm exact times for your stay." },
+    { id: "seed-faq-2", question: "Are pets allowed?", answer: "Yes — both units are pet-friendly." }
+  ],
+  recommendations: [],
   galleries: {
     unit1: [],
     wildlife: [],

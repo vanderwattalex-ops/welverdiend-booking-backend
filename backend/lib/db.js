@@ -20,6 +20,7 @@ const availabilityCollection = firestore.collection("availability");
 const bookingsCollection = firestore.collection("bookings");
 const overridesCollection = firestore.collection("overrides");
 const settingsCollection = firestore.collection("settings");
+const pageviewsCollection = firestore.collection("pageviews");
 
 module.exports = {
   firestore,
@@ -29,5 +30,6 @@ module.exports = {
   availabilityCollection,
   bookingsCollection,
   overridesCollection,
-  settingsCollection
+  settingsCollection,
+  pageviewsCollection
 };

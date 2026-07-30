@@ -90,6 +90,14 @@ h3{font-size:20px;}
 }
 .watermark-band .watermark-content{position:relative;max-width:640px;margin:0 auto;}
 
+/* Lighter version — just the mark, no content, for pages where a full
+   watermark band would disrupt the existing layout */
+.watermark-strip{position:relative;height:90px;overflow:hidden;background:var(--surface);}
+.watermark-strip img{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:220px;opacity:.06;pointer-events:none;
+}
+
 /* At-a-glance feature cards */
 .features{
   display:grid;grid-template-columns:repeat(3,1fr);gap:36px;margin-top:44px;
@@ -185,4 +193,32 @@ h3{font-size:20px;}
   .site-nav{gap:14px;}
   .site-header .logo img{height:44px;}
   .watermark-band .watermark-mark{width:220px;}
+}
+
+/* Floating WhatsApp button */
+.whatsapp-float{
+  position:fixed;bottom:22px;right:22px;z-index:500;
+  width:58px;height:58px;border-radius:50%;
+  background:#25D366;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 14px rgba(0,0,0,.25);text-decoration:none;
+  transition:transform .15s ease;
+}
+.whatsapp-float:hover{transform:scale(1.08);}
+.whatsapp-float svg{width:30px;height:30px;fill:#fff;}
+@media (max-width: 760px){
+  .whatsapp-float{width:52px;height:52px;bottom:16px;right:16px;}
+  .whatsapp-float svg{width:26px;height:26px;}
+}
+
+/* Floating pet-friendly stamp */
+.pet-friendly-stamp{
+  position:fixed;bottom:22px;left:22px;z-index:499;
+  width:100px;height:auto;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.28));
+  transform:rotate(-6deg);
+  transition:transform .2s ease;
+}
+.pet-friendly-stamp:hover{transform:rotate(-6deg) scale(1.07);}
+@media (max-width: 760px){
+  .pet-friendly-stamp{width:72px;bottom:16px;left:16px;}
 }

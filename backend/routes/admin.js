@@ -13,7 +13,8 @@ const {
 } = require("../lib/email");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { generateInvoice } = require("../lib/invoice");
-const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, setHeroPhoto, addReview, removeReview, GALLERY_IDS } = require("../lib/siteContent");
+const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation, GALLERY_IDS } = require("../lib/siteContent");
+const { getAnalyticsSummary } = require("../lib/analytics");
 
 const photoUpload = multer({
   storage: multer.memoryStorage(),
@@ -516,6 +517,67 @@ router.delete("/admin/site-content/reviews", async (req, res) => {
   } catch (err) {
     console.error("[admin] remove review failed:", err);
     res.status(500).json({ ok: false, error: "Could not remove review" });
+  }
+});
+
+// POST /api/admin/site-content/faqs   body: { question, answer }
+router.post("/admin/site-content/faqs", async (req, res) => {
+  try {
+    const { question, answer } = req.body;
+    if (!question || !answer) return res.status(400).json({ ok: false, error: "Both question and answer are required" });
+    const faqs = await addFaq({ question, answer });
+    res.json({ ok: true, faqs });
+  } catch (err) {
+    console.error("[admin] add faq failed:", err);
+    res.status(500).json({ ok: false, error: "Could not add FAQ" });
+  }
+});
+
+// DELETE /api/admin/site-content/faqs   body: { id }
+router.delete("/admin/site-content/faqs", async (req, res) => {
+  try {
+    const { id } = req.body;
+    const faqs = await removeFaq(id);
+    res.json({ ok: true, faqs });
+  } catch (err) {
+    console.error("[admin] remove faq failed:", err);
+    res.status(500).json({ ok: false, error: "Could not remove FAQ" });
+  }
+});
+
+// POST /api/admin/site-content/recommendations   body: { name, category, description }
+router.post("/admin/site-content/recommendations", async (req, res) => {
+  try {
+    const { name, category, description } = req.body;
+    if (!name) return res.status(400).json({ ok: false, error: "A name is required" });
+    const recommendations = await addRecommendation({ name, category, description });
+    res.json({ ok: true, recommendations });
+  } catch (err) {
+    console.error("[admin] add recommendation failed:", err);
+    res.status(500).json({ ok: false, error: "Could not add recommendation" });
+  }
+});
+
+// DELETE /api/admin/site-content/recommendations   body: { id }
+router.delete("/admin/site-content/recommendations", async (req, res) => {
+  try {
+    const { id } = req.body;
+    const recommendations = await removeRecommendation(id);
+    res.json({ ok: true, recommendations });
+  } catch (err) {
+    console.error("[admin] remove recommendation failed:", err);
+    res.status(500).json({ ok: false, error: "Could not remove recommendation" });
+  }
+});
+
+// GET /api/admin/analytics
+router.get("/admin/analytics", async (req, res) => {
+  try {
+    const summary = await getAnalyticsSummary(30);
+    res.json({ ok: true, ...summary });
+  } catch (err) {
+    console.error("[admin] analytics failed:", err);
+    res.status(500).json({ ok: false, error: "Could not load analytics" });
   }
 });
 

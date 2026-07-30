@@ -9,12 +9,21 @@
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/b4afe026-ecd6-4263-8dcc-e3f25c3c9899/DSC_9863.jpg">
 <meta property="og:type" content="website">
 <meta name="description" content="Wildlife, tranquility, and city convenience. A peaceful self-catering retreat in Bloemfontein, minutes from the city.">
+<link rel="canonical" href="https://welverdiendaccommodation.com/">
 <link rel="icon" type="image/png" href="/assets/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<script>(function(){
+  var API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
+  fetch(API_BASE + "/api/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ page: location.pathname, referrer: document.referrer })
+  }).catch(function(){});
+})();</script>
 
 <header class="site-header">
   <a class="logo" href="index.html"><img src="/assets/logo-wordmark.png" alt="Welverdiend Accommodation"></a>
@@ -25,6 +34,7 @@
     <a href="unit2.html">Unit 2</a>
     <a href="wildlife.html">Wildlife</a>
     <a href="location.html">Location</a>
+    <a href="faq.html">FAQ</a>
     <a href="reviews.html">Reviews</a>
     <a href="contact.html">Contact</a>
     <a href="/booking-widget.html" class="book-btn">Book now</a>
@@ -177,7 +187,61 @@
       document.getElementById("availability-cards").innerHTML = `<p style="grid-column:1/-1;color:var(--ink-soft);">Could not load availability right now.</p>`;
     });
 })();
+
+// Structured data for search engines — built dynamically from live
+// pricing and reviews, so it never goes stale as prices change or
+// reviews get added, without needing a redeploy.
+(function(){
+  const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
+  Promise.all([
+    fetch(`${API_BASE}/api/config`).then(r => r.json()),
+    fetch(`${API_BASE}/api/site-content`).then(r => r.json())
+  ]).then(([config, siteContent]) => {
+    if(!config.ok || !siteContent.ok) return;
+    const prices = (config.units || []).map(u => u.pricePerNight).filter(Boolean);
+    const minPrice = prices.length ? Math.min(...prices) : null;
+    const maxPrice = prices.length ? Math.max(...prices) : null;
+
+    const data = {
+      "@context": "https://schema.org",
+      "@type": "LodgingBusiness",
+      "name": "Welverdiend Accommodation",
+      "image": siteContent.heroPhotos ? siteContent.heroPhotos.homeTop : undefined,
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "4 Kenilworth Road",
+        "addressLocality": "Bloemfontein",
+        "addressCountry": "ZA"
+      },
+      "telephone": "+27791183173",
+      "email": "bookings@welverdiendaccommodation.com",
+      "url": "https://welverdiendaccommodation.com/",
+      "priceRange": minPrice ? (minPrice === maxPrice ? `R${minPrice}` : `R${minPrice} - R${maxPrice}`) : undefined
+    };
+
+    const reviews = siteContent.reviews || [];
+    if(reviews.length > 0){
+      const avg = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      data.aggregateRating = {
+        "@type": "AggregateRating",
+        "ratingValue": avg.toFixed(1),
+        "reviewCount": reviews.length
+      };
+    }
+
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.textContent = JSON.stringify(data);
+    document.head.appendChild(script);
+  }).catch(() => {});
+})();
 </script>
+
+<img src="/assets/pet-friendly-badge.png" alt="Welverdiend is pet friendly" class="pet-friendly-stamp">
+
+<a href="https://wa.me/27791183173?text=Hi%2C%20I%27d%20like%20to%20ask%20about%20Welverdiend%20Accommodation" target="_blank" rel="noopener" class="whatsapp-float" aria-label="Chat with us on WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.46 1.32 4.96L2 22l5.25-1.38c1.45.79 3.08 1.21 4.79 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.87 9.87 0 0012.04 2zm0 1.67c2.24 0 4.35.87 5.93 2.46a8.24 8.24 0 012.42 5.87c0 4.55-3.7 8.25-8.25 8.25a8.4 8.4 0 01-4.19-1.13l-.3-.17-3.11.82.83-3.03-.19-.31a8.22 8.22 0 01-1.26-4.4c0-4.55 3.7-8.25 8.25-8.25zm-4.55 4.75c-.16 0-.42.06-.64.31-.22.25-.85.83-.85 2.02s.87 2.35.99 2.51c.12.16 1.7 2.72 4.19 3.7 2.07.82 2.49.66 2.94.62.45-.05 1.45-.59 1.66-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28-.24-.12-1.45-.71-1.68-.79-.22-.08-.39-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.32-.75-1.81-.2-.48-.4-.42-.55-.42h-.47z"/></svg>
+</a>
 
 </body>
 </html>

@@ -112,6 +112,11 @@
     padding:9px 16px;font-size:13px;cursor:pointer;font-weight:600;margin-top:6px;
   }
   .photo-upload-btn:disabled{background:var(--busy);cursor:not-allowed;}
+  .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .stat-row:last-child{border-bottom:none;}
+  .stat-row .stat-count{font-weight:600;color:var(--taupe-deep);}
+  .big-stat{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:600;color:var(--taupe-deep);line-height:1;}
+  .big-stat-label{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-top:6px;}
 </style>
 </head>
 <body>
@@ -132,6 +137,7 @@
   <button data-tab="calendar">Calendar</button>
   <button data-tab="settings">Settings</button>
   <button data-tab="website">Website</button>
+  <button data-tab="analytics">Analytics</button>
 </div>
 
 <div class="tab-panel active" id="panel-bookings">
@@ -165,6 +171,12 @@
   </div>
 </div>
 
+<div class="tab-panel" id="panel-analytics">
+  <div id="analytics-content">
+    <p class="no-ranges">Enter your admin token above and open this tab to load analytics.</p>
+  </div>
+</div>
+
 <script>
   const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app"; // same backend URL as the widget
   let currentStatus = "";
@@ -189,6 +201,7 @@
       if(btn.dataset.tab === "calendar" && token()) loadCalendar();
       if(btn.dataset.tab === "settings" && token()) loadSettings();
       if(btn.dataset.tab === "website" && token()) loadWebsiteContent();
+      if(btn.dataset.tab === "analytics" && token()) loadAnalytics();
     };
   });
   document.getElementById("token-toggle").onclick = () => {
@@ -738,6 +751,8 @@
     const galleries = websiteContentState.galleries || { unit1: [], unit2: [], wildlife: [] };
     const heroPhotos = websiteContentState.heroPhotos || {};
     const reviews = websiteContentState.reviews || [];
+    const faqs = websiteContentState.faqs || [];
+    const recommendations = websiteContentState.recommendations || [];
     const heroSlots = [
       { key: "homeTop", label: "Home page — top hero photo (the big banner photo at the very top)" },
       { key: "homeSecond", label: "Home page — second photo (the wide photo further down, of the grounds)" },
@@ -818,6 +833,50 @@
         </div>
         <div class="settings-msg" id="review-msg"></div>
       </div>
+
+      <div class="unit-block">
+        <h2>FAQ page</h2>
+        <div id="faqs-manager-list">
+          ${faqs.length === 0 ? `<p class="no-ranges">No FAQs yet.</p>` : faqs.map(f => `
+            <div class="range-row">
+              <div>
+                <div class="range-dates">${esc(f.question)}</div>
+                <div class="range-source">${esc(f.answer)}</div>
+              </div>
+              <button class="btn-reblock" data-faq-id="${f.id}">Remove</button>
+            </div>
+          `).join("")}
+        </div>
+        <div class="override-form" style="margin-top:16px;">
+          <div class="field" style="flex:1;min-width:220px;"><label>Question</label><input type="text" id="new-faq-question" placeholder="e.g. What time is check-in?"></div>
+          <div class="field" style="flex:1;min-width:220px;"><label>Answer</label><input type="text" id="new-faq-answer" placeholder="Your answer"></div>
+          <button class="btn-unblock" id="add-faq-btn">+ Add FAQ</button>
+        </div>
+        <div class="settings-msg" id="faq-msg"></div>
+      </div>
+
+      <div class="unit-block">
+        <h2>Location page recommendations</h2>
+        <p class="range-source" style="margin-bottom:10px;">Your own favorite nearby restaurants, attractions, and shops — shown on the Location page alongside the maps.</p>
+        <div id="recs-manager-list">
+          ${recommendations.length === 0 ? `<p class="no-ranges">No recommendations yet.</p>` : recommendations.map(r => `
+            <div class="range-row">
+              <div>
+                <div class="range-dates">${esc(r.name)}${r.category ? ` <span style="color:var(--taupe-dark);font-weight:400;">— ${esc(r.category)}</span>` : ""}</div>
+                <div class="range-source">${esc(r.description)}</div>
+              </div>
+              <button class="btn-reblock" data-rec-id="${r.id}">Remove</button>
+            </div>
+          `).join("")}
+        </div>
+        <div class="override-form" style="margin-top:16px;">
+          <div class="field"><label>Name</label><input type="text" id="new-rec-name" placeholder="e.g. Mimosa Café"></div>
+          <div class="field"><label>Category</label><input type="text" id="new-rec-category" placeholder="e.g. Restaurant, Attraction, Shop"></div>
+          <div class="field" style="flex:1;min-width:220px;"><label>Why you recommend it</label><input type="text" id="new-rec-description" placeholder="A short note"></div>
+          <button class="btn-unblock" id="add-rec-btn">+ Add recommendation</button>
+        </div>
+        <div class="settings-msg" id="rec-msg"></div>
+      </div>
     `;
 
     document.getElementById("save-about-btn").onclick = saveAboutText;
@@ -837,6 +896,14 @@
     document.getElementById("add-review-btn").onclick = addReviewFromForm;
     content.querySelectorAll("[data-review-id]").forEach(btn => {
       btn.onclick = () => removeReviewById(btn.dataset.reviewId);
+    });
+    document.getElementById("add-faq-btn").onclick = addFaqFromForm;
+    content.querySelectorAll("[data-faq-id]").forEach(btn => {
+      btn.onclick = () => removeFaqById(btn.dataset.faqId);
+    });
+    document.getElementById("add-rec-btn").onclick = addRecommendationFromForm;
+    content.querySelectorAll("[data-rec-id]").forEach(btn => {
+      btn.onclick = () => removeRecommendationById(btn.dataset.recId);
     });
   }
 
@@ -913,6 +980,105 @@
         renderWebsiteContent();
       } else {
         alert(data.error || "Could not remove that review.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
+  }
+
+  async function addFaqFromForm(){
+    const msg = document.getElementById("faq-msg");
+    const question = document.getElementById("new-faq-question").value.trim();
+    const answer = document.getElementById("new-faq-answer").value.trim();
+    if(!question || !answer){
+      msg.className = "settings-msg error";
+      msg.textContent = "Please fill in both the question and the answer.";
+      return;
+    }
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/faqs`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ question, answer })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.faqs = data.faqs;
+        renderWebsiteContent();
+      } else {
+        msg.className = "settings-msg error";
+        msg.textContent = data.error || "Could not add FAQ.";
+      }
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
+    }
+  }
+
+  async function removeFaqById(id){
+    if(!confirm("Remove this FAQ from the website?")) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/faqs`, {
+        method: "DELETE",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.faqs = data.faqs;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not remove that FAQ.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
+  }
+
+  async function addRecommendationFromForm(){
+    const msg = document.getElementById("rec-msg");
+    const name = document.getElementById("new-rec-name").value.trim();
+    const category = document.getElementById("new-rec-category").value.trim();
+    const description = document.getElementById("new-rec-description").value.trim();
+    if(!name){
+      msg.className = "settings-msg error";
+      msg.textContent = "Please give it a name at least.";
+      return;
+    }
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/recommendations`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ name, category, description })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.recommendations = data.recommendations;
+        renderWebsiteContent();
+      } else {
+        msg.className = "settings-msg error";
+        msg.textContent = data.error || "Could not add recommendation.";
+      }
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
+    }
+  }
+
+  async function removeRecommendationById(id){
+    if(!confirm("Remove this recommendation from the website?")) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/recommendations`, {
+        method: "DELETE",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.recommendations = data.recommendations;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not remove that recommendation.");
       }
     }catch(err){
       alert("Could not reach the server.");
@@ -1005,6 +1171,58 @@
     }catch(err){
       alert("Could not reach the server.");
     }
+  }
+
+  async function loadAnalytics(){
+    const content = document.getElementById("analytics-content");
+    if(!token()){ alert("Enter your admin token first."); return; }
+    let res, data;
+    try{
+      res = await fetch(`${API_BASE}/api/admin/analytics`, { headers: { "x-admin-token": token() } });
+      data = await res.json();
+    }catch(err){
+      content.innerHTML = `<p class="no-ranges">Could not reach the server.</p>`;
+      return;
+    }
+    if(!data.ok){
+      content.innerHTML = `<p class="no-ranges">Could not load analytics — check your admin token.</p>`;
+      return;
+    }
+
+    const pageLabels = {
+      "/": "Home", "/index.html": "Home", "/about.html": "About",
+      "/unit1.html": "Unit 1", "/unit2.html": "Unit 2", "/wildlife.html": "Wildlife",
+      "/location.html": "Location", "/faq.html": "FAQ", "/reviews.html": "Reviews",
+      "/contact.html": "Contact", "/booking-widget.html": "Booking calendar"
+    };
+
+    content.innerHTML = `
+      <div class="unit-block" style="text-align:center;">
+        <div class="big-stat">${data.totalViews}</div>
+        <div class="big-stat-label">Page views in the last ${data.days} days</div>
+      </div>
+
+      <div class="unit-block">
+        <h2>Most visited pages</h2>
+        ${data.byPage.length === 0 ? `<p class="no-ranges">No visits recorded yet.</p>` : data.byPage.map(p => `
+          <div class="stat-row"><span>${pageLabels[p.page] || p.page}</span><span class="stat-count">${p.count}</span></div>
+        `).join("")}
+      </div>
+
+      <div class="unit-block">
+        <h2>Where visitors are coming from</h2>
+        ${data.bySource.length === 0 ? `<p class="no-ranges">No visits recorded yet.</p>` : data.bySource.map(s => `
+          <div class="stat-row"><span>${s.source}</span><span class="stat-count">${s.count}</span></div>
+        `).join("")}
+      </div>
+
+      <div class="unit-block">
+        <h2>Daily visits</h2>
+        ${data.byDay.length === 0 ? `<p class="no-ranges">No visits recorded yet.</p>` : data.byDay.slice(-14).reverse().map(d => `
+          <div class="stat-row"><span>${d.date}</span><span class="stat-count">${d.count}</span></div>
+        `).join("")}
+      </div>
+    `;
   }
 
 </script>

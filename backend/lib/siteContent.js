@@ -24,6 +24,8 @@ async function getSiteContent() {
       aboutPhoto: (saved.heroPhotos && saved.heroPhotos.aboutPhoto) || defaults.heroPhotos.aboutPhoto
     },
     reviews: saved.reviews || defaults.reviews,
+    faqs: saved.faqs || defaults.faqs,
+    recommendations: saved.recommendations || defaults.recommendations,
     galleries
   };
 }
@@ -70,8 +72,39 @@ async function removeReview(id) {
   return reviews;
 }
 
+async function addFaq({ question, answer }) {
+  const current = await getSiteContent();
+  const faq = { id: uuidv4(), question, answer };
+  const faqs = [...current.faqs, faq];
+  await settingsCollection.doc(DOC_ID).set({ faqs }, { merge: true });
+  return faqs;
+}
+
+async function removeFaq(id) {
+  const current = await getSiteContent();
+  const faqs = current.faqs.filter(f => f.id !== id);
+  await settingsCollection.doc(DOC_ID).set({ faqs }, { merge: true });
+  return faqs;
+}
+
+async function addRecommendation({ name, category, description }) {
+  const current = await getSiteContent();
+  const rec = { id: uuidv4(), name, category: category || "", description: description || "" };
+  const recommendations = [...current.recommendations, rec];
+  await settingsCollection.doc(DOC_ID).set({ recommendations }, { merge: true });
+  return recommendations;
+}
+
+async function removeRecommendation(id) {
+  const current = await getSiteContent();
+  const recommendations = current.recommendations.filter(r => r.id !== id);
+  await settingsCollection.doc(DOC_ID).set({ recommendations }, { merge: true });
+  return recommendations;
+}
+
 module.exports = {
   GALLERY_IDS,
   getSiteContent, saveAboutParagraphs, setHeroPhoto,
-  addGalleryPhoto, removeGalleryPhoto, addReview, removeReview
+  addGalleryPhoto, removeGalleryPhoto, addReview, removeReview,
+  addFaq, removeFaq, addRecommendation, removeRecommendation
 };
