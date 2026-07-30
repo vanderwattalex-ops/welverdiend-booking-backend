@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guest Reviews — Welverdiend Accommodation</title>
+<title>Welverdiend Wildlife — Welverdiend Accommodation</title>
 <link rel="icon" type="image/png" href="/assets/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -18,9 +18,9 @@
     <a href="about.html">About</a>
     <a href="unit1.html">Unit 1</a>
     <a href="unit2.html">Unit 2</a>
-    <a href="wildlife.html">Wildlife</a>
+    <a href="wildlife.html" class="active">Wildlife</a>
     <a href="location.html">Location</a>
-    <a href="reviews.html" class="active">Reviews</a>
+    <a href="reviews.html">Reviews</a>
     <a href="contact.html">Contact</a>
     <a href="/booking-widget.html" class="book-btn">Book now</a>
   </nav>
@@ -28,19 +28,20 @@
 
 <a href="index.html" class="back-link" onclick="if(document.referrer){event.preventDefault();history.back();}">← Back</a>
 
-<section class="section narrow center" style="padding-bottom:10px;">
-  <p class="eyebrow">What guests say</p>
-  <h1 style="font-size:36px;">Guest reviews</h1>
+<section class="section narrow center" style="padding-bottom:20px;padding-top:20px;">
+  <p class="eyebrow">Roaming free</p>
+  <h1 style="font-size:36px;">Welverdiend Wildlife</h1>
+  <p class="lede">Part of what makes Welverdiend special — wildlife roams freely around the property, right alongside where you'll be staying.</p>
 </section>
 
-<section class="section" style="padding-top:20px;">
-  <div class="review-grid" id="reviews-list">
-    <p style="text-align:center;color:var(--ink-soft);">Loading reviews…</p>
+<section class="section">
+  <div id="gallery-wrap">
+    <p style="text-align:center;color:var(--ink-soft);">Loading photos…</p>
   </div>
 </section>
 
 <div class="cta-band">
-  <h2>See it for yourself</h2>
+  <h2>Come experience it yourself</h2>
   <p>Check live availability and reserve directly — no booking fees.</p>
   <a class="book-btn" href="/booking-widget.html">Check availability</a>
 </div>
@@ -59,26 +60,22 @@
   fetch(`${API_BASE}/api/site-content`)
     .then(r => r.json())
     .then(data => {
-      const wrap = document.getElementById("reviews-list");
+      const wrap = document.getElementById("gallery-wrap");
       if(!data.ok){
-        wrap.innerHTML = `<p style="text-align:center;color:var(--ink-soft);">Could not load reviews right now.</p>`;
+        wrap.innerHTML = `<p style="text-align:center;color:var(--ink-soft);">Could not load photos right now — please refresh.</p>`;
         return;
       }
-      const reviews = data.reviews || [];
-      if(reviews.length === 0){
-        wrap.innerHTML = `<p style="text-align:center;color:var(--ink-soft);">No reviews yet.</p>`;
+      const photos = (data.galleries && data.galleries.wildlife) || [];
+      if(photos.length === 0){
+        wrap.innerHTML = `<div class="gallery-empty"><p style="margin:0;">Photos are on their way — check back soon.</p></div>`;
         return;
       }
-      wrap.innerHTML = reviews.map(r => `
-        <div class="review-card">
-          <div class="review-stars">${"★".repeat(r.rating)}${"☆".repeat(5-r.rating)}</div>
-          <p class="review-text">"${r.text}"</p>
-          <div class="review-name">${r.name}</div>
-        </div>
-      `).join("");
+      wrap.innerHTML = `<div class="gallery-grid">` +
+        photos.map(url => `<img src="${url}" alt="Welverdiend wildlife" loading="lazy">`).join("") +
+        `</div>`;
     })
     .catch(() => {
-      document.getElementById("reviews-list").innerHTML = `<p style="text-align:center;color:var(--ink-soft);">Could not load reviews right now.</p>`;
+      document.getElementById("gallery-wrap").innerHTML = `<p style="text-align:center;color:var(--ink-soft);">Could not load photos right now — please refresh.</p>`;
     });
 })();
 </script>

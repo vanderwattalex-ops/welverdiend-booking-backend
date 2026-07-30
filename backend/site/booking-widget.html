@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Welverdiend Accommodation — Book your stay</title>
+<link rel="icon" type="image/png" href="/assets/logo-mark.png">
+<meta property="og:title" content="Welverdiend Accommodation — Book your stay">
+<meta property="og:description" content="Check live availability and reserve your stay directly — no booking fees.">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/b4afe026-ecd6-4263-8dcc-e3f25c3c9899/DSC_9863.jpg">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -236,9 +241,17 @@
   .wa-msg.error{color:var(--danger);}
   .wa-msg.success{color:var(--success);}
   .wa-close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-soft);}
+  .wa-back-link{
+    display:inline-flex;align-items:center;gap:6px;font-size:12.5px;
+    letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);
+    text-decoration:none;margin:0 0 16px;cursor:pointer;
+  }
+  .wa-back-link:hover{color:var(--taupe-deep);}
 </style>
 </head>
 <body>
+
+<a href="index.html" class="wa-back-link" onclick="if(document.referrer){event.preventDefault();history.back();}">← Back</a>
 
 <div class="wa-wrap">
   <div class="wa-header">

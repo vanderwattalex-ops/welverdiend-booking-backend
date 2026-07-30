@@ -8,13 +8,15 @@ module.exports = {
   // obvious which photo controls which part of the page.
   heroPhotos: {
     homeTop: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/b4afe026-ecd6-4263-8dcc-e3f25c3c9899/DSC_9863.jpg",
-    homeSecond: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/8fdc984d-f829-415a-8dac-45f0aebf2c7e/DSC_9860.jpg"
+    homeSecond: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/8fdc984d-f829-415a-8dac-45f0aebf2c7e/DSC_9860.jpg",
+    aboutPhoto: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/a1374a13-1761-4349-87eb-dfdf3604836a/DSC_9841.jpg"
   },
   reviews: [
     { id: "seed-1", name: "A recent guest", rating: 5, text: "A truly peaceful stay — beautifully kept, quiet, and close enough to town to be convenient. We'd happily come back." }
   ],
   galleries: {
     unit1: [],
+    wildlife: [],
     unit2: [
       "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/6e5cef96-58dd-472e-9c38-cbd3eb704260/DSC_9864.jpg",
       "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/0db8e824-a832-4ddb-a70a-fa3b4bbc7ef2/Slaapkamer+1.jpg",

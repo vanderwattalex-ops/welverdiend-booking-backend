@@ -730,16 +730,20 @@
     renderWebsiteContent();
   }
 
+  const galleryLabels = { unit1: "Unit 1 gallery photos", unit2: "Unit 2 gallery photos", wildlife: "Welverdiend Wildlife photos" };
+
   function renderWebsiteContent(){
     const content = document.getElementById("website-content");
     const paras = websiteContentState.aboutParagraphs || [];
-    const galleries = websiteContentState.galleries || { unit1: [], unit2: [] };
+    const galleries = websiteContentState.galleries || { unit1: [], unit2: [], wildlife: [] };
     const heroPhotos = websiteContentState.heroPhotos || {};
     const reviews = websiteContentState.reviews || [];
     const heroSlots = [
       { key: "homeTop", label: "Home page — top hero photo (the big banner photo at the very top)" },
-      { key: "homeSecond", label: "Home page — second photo (the wide photo further down, of the grounds)" }
+      { key: "homeSecond", label: "Home page — second photo (the wide photo further down, of the grounds)" },
+      { key: "aboutPhoto", label: "About page — main photo" }
     ];
+    const galleryIds = Object.keys(galleryLabels);
 
     content.innerHTML = `
       <div class="unit-block">
@@ -751,8 +755,8 @@
       </div>
 
       <div class="unit-block">
-        <h2>Home page photos</h2>
-        <p class="range-source" style="margin-bottom:10px;">Each photo below is clearly labeled with exactly where it appears on the Home page — replacing one only changes that specific spot.</p>
+        <h2>Named photos</h2>
+        <p class="range-source" style="margin-bottom:10px;">Each photo below is clearly labeled with exactly where it appears — replacing one only changes that specific spot.</p>
         ${heroSlots.map(slot => `
           <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--line);">
             <div class="label" style="margin-bottom:8px;font-weight:600;color:var(--ink);">${slot.label}</div>
@@ -761,27 +765,27 @@
             </div>
             <input type="file" accept="image/*" id="hero-input-${slot.key}" style="display:none">
             <button type="button" class="photo-upload-btn" id="hero-upload-btn-${slot.key}">Replace this photo</button>
-            <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — any size, they'll be automatically resized. (iPhone photos saved as HEIC will need to be converted or shared as JPG first.)</div>
+            <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — any size, they'll be automatically resized.</div>
             <div class="settings-msg" id="hero-msg-${slot.key}"></div>
           </div>
         `).join("")}
       </div>
 
-      ${["unit1","unit2"].map(unitId => `
+      ${galleryIds.map(galleryId => `
         <div class="unit-block">
-          <h2>${unitId === "unit1" ? "Unit 1" : "Unit 2"} gallery photos</h2>
-          <div class="photo-grid" id="photo-grid-${unitId}">
-            ${(galleries[unitId]||[]).map(url => `
+          <h2>${galleryLabels[galleryId]}</h2>
+          <div class="photo-grid" id="photo-grid-${galleryId}">
+            ${(galleries[galleryId]||[]).map(url => `
               <div class="photo-tile">
-                <img src="${url}" alt="${unitId}">
-                <button type="button" data-gallery="${unitId}" data-url="${esc(url)}" class="remove-photo-btn">Remove</button>
+                <img src="${url}" alt="${galleryId}">
+                <button type="button" data-gallery="${galleryId}" data-url="${esc(url)}" class="remove-photo-btn">Remove</button>
               </div>
             `).join("") || `<p class="no-ranges">No photos yet.</p>`}
           </div>
-          <input type="file" accept="image/*" id="photo-input-${unitId}" style="display:none">
-          <button type="button" class="photo-upload-btn" data-gallery="${unitId}" id="upload-btn-${unitId}">+ Upload a photo</button>
-          <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — any size, they'll be automatically resized. (iPhone photos saved as HEIC will need to be converted or shared as JPG first.)</div>
-          <div class="settings-msg" id="photo-msg-${unitId}"></div>
+          <input type="file" accept="image/*" id="photo-input-${galleryId}" style="display:none" multiple>
+          <button type="button" class="photo-upload-btn" data-gallery="${galleryId}" id="upload-btn-${galleryId}">+ Upload photos</button>
+          <div class="range-source" style="margin-top:4px;">Select multiple files at once to upload them all in one go. JPG, PNG, or WebP — any size, they'll be automatically resized.</div>
+          <div class="settings-msg" id="photo-msg-${galleryId}"></div>
         </div>
       `).join("")}
 
@@ -817,10 +821,10 @@
     `;
 
     document.getElementById("save-about-btn").onclick = saveAboutText;
-    ["unit1","unit2"].forEach(unitId => {
-      const input = document.getElementById(`photo-input-${unitId}`);
-      document.getElementById(`upload-btn-${unitId}`).onclick = () => input.click();
-      input.onchange = (e) => { if(e.target.files[0]) uploadPhoto(unitId, e.target.files[0]); };
+    galleryIds.forEach(galleryId => {
+      const input = document.getElementById(`photo-input-${galleryId}`);
+      document.getElementById(`upload-btn-${galleryId}`).onclick = () => input.click();
+      input.onchange = (e) => { if(e.target.files.length) uploadPhotos(galleryId, Array.from(e.target.files)); };
     });
     content.querySelectorAll(".remove-photo-btn").forEach(btn => {
       btn.onclick = () => removePhoto(btn.dataset.gallery, btn.dataset.url);
@@ -939,46 +943,61 @@
     btn.disabled = false; btn.textContent = "Save About text";
   }
 
-  async function uploadPhoto(unitId, file){
-    const msg = document.getElementById(`photo-msg-${unitId}`);
-    const btn = document.getElementById(`upload-btn-${unitId}`);
+  // Uploads a batch of files to a gallery one at a time (reusing the
+  // same proven single-file endpoint), showing progress as it goes.
+  async function uploadPhotos(galleryId, files){
+    const msg = document.getElementById(`photo-msg-${galleryId}`);
+    const btn = document.getElementById(`upload-btn-${galleryId}`);
     msg.className = "settings-msg"; msg.textContent = "";
-    btn.disabled = true; btn.textContent = "Uploading…";
-    try{
-      const fd = new FormData();
-      fd.append("gallery", unitId);
-      fd.append("photo", file);
-      const res = await fetch(`${API_BASE}/api/admin/site-content/photos`, {
-        method: "POST",
-        headers: { "x-admin-token": token() },
-        body: fd
-      });
-      const data = await res.json();
-      if(data.ok){
-        websiteContentState.galleries[unitId] = data.gallery;
-        renderWebsiteContent();
-      } else {
+    btn.disabled = true;
+
+    let succeeded = 0;
+    for(let i = 0; i < files.length; i++){
+      btn.textContent = `Uploading ${i+1} of ${files.length}…`;
+      try{
+        const fd = new FormData();
+        fd.append("gallery", galleryId);
+        fd.append("photo", files[i]);
+        const res = await fetch(`${API_BASE}/api/admin/site-content/photos`, {
+          method: "POST",
+          headers: { "x-admin-token": token() },
+          body: fd
+        });
+        const data = await res.json();
+        if(data.ok){
+          websiteContentState.galleries[galleryId] = data.gallery;
+          succeeded++;
+        } else {
+          msg.className = "settings-msg error";
+          msg.textContent = `"${files[i].name}" failed: ${data.error || "unknown error"}`;
+        }
+      }catch(err){
         msg.className = "settings-msg error";
-        msg.textContent = data.error || "Upload failed.";
+        msg.textContent = `Could not reach the server while uploading "${files[i].name}".`;
       }
-    }catch(err){
-      msg.className = "settings-msg error";
-      msg.textContent = "Could not reach the server — check your internet connection and try again.";
     }
-    btn.disabled = false; btn.textContent = "+ Upload a photo";
+
+    renderWebsiteContent();
+    if(succeeded === files.length){
+      const successMsg = document.getElementById(`photo-msg-${galleryId}`);
+      if(successMsg){
+        successMsg.className = "settings-msg success";
+        successMsg.textContent = `${succeeded} photo${succeeded===1?"":"s"} uploaded.`;
+      }
+    }
   }
 
-  async function removePhoto(unitId, url){
+  async function removePhoto(galleryId, url){
     if(!confirm("Remove this photo from the website?")) return;
     try{
       const res = await fetch(`${API_BASE}/api/admin/site-content/photos`, {
         method: "DELETE",
         headers: { "x-admin-token": token(), "Content-Type": "application/json" },
-        body: JSON.stringify({ gallery: unitId, url })
+        body: JSON.stringify({ gallery: galleryId, url })
       });
       const data = await res.json();
       if(data.ok){
-        websiteContentState.galleries[unitId] = data.gallery;
+        websiteContentState.galleries[galleryId] = data.gallery;
         renderWebsiteContent();
       } else {
         alert(data.error || "Could not remove that photo.");
@@ -987,6 +1006,7 @@
       alert("Could not reach the server.");
     }
   }
+
 </script>
 
 <div class="reason-modal-overlay" id="reason-modal-overlay">

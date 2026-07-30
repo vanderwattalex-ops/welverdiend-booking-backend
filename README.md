@@ -169,6 +169,48 @@ buttons shown change depending on where a booking is in the flow:
 Declining or rejecting lets you type an optional short reason, which
 gets included in the email sent to the guest.
 
+## Photo uploads are automatically resized
+
+Every photo uploaded through the Website tab — gallery or Home page —
+gets automatically shrunk to a sensible size (max 1600px wide,
+compressed) before storage. This means you never need to resize a
+photo yourself before uploading, even a large original straight from a
+phone or camera.
+
+## Bulk photo upload
+
+Every photo upload area in the Website tab (Unit 1, Unit 2, Wildlife
+galleries) now accepts selecting multiple files at once — pick 5, 10,
+however many, and they upload one after another automatically with a
+progress indicator, instead of one at a time.
+
+## Welverdiend Wildlife page
+
+A new page (`wildlife.html`, linked in the nav on every page) for
+photos of the wildlife roaming the property — self-manageable from the
+Website tab exactly like the unit galleries.
+
+## Location page
+
+A new page showing your exact address on an embedded Google Map, plus
+a second map showing nearby restaurants and shops. This uses Google's
+free map embed (no API key or billing account needed) — good enough
+for "here's exactly where we are" and "here's what's around us," though
+a paid Google Places API key would be needed for something more
+interactive like live search/filtering, if you ever want that later.
+
+## Availability counter on the Home page
+
+Each unit now shows a live counter — how many nights are open in the
+next 30 days, and the next available check-in date — computed directly
+from the same synced calendar data as the booking widget, so it's
+always accurate and needs no separate upkeep.
+
+## Back button on the booking page
+
+`booking-widget.html` now has a Back link at the top, consistent with
+the rest of the site.
+
 ## Managing your website yourself — photos and About text
 
 The **Website** tab in `admin-dashboard.html` lets you manage the

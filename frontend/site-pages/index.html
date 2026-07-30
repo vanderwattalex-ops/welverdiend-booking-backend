@@ -4,7 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Welverdiend Accommodation — Bloemfontein</title>
+<meta property="og:title" content="Welverdiend Accommodation — Bloemfontein">
+<meta property="og:description" content="Wildlife, tranquility, and city convenience. A peaceful self-catering retreat in Bloemfontein, minutes from the city.">
+<meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/b4afe026-ecd6-4263-8dcc-e3f25c3c9899/DSC_9863.jpg">
+<meta property="og:type" content="website">
 <meta name="description" content="Wildlife, tranquility, and city convenience. A peaceful self-catering retreat in Bloemfontein, minutes from the city.">
+<link rel="icon" type="image/png" href="/assets/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
@@ -18,6 +23,8 @@
     <a href="about.html">About</a>
     <a href="unit1.html">Unit 1</a>
     <a href="unit2.html">Unit 2</a>
+    <a href="wildlife.html">Wildlife</a>
+    <a href="location.html">Location</a>
     <a href="reviews.html">Reviews</a>
     <a href="contact.html">Contact</a>
     <a href="/booking-widget.html" class="book-btn">Book now</a>
@@ -62,6 +69,14 @@
 </section>
 
 <img id="hero-second-img" class="hero-plain" src="" alt="Welverdiend Accommodation grounds">
+
+<section class="section center">
+  <p class="eyebrow">Right now</p>
+  <h2>Availability this month</h2>
+  <div class="avail-grid" id="availability-cards">
+    <p style="grid-column:1/-1;color:var(--ink-soft);">Loading availability…</p>
+  </div>
+</section>
 
 <section class="section tinted center">
   <p class="eyebrow">What guests say</p>
@@ -117,6 +132,50 @@
       `).join("");
     })
     .catch(() => {});
+
+  function toISO(d){ return d.toISOString().slice(0,10); }
+  function fmtDate(dateStr){
+    return new Date(dateStr).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  }
+  function computeAvailability(unit){
+    const today = new Date(); today.setHours(0,0,0,0);
+    const busyRanges = unit.busyRanges || [];
+    let nextAvailable = null, openCount = 0;
+    for(let i=0;i<30;i++){
+      const d = new Date(today); d.setDate(d.getDate()+i);
+      const dateStr = toISO(d);
+      const busy = busyRanges.some(r => dateStr >= r.start && dateStr < r.end);
+      if(!busy){
+        openCount++;
+        if(nextAvailable === null) nextAvailable = dateStr;
+      }
+    }
+    return { nextAvailable, openCount };
+  }
+
+  fetch(`${API_BASE}/api/availability`)
+    .then(r => r.json())
+    .then(data => {
+      const wrap = document.getElementById("availability-cards");
+      if(!data.ok || !data.units || data.units.length === 0){
+        wrap.innerHTML = `<p style="grid-column:1/-1;color:var(--ink-soft);">Could not load availability right now.</p>`;
+        return;
+      }
+      wrap.innerHTML = data.units.map(unit => {
+        const { nextAvailable, openCount } = computeAvailability(unit);
+        return `
+          <div class="avail-card">
+            <div class="avail-count">${openCount}<span style="font-size:22px;">/30</span></div>
+            <div class="avail-label">Nights open this month — ${unit.unitName}</div>
+            <div class="avail-next">${nextAvailable ? `Next available: ${fmtDate(nextAvailable)}` : "Fully booked this month"}</div>
+            <a class="book-btn" href="/booking-widget.html?unit=${unit.unitId}">Check dates</a>
+          </div>
+        `;
+      }).join("");
+    })
+    .catch(() => {
+      document.getElementById("availability-cards").innerHTML = `<p style="grid-column:1/-1;color:var(--ink-soft);">Could not load availability right now.</p>`;
+    });
 })();
 </script>
 

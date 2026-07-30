@@ -7,20 +7,24 @@ const { v4: uuidv4 } = require("uuid");
 // separate concerns even though they're both admin-editable.
 const DOC_ID = "site";
 
+const GALLERY_IDS = ["unit1", "unit2", "wildlife"];
+
 async function getSiteContent() {
   const doc = await settingsCollection.doc(DOC_ID).get();
   const saved = doc.exists ? doc.data() : {};
+  const galleries = {};
+  GALLERY_IDS.forEach(id => {
+    galleries[id] = (saved.galleries && saved.galleries[id]) || defaults.galleries[id] || [];
+  });
   return {
     aboutParagraphs: saved.aboutParagraphs || defaults.aboutParagraphs,
     heroPhotos: {
       homeTop: (saved.heroPhotos && saved.heroPhotos.homeTop) || defaults.heroPhotos.homeTop,
-      homeSecond: (saved.heroPhotos && saved.heroPhotos.homeSecond) || defaults.heroPhotos.homeSecond
+      homeSecond: (saved.heroPhotos && saved.heroPhotos.homeSecond) || defaults.heroPhotos.homeSecond,
+      aboutPhoto: (saved.heroPhotos && saved.heroPhotos.aboutPhoto) || defaults.heroPhotos.aboutPhoto
     },
     reviews: saved.reviews || defaults.reviews,
-    galleries: {
-      unit1: (saved.galleries && saved.galleries.unit1) || defaults.galleries.unit1,
-      unit2: (saved.galleries && saved.galleries.unit2) || defaults.galleries.unit2
-    }
+    galleries
   };
 }
 
@@ -67,6 +71,7 @@ async function removeReview(id) {
 }
 
 module.exports = {
+  GALLERY_IDS,
   getSiteContent, saveAboutParagraphs, setHeroPhoto,
   addGalleryPhoto, removeGalleryPhoto, addReview, removeReview
 };

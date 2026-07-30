@@ -126,6 +126,21 @@ h3{font-size:20px;}
 .review-text{font-size:14.5px;line-height:1.7;color:var(--ink);margin:0 0 14px;font-style:italic;}
 .review-name{font-size:12.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);}
 
+/* Availability counter */
+.avail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;margin-top:36px;max-width:700px;margin-left:auto;margin-right:auto;}
+.avail-card{
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;
+  padding:28px 24px;text-align:center;
+}
+.avail-card .avail-count{font-family:'Cormorant Garamond',serif;font-size:40px;color:var(--taupe-deep);font-weight:600;line-height:1;margin-bottom:6px;}
+.avail-card .avail-label{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px;}
+.avail-card .avail-next{font-size:13.5px;color:var(--ink);margin-bottom:16px;}
+.avail-card .book-btn{
+  display:inline-block;background:var(--taupe-deep);color:var(--white);
+  padding:9px 20px;border-radius:3px;text-decoration:none;font-weight:600;font-size:13px;
+}
+.avail-card .book-btn:hover{background:var(--ink);}
+
 /* Contact */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;}
 .contact-item{margin-bottom:20px;}
@@ -163,6 +178,7 @@ h3{font-size:20px;}
 
 @media (max-width: 760px){
   .features{grid-template-columns:1fr;}
+  .avail-grid{grid-template-columns:1fr;}
   .contact-grid{grid-template-columns:1fr;}
   h1{font-size:32px;}
   .hero-overlay h1{font-size:34px;}

@@ -13,7 +13,7 @@ const {
 } = require("../lib/email");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { generateInvoice } = require("../lib/invoice");
-const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, setHeroPhoto, addReview, removeReview } = require("../lib/siteContent");
+const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, setHeroPhoto, addReview, removeReview, GALLERY_IDS } = require("../lib/siteContent");
 
 const photoUpload = multer({
   storage: multer.memoryStorage(),
@@ -443,7 +443,7 @@ router.post("/admin/site-content/about", async (req, res) => {
 router.post("/admin/site-content/photos", photoUpload.single("photo"), async (req, res) => {
   try {
     const { gallery } = req.body;
-    if (!["unit1", "unit2"].includes(gallery)) return res.status(400).json({ ok: false, error: "gallery must be unit1 or unit2" });
+    if (!GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: `gallery must be one of: ${GALLERY_IDS.join(", ")}` });
     if (!req.file) return res.status(400).json({ ok: false, error: "No photo attached" });
 
     const objectPath = `gallery-photos/${gallery}/${uuidv4()}.jpg`;
@@ -464,7 +464,7 @@ router.post("/admin/site-content/photos", photoUpload.single("photo"), async (re
 router.delete("/admin/site-content/photos", async (req, res) => {
   try {
     const { gallery, url } = req.body;
-    if (!["unit1", "unit2"].includes(gallery)) return res.status(400).json({ ok: false, error: "gallery must be unit1 or unit2" });
+    if (!GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: `gallery must be one of: ${GALLERY_IDS.join(", ")}` });
     const updated = await removeGalleryPhoto(gallery, url);
     res.json({ ok: true, gallery: updated });
   } catch (err) {
@@ -479,7 +479,7 @@ router.delete("/admin/site-content/photos", async (req, res) => {
 router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async (req, res) => {
   try {
     const { slot } = req.body;
-    if (!["homeTop", "homeSecond"].includes(slot)) return res.status(400).json({ ok: false, error: "slot must be homeTop or homeSecond" });
+    if (!["homeTop", "homeSecond", "aboutPhoto"].includes(slot)) return res.status(400).json({ ok: false, error: "slot must be homeTop, homeSecond, or aboutPhoto" });
     if (!req.file) return res.status(400).json({ ok: false, error: "No photo attached" });
 
     const objectPath = `hero-photos/${slot}/${uuidv4()}.jpg`;
