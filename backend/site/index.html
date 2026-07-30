@@ -143,7 +143,10 @@
     })
     .catch(() => {});
 
-  function toISO(d){ return d.toISOString().slice(0,10); }
+  function toISO(d){
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
   function fmtDate(dateStr){
     return new Date(dateStr).toLocaleDateString(undefined, { day: "numeric", month: "short" });
   }
