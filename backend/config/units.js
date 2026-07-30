@@ -75,8 +75,10 @@ module.exports = {
   // commit a real token to this file.
   adminTokenEnvVar: "ADMIN_TOKEN",
 
-  // Where booking-request emails get sent for you to review.
-  ownerNotificationEmail: "bookings@welverdiendaccommodation.com",
+  // Where booking-request emails get sent for you to review. You can
+  // put more than one address here separated by commas — same goes
+  // for the version editable in the Settings tab, which overrides this.
+  ownerNotificationEmail: "vanderwatt.alex@gmail.com",
 
   // Shown to guests by email once you approve their dates, so they know
   // how to pay before uploading proof of payment.

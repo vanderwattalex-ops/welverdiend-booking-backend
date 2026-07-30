@@ -46,8 +46,8 @@ function generateInvoice(booking, unitName) {
     let headerBottom = 50;
     try {
       if (fs.existsSync(LOGO_PATH)) {
-        doc.image(LOGO_PATH, 50, 45, { width: 220 });
-        headerBottom = 45 + 220 * (285 / 2042) + 10; // matches the logo's cropped aspect ratio
+        doc.image(LOGO_PATH, 50, 50, { width: 200 });
+        headerBottom = 50 + 200 * (455 / 2042) + 14; // matches the logo's cropped aspect ratio
       } else {
         throw new Error("logo not found");
       }
@@ -77,7 +77,7 @@ function generateInvoice(booking, unitName) {
     doc.fontSize(11).fillColor("#2B2A26").text("Stay details:");
     doc.fontSize(10).fillColor("#66604F")
       .text(`${unitName}`)
-      .text(`${fmtDate(booking.checkIn)} → ${fmtDate(booking.checkOut)} (${booking.nights} night${booking.nights === 1 ? "" : "s"})`);
+      .text(`${fmtDate(booking.checkIn)} to ${fmtDate(booking.checkOut)} (${booking.nights} night${booking.nights === 1 ? "" : "s"})`);
     doc.moveDown(1);
 
     // Line items table

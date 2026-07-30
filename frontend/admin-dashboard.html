@@ -563,7 +563,7 @@
       <div class="unit-block">
         <h2>Bank details</h2>
         <div class="settings-field"><label>Shown to guests once approved, and in the approval email</label><textarea id="bank-details">${esc(s.bankDetails)}</textarea></div>
-        <div class="settings-field"><label>Booking-request notification email</label><input type="text" id="owner-email" value="${esc(s.ownerNotificationEmail)}"></div>
+        <div class="settings-field"><label>Booking-request notification email(s)</label><input type="text" id="owner-email" value="${esc(s.ownerNotificationEmail)}" placeholder="you@example.com, someone-else@example.com"><div class="range-source" style="margin-top:4px;">Separate multiple addresses with a comma to notify more than one person.</div></div>
         <button type="button" class="btn-add-extra" id="test-email-btn">Send test email to this address</button>
         <div class="settings-msg" id="test-email-msg"></div>
       </div>
