@@ -29,7 +29,7 @@ img{max-width:100%;display:block;}
   padding:18px 5vw;border-bottom:1px solid var(--line);
   flex-wrap:wrap;gap:16px;background:var(--white);
 }
-.site-header .logo img{height:58px;width:auto;}
+.site-header .logo img{height:84px;width:auto;}
 .site-nav{display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
 .site-nav a{
   font-size:13px;letter-spacing:.06em;text-transform:uppercase;
@@ -191,7 +191,7 @@ h3{font-size:20px;}
   h1{font-size:32px;}
   .hero-overlay h1{font-size:34px;}
   .site-nav{gap:14px;}
-  .site-header .logo img{height:44px;}
+  .site-header .logo img{height:60px;}
   .watermark-band .watermark-mark{width:220px;}
 }
 
