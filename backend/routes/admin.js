@@ -449,8 +449,7 @@ router.post("/admin/site-content/photos", photoUpload.single("photo"), async (re
     const objectPath = `gallery-photos/${gallery}/${uuidv4()}.jpg`;
     const compressed = await compressPhoto(req.file.buffer);
     await siteAssetsBucket.file(objectPath).save(compressed, {
-      contentType: "image/jpeg",
-      public: true
+      contentType: "image/jpeg"
     });
     const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
     const updated = await addGalleryPhoto(gallery, publicUrl);
