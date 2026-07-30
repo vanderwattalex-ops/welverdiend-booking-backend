@@ -1,16 +1,27 @@
 const express = require("express");
 const router = express.Router();
-const { bookingsCollection, bucket, availabilityCollection, overridesCollection } = require("../lib/db");
+const { bookingsCollection, bucket, siteAssetsBucket, availabilityCollection, overridesCollection } = require("../lib/db");
 const { requireAdmin } = require("./adminAuth");
 const { units } = require("../config/units");
 const { rangesOverlap, subtractRanges } = require("../lib/rangeUtils");
 const { v4: uuidv4 } = require("uuid");
+const multer = require("multer");
 const {
   notifyGuestApproved, notifyGuestConfirmed, notifyGuestDeclined,
   notifyGuestBalanceDue, notifyGuestPaidInFull, sendTestEmail
 } = require("../lib/email");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { generateInvoice } = require("../lib/invoice");
+const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto } = require("../lib/siteContent");
+
+const photoUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
+  fileFilter: (req, file, cb) => {
+    const ok = ["image/jpeg", "image/png", "image/webp"].includes(file.mimetype);
+    cb(ok ? null : new Error("Please upload a JPG, PNG, or WebP image"), ok);
+  }
+});
 
 router.use(requireAdmin);
 router.use(express.json());
@@ -389,6 +400,61 @@ router.post("/admin/test-email", async (req, res) => {
   } catch (err) {
     console.error("[admin] test email failed:", err);
     res.status(500).json({ ok: false, error: "Could not send test email" });
+  }
+});
+
+// -----------------------------------------------------------------
+// Website content — About text and unit photo galleries for the
+// marketing site, editable from the admin dashboard's Website tab.
+// Photos upload straight to a public Cloud Storage bucket so the
+// public site pages load them directly and fast, no backend involved
+// per page view.
+// -----------------------------------------------------------------
+
+// POST /api/admin/site-content/about   body: { aboutParagraphs: [string, string] }
+router.post("/admin/site-content/about", async (req, res) => {
+  try {
+    const { aboutParagraphs } = req.body;
+    if (!Array.isArray(aboutParagraphs)) return res.status(400).json({ ok: false, error: "aboutParagraphs must be a list" });
+    await saveAboutParagraphs(aboutParagraphs);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[admin] save about text failed:", err);
+    res.status(500).json({ ok: false, error: "Could not save About text" });
+  }
+});
+
+// POST /api/admin/site-content/photos   multipart/form-data: gallery ('unit1'|'unit2'), file "photo"
+router.post("/admin/site-content/photos", photoUpload.single("photo"), async (req, res) => {
+  try {
+    const { gallery } = req.body;
+    if (!["unit1", "unit2"].includes(gallery)) return res.status(400).json({ ok: false, error: "gallery must be unit1 or unit2" });
+    if (!req.file) return res.status(400).json({ ok: false, error: "No photo attached" });
+
+    const ext = (req.file.originalname.split(".").pop() || "jpg").toLowerCase();
+    const objectPath = `gallery-photos/${gallery}/${uuidv4()}.${ext}`;
+    await siteAssetsBucket.file(objectPath).save(req.file.buffer, {
+      contentType: req.file.mimetype
+    });
+    const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
+    const updated = await addGalleryPhoto(gallery, publicUrl);
+    res.json({ ok: true, url: publicUrl, gallery: updated });
+  } catch (err) {
+    console.error("[admin] photo upload failed:", err);
+    res.status(500).json({ ok: false, error: "Could not upload photo — check the site-assets bucket exists and allows public objects." });
+  }
+});
+
+// DELETE /api/admin/site-content/photos   body: { gallery, url }
+router.delete("/admin/site-content/photos", async (req, res) => {
+  try {
+    const { gallery, url } = req.body;
+    if (!["unit1", "unit2"].includes(gallery)) return res.status(400).json({ ok: false, error: "gallery must be unit1 or unit2" });
+    const updated = await removeGalleryPhoto(gallery, url);
+    res.json({ ok: true, gallery: updated });
+  } catch (err) {
+    console.error("[admin] photo remove failed:", err);
+    res.status(500).json({ ok: false, error: "Could not remove photo" });
   }
 });
 

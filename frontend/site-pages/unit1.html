@@ -30,14 +30,8 @@
 </section>
 
 <section class="section">
-  <div class="gallery-grid">
-    <img src="/assets/unit1-exterior.jpg" alt="Unit 1 exterior">
-    <img src="/assets/unit1-lounge.jpg" alt="Unit 1 lounge">
-    <img src="/assets/unit1-dining.jpg" alt="Unit 1 dining area">
-    <img src="/assets/unit1-kitchen.jpg" alt="Unit 1 kitchen">
-    <img src="/assets/unit1-bedroom.jpg" alt="Unit 1 bedroom">
-    <img src="/assets/unit1-bedroom2.jpg" alt="Unit 1 second bedroom">
-    <img src="/assets/unit1-bathroom.jpg" alt="Unit 1 bathroom">
+  <div id="gallery-wrap">
+    <p style="text-align:center;color:var(--ink-soft);">Loading photos…</p>
   </div>
 </section>
 
@@ -59,6 +53,32 @@
   </div>
   <p style="margin-top:14px;">© Welverdiend Accommodation · 4 Kenilworth Road, Bloemfontein</p>
 </footer>
+
+<script>
+(function(){
+  const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
+  fetch(`${API_BASE}/api/site-content`)
+    .then(r => r.json())
+    .then(data => {
+      const wrap = document.getElementById("gallery-wrap");
+      if(!data.ok){
+        wrap.innerHTML = `<p style="text-align:center;color:var(--ink-soft);">Could not load photos right now — please refresh.</p>`;
+        return;
+      }
+      const photos = (data.galleries && data.galleries.unit1) || [];
+      if(photos.length === 0){
+        wrap.innerHTML = `<div class="gallery-empty"><p style="margin:0;">Photos of Unit 1 are on their way — check back soon.</p></div>`;
+        return;
+      }
+      wrap.innerHTML = `<div class="gallery-grid">` +
+        photos.map(url => `<img src="${url}" alt="Unit 1" loading="lazy">`).join("") +
+        `</div>`;
+    })
+    .catch(() => {
+      document.getElementById("gallery-wrap").innerHTML = `<p style="text-align:center;color:var(--ink-soft);">Could not load photos right now — please refresh.</p>`;
+    });
+})();
+</script>
 
 </body>
 </html>

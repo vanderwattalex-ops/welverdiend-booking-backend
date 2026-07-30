@@ -100,6 +100,18 @@
   .settings-msg{font-size:13px;margin-top:10px;}
   .settings-msg.success{color:var(--success);}
   .settings-msg.error{color:var(--danger);}
+  .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:14px 0;}
+  .photo-tile{position:relative;border-radius:5px;overflow:hidden;border:1px solid var(--line);}
+  .photo-tile img{width:100%;height:110px;object-fit:cover;display:block;}
+  .photo-tile button{
+    position:absolute;top:5px;right:5px;background:rgba(163,64,47,.92);color:white;
+    border:none;border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;
+  }
+  .photo-upload-btn{
+    display:inline-block;background:var(--taupe-deep);color:white;border:none;border-radius:5px;
+    padding:9px 16px;font-size:13px;cursor:pointer;font-weight:600;margin-top:6px;
+  }
+  .photo-upload-btn:disabled{background:var(--busy);cursor:not-allowed;}
 </style>
 </head>
 <body>
@@ -119,6 +131,7 @@
   <button class="active" data-tab="bookings">Bookings</button>
   <button data-tab="calendar">Calendar</button>
   <button data-tab="settings">Settings</button>
+  <button data-tab="website">Website</button>
 </div>
 
 <div class="tab-panel active" id="panel-bookings">
@@ -146,6 +159,12 @@
   </div>
 </div>
 
+<div class="tab-panel" id="panel-website">
+  <div id="website-content">
+    <p class="no-ranges">Enter your admin token above and open this tab to manage your website.</p>
+  </div>
+</div>
+
 <script>
   const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app"; // same backend URL as the widget
   let currentStatus = "";
@@ -169,6 +188,7 @@
       document.getElementById(`panel-${btn.dataset.tab}`).classList.add("active");
       if(btn.dataset.tab === "calendar" && token()) loadCalendar();
       if(btn.dataset.tab === "settings" && token()) loadSettings();
+      if(btn.dataset.tab === "website" && token()) loadWebsiteContent();
     };
   });
   document.getElementById("token-toggle").onclick = () => {
@@ -687,6 +707,143 @@
       msg.textContent = "Could not reach the server.";
     }
     btn.disabled = false; btn.textContent = "Send test email to this address";
+  }
+
+  let websiteContentState = null;
+
+  async function loadWebsiteContent(){
+    const content = document.getElementById("website-content");
+    if(!token()){ alert("Enter your admin token first."); return; }
+    let res, data;
+    try{
+      res = await fetch(`${API_BASE}/api/site-content`);
+      data = await res.json();
+    }catch(err){
+      content.innerHTML = `<p class="no-ranges">Could not reach the server.</p>`;
+      return;
+    }
+    if(!data.ok){
+      content.innerHTML = `<p class="no-ranges">Could not load website content.</p>`;
+      return;
+    }
+    websiteContentState = data;
+    renderWebsiteContent();
+  }
+
+  function renderWebsiteContent(){
+    const content = document.getElementById("website-content");
+    const paras = websiteContentState.aboutParagraphs || [];
+    const galleries = websiteContentState.galleries || { unit1: [], unit2: [] };
+
+    content.innerHTML = `
+      <div class="unit-block">
+        <h2>About page text</h2>
+        <div class="settings-field"><label>Paragraph 1</label><textarea id="about-p1" style="min-height:90px;">${esc(paras[0]||"")}</textarea></div>
+        <div class="settings-field"><label>Paragraph 2</label><textarea id="about-p2" style="min-height:90px;">${esc(paras[1]||"")}</textarea></div>
+        <button class="btn-save-settings" id="save-about-btn">Save About text</button>
+        <div class="settings-msg" id="about-msg"></div>
+      </div>
+
+      ${["unit1","unit2"].map(unitId => `
+        <div class="unit-block">
+          <h2>${unitId === "unit1" ? "Unit 1" : "Unit 2"} photos</h2>
+          <div class="photo-grid" id="photo-grid-${unitId}">
+            ${(galleries[unitId]||[]).map(url => `
+              <div class="photo-tile">
+                <img src="${url}" alt="${unitId}">
+                <button type="button" data-gallery="${unitId}" data-url="${esc(url)}" class="remove-photo-btn">Remove</button>
+              </div>
+            `).join("") || `<p class="no-ranges">No photos yet.</p>`}
+          </div>
+          <input type="file" accept="image/*" id="photo-input-${unitId}" style="display:none">
+          <button type="button" class="photo-upload-btn" data-gallery="${unitId}" id="upload-btn-${unitId}">+ Upload a photo</button>
+          <div class="settings-msg" id="photo-msg-${unitId}"></div>
+        </div>
+      `).join("")}
+    `;
+
+    document.getElementById("save-about-btn").onclick = saveAboutText;
+    ["unit1","unit2"].forEach(unitId => {
+      const input = document.getElementById(`photo-input-${unitId}`);
+      document.getElementById(`upload-btn-${unitId}`).onclick = () => input.click();
+      input.onchange = (e) => { if(e.target.files[0]) uploadPhoto(unitId, e.target.files[0]); };
+    });
+    content.querySelectorAll(".remove-photo-btn").forEach(btn => {
+      btn.onclick = () => removePhoto(btn.dataset.gallery, btn.dataset.url);
+    });
+  }
+
+  async function saveAboutText(){
+    const msg = document.getElementById("about-msg");
+    const btn = document.getElementById("save-about-btn");
+    const aboutParagraphs = [
+      document.getElementById("about-p1").value,
+      document.getElementById("about-p2").value
+    ];
+    btn.disabled = true; btn.textContent = "Saving…";
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/about`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ aboutParagraphs })
+      });
+      const data = await res.json();
+      msg.className = data.ok ? "settings-msg success" : "settings-msg error";
+      msg.textContent = data.ok ? "Saved — live on the About page immediately." : (data.error || "Could not save.");
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server.";
+    }
+    btn.disabled = false; btn.textContent = "Save About text";
+  }
+
+  async function uploadPhoto(unitId, file){
+    const msg = document.getElementById(`photo-msg-${unitId}`);
+    const btn = document.getElementById(`upload-btn-${unitId}`);
+    msg.className = "settings-msg"; msg.textContent = "";
+    btn.disabled = true; btn.textContent = "Uploading…";
+    try{
+      const fd = new FormData();
+      fd.append("gallery", unitId);
+      fd.append("photo", file);
+      const res = await fetch(`${API_BASE}/api/admin/site-content/photos`, {
+        method: "POST",
+        headers: { "x-admin-token": token() },
+        body: fd
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.galleries[unitId] = data.gallery;
+        renderWebsiteContent();
+      } else {
+        msg.className = "settings-msg error";
+        msg.textContent = data.error || "Upload failed.";
+      }
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server.";
+    }
+    btn.disabled = false; btn.textContent = "+ Upload a photo";
+  }
+
+  async function removePhoto(unitId, url){
+    if(!confirm("Remove this photo from the website?")) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/photos`, {
+        method: "DELETE",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ gallery: unitId, url })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.galleries[unitId] = data.gallery;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not remove that photo.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
   }
 </script>
 

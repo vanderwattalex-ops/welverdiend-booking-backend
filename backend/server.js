@@ -13,6 +13,7 @@ app.get("/", (req, res) => res.json({ ok: true, service: "welverdiend-booking-ba
 app.get("/healthz", (req, res) => res.json({ ok: true }));
 
 app.use("/api", require("./routes/config"));
+app.use("/api", require("./routes/siteContent"));
 app.use("/api", require("./routes/availability"));
 app.use("/api", require("./routes/bookings"));
 app.use("/api", require("./routes/admin"));
