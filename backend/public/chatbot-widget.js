@@ -69,36 +69,43 @@
   function toggle(){
     isOpen = !isOpen;
     panel.classList.toggle("show", isOpen);
-    if(isOpen){
-      document.getElementById("wa-chat-input").focus();
-      positionPanel();
-    }
+    if(isOpen) document.getElementById("wa-chat-input").focus();
+    else resetPanelLift();
   }
   btn.onclick = toggle;
   document.getElementById("wa-chat-close").onclick = toggle;
 
-  // Mobile browsers shrink the VISIBLE (visual) viewport when the
-  // on-screen keyboard opens, but position:fixed elements stay
-  // anchored to the full LAYOUT viewport — so a static "bottom: 162px"
-  // ends up hidden behind the keyboard. This recalculates the panel's
-  // position against the actual visible area whenever the keyboard
-  // opens, closes, or the page scrolls while it's open.
-  function positionPanel(){
-    if(!isOpen || !window.visualViewport) return;
-    const vv = window.visualViewport;
-    const isMobile = window.innerWidth <= 760;
-    const sideMargin = isMobile ? 12 : 22;
-    const keyboardGap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    const availableHeight = vv.height - keyboardGap - (sideMargin * 2);
-    const desiredHeight = isMobile ? vv.height * 0.6 : 460;
-    panel.style.bottom = (keyboardGap + sideMargin) + "px";
-    panel.style.height = Math.max(240, Math.min(desiredHeight, availableHeight)) + "px";
+  // Some in-app browsers (e.g. Facebook's) don't shrink the visible
+  // viewport for the keyboard and don't reliably fire visualViewport
+  // resize events either — they PAN the page instead, and pan alone
+  // can't move a position:fixed element (it's glued to the viewport by
+  // definition). The fix that actually works everywhere: lift the
+  // panel with a CSS transform the moment the input is focused, aimed
+  // at a fixed target position near the top of the screen — with a
+  // hard floor so the panel can never be lifted past the point where
+  // its own header would clip off-screen.
+  const LIFT_TARGET_TOP = 110; // where we want the input row to land
+  const MIN_PANEL_TOP = 10;    // panel's top edge can never go above this
+
+  function liftPanelForKeyboard(){
+    panel.style.transition = "transform .2s ease";
+    const panelRect = panel.getBoundingClientRect();
+    const inputRow = panel.querySelector(".wa-chat-input-row");
+    const inputRect = inputRow.getBoundingClientRect();
+
+    let shift = inputRect.top - LIFT_TARGET_TOP;
+    if(shift < 0) shift = 0;
+    const maxShift = Math.max(0, panelRect.top - MIN_PANEL_TOP);
+    if(shift > maxShift) shift = maxShift;
+
+    panel.style.transform = shift > 0 ? `translateY(-${shift}px)` : "";
   }
-  if(window.visualViewport){
-    window.visualViewport.addEventListener("resize", positionPanel);
-    window.visualViewport.addEventListener("scroll", positionPanel);
+  function resetPanelLift(){
+    panel.style.transition = "transform .2s ease";
+    panel.style.transform = "";
   }
-  document.getElementById("wa-chat-input")?.addEventListener("focus", () => setTimeout(positionPanel, 50));
+  document.getElementById("wa-chat-input").addEventListener("focus", () => setTimeout(liftPanelForKeyboard, 80));
+  document.getElementById("wa-chat-input").addEventListener("blur", () => setTimeout(resetPanelLift, 80));
 
   function addMessage(text, role){
     const msgs = document.getElementById("wa-chat-messages");
