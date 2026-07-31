@@ -66,10 +66,36 @@
   `;
   document.body.appendChild(panel);
 
+  // On mobile, opening the keyboard shrinks the VISUAL viewport but
+  // .wa-chat-panel is `position:fixed`, which tracks the LAYOUT
+  // viewport — so the panel doesn't move and the keyboard just covers
+  // it. visualViewport tells us the keyboard's actual size so we can
+  // pull the panel up above it and shrink it to fit what's left.
+  function repositionPanel(){
+    if(!isOpen || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    panel.style.bottom = (keyboardHeight + 12) + "px";
+    const available = vv.height - 24;
+    panel.style.height = Math.min(available, 460) + "px";
+    panel.style.maxHeight = available + "px";
+  }
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", repositionPanel);
+    window.visualViewport.addEventListener("scroll", repositionPanel);
+  }
+
   function toggle(){
     isOpen = !isOpen;
     panel.classList.toggle("show", isOpen);
-    if(isOpen) document.getElementById("wa-chat-input").focus();
+    if(isOpen){
+      document.getElementById("wa-chat-input").focus();
+      setTimeout(repositionPanel, 50);
+    } else {
+      panel.style.bottom = "";
+      panel.style.height = "";
+      panel.style.maxHeight = "";
+    }
   }
   btn.onclick = toggle;
   document.getElementById("wa-chat-close").onclick = toggle;
