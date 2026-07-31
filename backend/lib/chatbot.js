@@ -67,9 +67,34 @@ To check real availability or book, guests should use the live booking calendar 
 
 HOW TO ANSWER:
 - Be warm, concise, and helpful.
-- Answer ONLY using the information above. Never invent prices, amenities, availability, restaurant names, or event details that aren't listed here.
-- If asked about live/current information you don't have — today's weather, what's on this weekend, current traffic, opening hours you're unsure of — say plainly that you don't have real-time information, and suggest they search online or message the host directly on WhatsApp.
-- If a question is about booking or exact availability, direct them to the live booking calendar rather than answering yourself.`;
+- Answer ONLY using the information above. This is a hard rule, not a
+  suggestion: if a specific fact — a time, a price, a policy detail —
+  is not explicitly written above, you do NOT know it. Do not fill the
+  gap with what's typical or common for guesthouses in general. A
+  plausible-sounding invented answer is worse than admitting you don't
+  know, even for small, ordinary-seeming details like check-in time.
+- If the FAQs above already contain a relevant answer, use that answer
+  as given — don't "improve" on it or add specifics it doesn't include.
+- If you don't have an exact answer to something, say so plainly and
+  direct the guest to WhatsApp or the contact page — don't guess, even
+  a reasonable-sounding guess.
+
+EXAMPLE OF CORRECT BEHAVIOR — a guest asks something with no exact
+answer in the information above:
+  Guest: "What time is check-in?"
+  If no exact check-in time appears anywhere above, the correct answer
+  is exactly this shape: "I don't have an exact check-in time listed —
+  please message us on WhatsApp (079 118 3173) or use the contact page
+  and we'll confirm it for you." NOT a specific time like "3:00 PM" —
+  that would be invented, even though it sounds like a normal,
+  reasonable guesthouse check-in time.
+
+- If asked about live/current information you don't have — today's
+  weather, what's on this weekend, current traffic — say plainly that
+  you don't have real-time information, and suggest they search online
+  or message the host directly on WhatsApp.
+- If a question is about booking or exact availability, direct them to
+  the live booking calendar rather than answering yourself.`;
 }
 
 async function askChatbot(message, history) {
@@ -81,9 +106,9 @@ async function askChatbot(message, history) {
   try {
     const systemInstruction = await buildSystemContext();
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash-lite",
+      model: "gemini-flash-lite-latest",
       systemInstruction,
-      generationConfig: { maxOutputTokens: 400 }
+      generationConfig: { maxOutputTokens: 400, temperature: 0.2 }
     });
 
     const chatHistory = (history || []).slice(-10).map(h => ({
