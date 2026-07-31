@@ -34,6 +34,7 @@
     .wa-chat-input-row input{flex:1;border:1px solid #E5E0D2;border-radius:20px;padding:9px 14px;font-size:13px;font-family:inherit;}
     .wa-chat-input-row button{background:#4A4436;color:#fff;border:none;border-radius:20px;padding:9px 16px;font-size:13px;cursor:pointer;flex-shrink:0;}
     .wa-chat-input-row button:disabled{background:#B7AFA0;cursor:not-allowed;}
+    .wa-chat-disclaimer{font-size:10.5px;color:#8A8578;text-align:center;padding:0 12px 8px;flex-shrink:0;}
     @media (max-width:760px){
       .wa-chat-btn{bottom:82px;width:50px;height:50px;font-size:22px;}
       .wa-chat-panel{bottom:140px;right:12px;width:92vw;height:60vh;}
@@ -57,6 +58,7 @@
     <div class="wa-chat-messages" id="wa-chat-messages">
       <div class="wa-chat-msg bot">Hi! Ask me anything about Welverdiend Accommodation — the units, amenities, nearby places, or your stay.</div>
     </div>
+    <div class="wa-chat-disclaimer">I do my best using our website's info — for anything important, please confirm with us on WhatsApp.</div>
     <div class="wa-chat-input-row">
       <input type="text" id="wa-chat-input" placeholder="Type a question...">
       <button id="wa-chat-send">Send</button>
