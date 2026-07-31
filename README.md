@@ -336,6 +336,70 @@ to-action buttons. Every unit/about/contact/reviews page also has a
 **Back** link at the top now, so navigating away from a page and back
 feels natural instead of dead-ending.
 
+## Photo sections, reordering, and click-to-enlarge
+
+Unit 1 and Unit 2 galleries are now organized into sections (Bedroom 1,
+Bathroom, Kitchen, etc. by default) — fully editable from the Website
+tab:
+
+- **Reorder photos** with "◀ Earlier / Later ▶" buttons — moves a photo
+  within its own section (arrows rather than drag-and-drop, since
+  arrows are far more reliable on mobile).
+- **Move a photo to a different section** via the dropdown under each photo.
+- **Add, rename, or remove sections** freely — removing a section moves
+  its photos to "Other" rather than deleting them.
+- **Upload directly into a section** — pick the section before
+  uploading a batch of photos.
+
+Existing photos from before this feature were automatically placed in
+an "Other" section — nothing was lost, just needs sorting into the
+right places when you get a chance.
+
+Every gallery (including Wildlife) now supports **click-to-enlarge** —
+click any photo to open it full-size with next/previous navigation
+(arrow keys work too) and a close button.
+
+## Weather forecast
+
+The Home page shows a real 7-day forecast for Bloemfontein, using
+Open-Meteo — a genuinely free weather service with no API key or
+billing account needed, consistent with how the maps and analytics
+were kept free too.
+
+## AI chat assistant
+
+A chat widget (the 💬 button, stacked above the WhatsApp button on
+every guest page) lets guests ask questions in plain English — about
+the units, amenities, nearby recommendations, FAQs, anything already
+on the site. It always reads the **current, live** site content on
+every single question — any FAQ, review, recommendation, or price you
+add through the Website/Settings tabs is reflected immediately, with
+no rebuild or delay.
+
+**Two honest limits, by design, not by accident:**
+- It answers only from what's actually on your site — it will not
+  invent prices, amenities, or restaurant names that aren't listed
+  anywhere.
+- It can't know about live/real-time things — today's weather, what's
+  on this weekend, current opening hours. Asked something like that,
+  it says so honestly and points the guest to WhatsApp or a web search,
+  rather than guessing.
+
+**One-time setup required** — this uses Google's Gemini API, which has
+a genuinely free tier (no credit card), but only on a project with
+**billing turned off**. Since this Cloud Run project already has
+billing enabled for other things, the API key needs to come from a
+**separate, fresh Google Cloud project**:
+
+1. Go to https://aistudio.google.com/apikey
+2. Create a new project when prompted (don't attach it to any existing
+   billing-enabled project) and generate an API key
+3. Set it as an environment variable on the Cloud Run service:
+   `GEMINI_API_KEY=<your key>`
+
+Without that key set, the chat widget still shows up but replies with
+a message saying it isn't set up yet — nothing breaks.
+
 ## Editing prices, extras, and bank details
 
 The **Settings** tab in `admin-dashboard.html` covers everything you'll

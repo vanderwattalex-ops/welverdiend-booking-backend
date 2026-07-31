@@ -112,6 +112,8 @@
     padding:9px 16px;font-size:13px;cursor:pointer;font-weight:600;margin-top:6px;
   }
   .photo-upload-btn:disabled{background:var(--busy);cursor:not-allowed;}
+  .photo-move-btn{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:3px 7px;cursor:pointer;color:var(--ink);}
+  .photo-move-btn:disabled{opacity:.35;cursor:not-allowed;}
   .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
   .stat-row:last-child{border-bottom:none;}
   .stat-row .stat-count{font-weight:600;color:var(--taupe-deep);}
@@ -745,6 +747,92 @@
 
   const galleryLabels = { unit1: "Unit 1 gallery photos", unit2: "Unit 2 gallery photos", wildlife: "Welverdiend Wildlife photos" };
 
+  const SECTIONED_GALLERIES = ["unit1", "unit2"];
+
+  function renderFlatGalleryBlock(galleryId, photos){
+    return `
+      <div class="unit-block">
+        <h2>${galleryLabels[galleryId]}</h2>
+        <div class="photo-grid" id="photo-grid-${galleryId}">
+          ${photos.map(url => `
+            <div class="photo-tile">
+              <img src="${url}" alt="${galleryId}">
+              <button type="button" data-gallery="${galleryId}" data-identifier="${esc(url)}" class="remove-photo-btn">Remove</button>
+            </div>
+          `).join("") || `<p class="no-ranges">No photos yet.</p>`}
+        </div>
+        <input type="file" accept="image/*" id="photo-input-${galleryId}" style="display:none" multiple>
+        <button type="button" class="photo-upload-btn" data-gallery="${galleryId}" id="upload-btn-${galleryId}">+ Upload photos</button>
+        <div class="range-source" style="margin-top:4px;">Select multiple files at once to upload them all in one go. JPG, PNG, or WebP — any size, they'll be automatically resized.</div>
+        <div class="settings-msg" id="photo-msg-${galleryId}"></div>
+      </div>
+    `;
+  }
+
+  function renderSectionedGalleryBlock(galleryId, photos, sections){
+    const allSectionNames = [...sections, "Other"];
+    // Group photos by section, in section-list order, then any leftover
+    // "Other" photos (or photos whose section somehow isn't in the list).
+    const grouped = allSectionNames.map(sectionName => ({
+      name: sectionName,
+      photos: photos.filter(p => p.section === sectionName)
+    })).filter(g => g.name === "Other" || true); // keep all, even empty, so admin sees every section
+
+    return `
+      <div class="unit-block">
+        <h2>${galleryLabels[galleryId]}</h2>
+
+        <div class="label" style="margin-bottom:6px;">Sections</div>
+        <div id="sections-manager-${galleryId}" style="margin-bottom:16px;">
+          ${sections.map(s => `
+            <span style="display:inline-flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:4px 6px 4px 12px;margin:0 6px 6px 0;font-size:12.5px;">
+              ${esc(s)}
+              <button type="button" class="section-rename-btn" data-gallery="${galleryId}" data-section="${esc(s)}" title="Rename" style="background:none;border:none;cursor:pointer;color:var(--taupe-dark);padding:2px 4px;">✎</button>
+              <button type="button" class="section-remove-btn" data-gallery="${galleryId}" data-section="${esc(s)}" title="Remove" style="background:none;border:none;cursor:pointer;color:var(--danger);padding:2px 4px;">✕</button>
+            </span>
+          `).join("")}
+        </div>
+        <div class="override-form" style="margin-bottom:20px;">
+          <div class="field"><label>New section name</label><input type="text" id="new-section-name-${galleryId}" placeholder="e.g. Patio"></div>
+          <button type="button" class="btn-unblock" data-gallery="${galleryId}" id="add-section-btn-${galleryId}">+ Add section</button>
+        </div>
+
+        ${grouped.map(group => `
+          <div style="margin-bottom:18px;">
+            <div class="label" style="margin-bottom:8px;">${esc(group.name)}</div>
+            <div class="photo-grid" id="photo-grid-${galleryId}-${esc(group.name)}">
+              ${group.photos.map((p, i) => `
+                <div>
+                  <div class="photo-tile">
+                    <img src="${p.url}" alt="${galleryId}">
+                    <button type="button" data-gallery="${galleryId}" data-identifier="${p.id}" class="remove-photo-btn">Remove</button>
+                  </div>
+                  <div style="display:flex;gap:4px;align-items:center;margin-top:6px;font-size:11px;flex-wrap:wrap;">
+                    <button type="button" class="photo-move-btn" data-gallery="${galleryId}" data-photo-id="${p.id}" data-direction="up" ${i===0?"disabled":""}>◀ Earlier</button>
+                    <button type="button" class="photo-move-btn" data-gallery="${galleryId}" data-photo-id="${p.id}" data-direction="down" ${i===group.photos.length-1?"disabled":""}>Later ▶</button>
+                    <select class="photo-section-select" data-gallery="${galleryId}" data-photo-id="${p.id}" style="font-size:11px;padding:2px;">
+                      ${allSectionNames.map(s => `<option value="${esc(s)}" ${s===group.name?"selected":""}>${esc(s)}</option>`).join("")}
+                    </select>
+                  </div>
+                </div>
+              `).join("") || `<p class="no-ranges">No photos in this section yet.</p>`}
+            </div>
+          </div>
+        `).join("")}
+
+        <input type="file" accept="image/*" id="photo-input-${galleryId}" style="display:none" multiple>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px;">
+          <select id="upload-section-${galleryId}" style="padding:8px 10px;border:1px solid var(--line);border-radius:5px;font-size:13px;">
+            ${allSectionNames.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("")}
+          </select>
+          <button type="button" class="photo-upload-btn" data-gallery="${galleryId}" id="upload-btn-${galleryId}">+ Upload photos to this section</button>
+        </div>
+        <div class="range-source" style="margin-top:4px;">Select multiple files at once to upload them all into the chosen section. JPG, PNG, or WebP — any size, they'll be automatically resized.</div>
+        <div class="settings-msg" id="photo-msg-${galleryId}"></div>
+      </div>
+    `;
+  }
+
   function renderWebsiteContent(){
     const content = document.getElementById("website-content");
     const paras = websiteContentState.aboutParagraphs || [];
@@ -758,6 +846,7 @@
       { key: "homeSecond", label: "Home page — second photo (the wide photo further down, of the grounds)" },
       { key: "aboutPhoto", label: "About page — main photo" }
     ];
+    const gallerySections = websiteContentState.gallerySections || { unit1: [], unit2: [] };
     const galleryIds = Object.keys(galleryLabels);
 
     content.innerHTML = `
@@ -786,23 +875,10 @@
         `).join("")}
       </div>
 
-      ${galleryIds.map(galleryId => `
-        <div class="unit-block">
-          <h2>${galleryLabels[galleryId]}</h2>
-          <div class="photo-grid" id="photo-grid-${galleryId}">
-            ${(galleries[galleryId]||[]).map(url => `
-              <div class="photo-tile">
-                <img src="${url}" alt="${galleryId}">
-                <button type="button" data-gallery="${galleryId}" data-url="${esc(url)}" class="remove-photo-btn">Remove</button>
-              </div>
-            `).join("") || `<p class="no-ranges">No photos yet.</p>`}
-          </div>
-          <input type="file" accept="image/*" id="photo-input-${galleryId}" style="display:none" multiple>
-          <button type="button" class="photo-upload-btn" data-gallery="${galleryId}" id="upload-btn-${galleryId}">+ Upload photos</button>
-          <div class="range-source" style="margin-top:4px;">Select multiple files at once to upload them all in one go. JPG, PNG, or WebP — any size, they'll be automatically resized.</div>
-          <div class="settings-msg" id="photo-msg-${galleryId}"></div>
-        </div>
-      `).join("")}
+      ${galleryIds.map(galleryId => SECTIONED_GALLERIES.includes(galleryId)
+        ? renderSectionedGalleryBlock(galleryId, galleries[galleryId]||[], gallerySections[galleryId]||[])
+        : renderFlatGalleryBlock(galleryId, galleries[galleryId]||[])
+      ).join("")}
 
       <div class="unit-block">
         <h2>Guest reviews</h2>
@@ -862,7 +938,7 @@
           ${recommendations.length === 0 ? `<p class="no-ranges">No recommendations yet.</p>` : recommendations.map(r => `
             <div class="range-row">
               <div>
-                <div class="range-dates">${esc(r.name)}${r.category ? ` <span style="color:var(--taupe-dark);font-weight:400;">— ${esc(r.category)}</span>` : ""}</div>
+                <div class="range-dates">${esc(r.name)}${r.category ? ` <span style="color:var(--taupe-dark);font-weight:400;">— ${esc(r.category)}</span>` : ""}${r.distance ? ` <span style="color:var(--ink-soft);font-weight:400;">(${esc(r.distance)})</span>` : ""}</div>
                 <div class="range-source">${esc(r.description)}</div>
               </div>
               <button class="btn-reblock" data-rec-id="${r.id}">Remove</button>
@@ -885,10 +961,31 @@
     galleryIds.forEach(galleryId => {
       const input = document.getElementById(`photo-input-${galleryId}`);
       document.getElementById(`upload-btn-${galleryId}`).onclick = () => input.click();
-      input.onchange = (e) => { if(e.target.files.length) uploadPhotos(galleryId, Array.from(e.target.files)); };
+      input.onchange = (e) => {
+        if(!e.target.files.length) return;
+        const sectionSelect = document.getElementById(`upload-section-${galleryId}`);
+        const section = sectionSelect ? sectionSelect.value : undefined;
+        uploadPhotos(galleryId, Array.from(e.target.files), section);
+      };
     });
     content.querySelectorAll(".remove-photo-btn").forEach(btn => {
-      btn.onclick = () => removePhoto(btn.dataset.gallery, btn.dataset.url);
+      btn.onclick = () => removePhoto(btn.dataset.gallery, btn.dataset.identifier);
+    });
+    content.querySelectorAll(".photo-move-btn").forEach(btn => {
+      btn.onclick = () => movePhotoAction(btn.dataset.gallery, btn.dataset.photoId, btn.dataset.direction);
+    });
+    content.querySelectorAll(".photo-section-select").forEach(sel => {
+      sel.onchange = () => setPhotoSectionAction(sel.dataset.gallery, sel.dataset.photoId, sel.value);
+    });
+    content.querySelectorAll(".section-rename-btn").forEach(btn => {
+      btn.onclick = () => renameSectionAction(btn.dataset.gallery, btn.dataset.section);
+    });
+    content.querySelectorAll(".section-remove-btn").forEach(btn => {
+      btn.onclick = () => removeSectionAction(btn.dataset.gallery, btn.dataset.section);
+    });
+    SECTIONED_GALLERIES.forEach(galleryId => {
+      const btn = document.getElementById(`add-section-btn-${galleryId}`);
+      if(btn) btn.onclick = () => addSectionAction(galleryId);
     });
     heroSlots.forEach(slot => {
       const input = document.getElementById(`hero-input-${slot.key}`);
@@ -1115,7 +1212,7 @@
 
   // Uploads a batch of files to a gallery one at a time (reusing the
   // same proven single-file endpoint), showing progress as it goes.
-  async function uploadPhotos(galleryId, files){
+  async function uploadPhotos(galleryId, files, section){
     const msg = document.getElementById(`photo-msg-${galleryId}`);
     const btn = document.getElementById(`upload-btn-${galleryId}`);
     msg.className = "settings-msg"; msg.textContent = "";
@@ -1127,6 +1224,7 @@
       try{
         const fd = new FormData();
         fd.append("gallery", galleryId);
+        if(section) fd.append("section", section);
         fd.append("photo", files[i]);
         const res = await fetch(`${API_BASE}/api/admin/site-content/photos`, {
           method: "POST",
@@ -1157,13 +1255,13 @@
     }
   }
 
-  async function removePhoto(galleryId, url){
+  async function removePhoto(galleryId, identifier){
     if(!confirm("Remove this photo from the website?")) return;
     try{
       const res = await fetch(`${API_BASE}/api/admin/site-content/photos`, {
         method: "DELETE",
         headers: { "x-admin-token": token(), "Content-Type": "application/json" },
-        body: JSON.stringify({ gallery: galleryId, url })
+        body: JSON.stringify({ gallery: galleryId, identifier })
       });
       const data = await res.json();
       if(data.ok){
@@ -1171,6 +1269,109 @@
         renderWebsiteContent();
       } else {
         alert(data.error || "Could not remove that photo.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
+  }
+
+  async function movePhotoAction(galleryId, photoId, direction){
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/photos/move`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ gallery: galleryId, photoId, direction })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.galleries[galleryId] = data.gallery;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not reorder that photo.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
+  }
+
+  async function setPhotoSectionAction(galleryId, photoId, section){
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/photos/section`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ gallery: galleryId, photoId, section })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.galleries[galleryId] = data.gallery;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not move that photo to the new section.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
+  }
+
+  async function addSectionAction(galleryId){
+    const input = document.getElementById(`new-section-name-${galleryId}`);
+    const name = input.value.trim();
+    if(!name){ alert("Type a section name first."); return; }
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/sections`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ unitId: galleryId, name })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.gallerySections[galleryId] = data.sections;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not add that section.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
+  }
+
+  async function renameSectionAction(galleryId, oldName){
+    const newName = prompt(`Rename "${oldName}" to:`, oldName);
+    if(!newName || !newName.trim() || newName.trim() === oldName) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/sections`, {
+        method: "PUT",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ unitId: galleryId, oldName, newName: newName.trim() })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.gallerySections[galleryId] = data.sections;
+        websiteContentState.galleries[galleryId] = data.gallery;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not rename that section.");
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+    }
+  }
+
+  async function removeSectionAction(galleryId, name){
+    if(!confirm(`Remove the "${name}" section? Photos in it will move to "Other", not be deleted.`)) return;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/sections`, {
+        method: "DELETE",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ unitId: galleryId, name })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.gallerySections[galleryId] = data.sections;
+        websiteContentState.galleries[galleryId] = data.gallery;
+        renderWebsiteContent();
+      } else {
+        alert(data.error || "Could not remove that section.");
       }
     }catch(err){
       alert("Could not reach the server.");

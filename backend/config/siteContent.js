@@ -19,6 +19,10 @@ module.exports = {
     { id: "seed-faq-2", question: "Are pets allowed?", answer: "Yes — both units are pet-friendly." }
   ],
   recommendations: [],
+  gallerySections: {
+    unit1: ["Bedroom 1", "Bedroom 2", "Bathroom", "Kitchen", "Dining area", "Living room", "Workspace"],
+    unit2: ["Bedroom 1", "Bedroom 2", "Bathroom", "Kitchen", "Dining area", "Living room", "Workspace"]
+  },
   galleries: {
     unit1: [],
     wildlife: [],

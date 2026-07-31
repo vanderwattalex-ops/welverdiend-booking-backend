@@ -123,6 +123,35 @@ h3{font-size:20px;}
   text-align:center;padding:60px 20px;color:var(--ink-soft);
   border:1px dashed var(--line);border-radius:8px;
 }
+.gallery-grid img{cursor:zoom-in;}
+
+/* Sectioned gallery (Unit 1 / Unit 2) */
+.gallery-section{margin-bottom:44px;}
+.gallery-section h3{font-size:22px;margin-bottom:16px;}
+
+/* Lightbox */
+.lightbox-overlay{
+  position:fixed;inset:0;background:rgba(20,19,17,.92);z-index:1000;
+  display:none;align-items:center;justify-content:center;padding:40px;
+}
+.lightbox-overlay.show{display:flex;}
+.lightbox-overlay img{max-width:92vw;max-height:88vh;object-fit:contain;border-radius:4px;}
+.lightbox-close{
+  position:absolute;top:20px;right:28px;background:none;border:none;
+  color:#fff;font-size:34px;cursor:pointer;line-height:1;
+}
+.lightbox-nav{
+  position:absolute;top:50%;transform:translateY(-50%);
+  background:rgba(255,255,255,.12);border:none;color:#fff;
+  width:48px;height:48px;border-radius:50%;font-size:22px;cursor:pointer;
+}
+.lightbox-nav:hover{background:rgba(255,255,255,.22);}
+.lightbox-prev{left:20px;}
+.lightbox-next{right:20px;}
+@media (max-width:760px){
+  .lightbox-nav{width:40px;height:40px;font-size:18px;}
+  .lightbox-close{font-size:28px;top:12px;right:16px;}
+}
 
 /* Reviews */
 .review-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px;margin-top:36px;}
@@ -148,6 +177,17 @@ h3{font-size:20px;}
   padding:9px 20px;border-radius:3px;text-decoration:none;font-weight:600;font-size:13px;
 }
 .avail-card .book-btn:hover{background:var(--ink);}
+
+/* Weather forecast */
+.weather-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:30px;max-width:900px;margin-left:auto;margin-right:auto;}
+.weather-card{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:14px 8px;text-align:center;}
+.weather-card .w-day{font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px;}
+.weather-card .w-icon{font-size:26px;margin-bottom:6px;}
+.weather-card .w-high{font-size:15px;font-weight:600;color:var(--ink);}
+.weather-card .w-low{font-size:12px;color:var(--ink-soft);}
+@media (max-width:760px){
+  .weather-grid{grid-template-columns:repeat(4,1fr);}
+}
 
 /* Contact */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;}

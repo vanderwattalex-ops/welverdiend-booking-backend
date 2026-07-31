@@ -13,7 +13,12 @@ const {
 } = require("../lib/email");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { generateInvoice } = require("../lib/invoice");
-const { saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation, GALLERY_IDS } = require("../lib/siteContent");
+const {
+  saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
+  addGallerySection, renameGallerySection, removeGallerySection,
+  setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation,
+  GALLERY_IDS, SECTIONED_GALLERY_IDS
+} = require("../lib/siteContent");
 const { getAnalyticsSummary } = require("../lib/analytics");
 
 const photoUpload = multer({
@@ -449,10 +454,10 @@ router.post("/admin/site-content/about", async (req, res) => {
   }
 });
 
-// POST /api/admin/site-content/photos   multipart/form-data: gallery ('unit1'|'unit2'), file "photo"
+// POST /api/admin/site-content/photos   multipart/form-data: gallery ('unit1'|'unit2'|'wildlife'), section (optional, unit1/unit2 only), file "photo"
 router.post("/admin/site-content/photos", photoUpload.single("photo"), async (req, res) => {
   try {
-    const { gallery } = req.body;
+    const { gallery, section } = req.body;
     if (!GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: `gallery must be one of: ${GALLERY_IDS.join(", ")}` });
     if (!req.file) return res.status(400).json({ ok: false, error: "No photo attached" });
 
@@ -462,7 +467,7 @@ router.post("/admin/site-content/photos", photoUpload.single("photo"), async (re
       contentType: "image/jpeg"
     });
     const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
-    const updated = await addGalleryPhoto(gallery, publicUrl);
+    const updated = await addGalleryPhoto(gallery, publicUrl, section);
     res.json({ ok: true, url: publicUrl, gallery: updated });
   } catch (err) {
     console.error("[admin] photo upload failed:", err);
@@ -470,16 +475,86 @@ router.post("/admin/site-content/photos", photoUpload.single("photo"), async (re
   }
 });
 
-// DELETE /api/admin/site-content/photos   body: { gallery, url }
+// DELETE /api/admin/site-content/photos   body: { gallery, identifier }
+// identifier is a photo id for unit1/unit2, or the raw url for wildlife.
 router.delete("/admin/site-content/photos", async (req, res) => {
   try {
-    const { gallery, url } = req.body;
+    const { gallery, identifier } = req.body;
     if (!GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: `gallery must be one of: ${GALLERY_IDS.join(", ")}` });
-    const updated = await removeGalleryPhoto(gallery, url);
+    const updated = await removeGalleryPhoto(gallery, identifier);
     res.json({ ok: true, gallery: updated });
   } catch (err) {
     console.error("[admin] photo remove failed:", err);
     res.status(500).json({ ok: false, error: "Could not remove photo" });
+  }
+});
+
+// POST /api/admin/site-content/photos/move   body: { gallery, photoId, direction: 'up'|'down' }
+router.post("/admin/site-content/photos/move", async (req, res) => {
+  try {
+    const { gallery, photoId, direction } = req.body;
+    if (!SECTIONED_GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: "Reordering is only available for unit1/unit2 galleries" });
+    if (!["up", "down"].includes(direction)) return res.status(400).json({ ok: false, error: "direction must be up or down" });
+    const updated = await movePhoto(gallery, photoId, direction);
+    res.json({ ok: true, gallery: updated });
+  } catch (err) {
+    console.error("[admin] photo move failed:", err);
+    res.status(500).json({ ok: false, error: "Could not reorder photo" });
+  }
+});
+
+// POST /api/admin/site-content/photos/section   body: { gallery, photoId, section }
+router.post("/admin/site-content/photos/section", async (req, res) => {
+  try {
+    const { gallery, photoId, section } = req.body;
+    if (!SECTIONED_GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: "Sections are only available for unit1/unit2 galleries" });
+    if (!section) return res.status(400).json({ ok: false, error: "section is required" });
+    const updated = await setPhotoSection(gallery, photoId, section);
+    res.json({ ok: true, gallery: updated });
+  } catch (err) {
+    console.error("[admin] set photo section failed:", err);
+    res.status(500).json({ ok: false, error: "Could not update the photo's section" });
+  }
+});
+
+// POST /api/admin/site-content/sections   body: { unitId, name }
+router.post("/admin/site-content/sections", async (req, res) => {
+  try {
+    const { unitId, name } = req.body;
+    if (!SECTIONED_GALLERY_IDS.includes(unitId)) return res.status(400).json({ ok: false, error: "Sections are only available for unit1/unit2" });
+    if (!name || !name.trim()) return res.status(400).json({ ok: false, error: "A section name is required" });
+    const sections = await addGallerySection(unitId, name.trim());
+    res.json({ ok: true, sections });
+  } catch (err) {
+    console.error("[admin] add section failed:", err);
+    res.status(500).json({ ok: false, error: "Could not add section" });
+  }
+});
+
+// PUT /api/admin/site-content/sections   body: { unitId, oldName, newName }
+router.put("/admin/site-content/sections", async (req, res) => {
+  try {
+    const { unitId, oldName, newName } = req.body;
+    if (!SECTIONED_GALLERY_IDS.includes(unitId)) return res.status(400).json({ ok: false, error: "Sections are only available for unit1/unit2" });
+    if (!newName || !newName.trim()) return res.status(400).json({ ok: false, error: "A new name is required" });
+    const result = await renameGallerySection(unitId, oldName, newName.trim());
+    res.json({ ok: true, sections: result.sections, gallery: result.photos });
+  } catch (err) {
+    console.error("[admin] rename section failed:", err);
+    res.status(500).json({ ok: false, error: "Could not rename section" });
+  }
+});
+
+// DELETE /api/admin/site-content/sections   body: { unitId, name }
+router.delete("/admin/site-content/sections", async (req, res) => {
+  try {
+    const { unitId, name } = req.body;
+    if (!SECTIONED_GALLERY_IDS.includes(unitId)) return res.status(400).json({ ok: false, error: "Sections are only available for unit1/unit2" });
+    const result = await removeGallerySection(unitId, name);
+    res.json({ ok: true, sections: result.sections, gallery: result.photos });
+  } catch (err) {
+    console.error("[admin] remove section failed:", err);
+    res.status(500).json({ ok: false, error: "Could not remove section" });
   }
 });
 
@@ -554,7 +629,7 @@ router.delete("/admin/site-content/faqs", async (req, res) => {
   }
 });
 
-// POST /api/admin/site-content/recommendations   body: { name, category, description }
+// POST /api/admin/site-content/recommendations   body: { name, category, description, mapLink, distance }
 router.post("/admin/site-content/recommendations", async (req, res) => {
   try {
     const { name, category, description, mapLink, distance } = req.body;
