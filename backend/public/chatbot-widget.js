@@ -37,7 +37,7 @@
     .wa-chat-disclaimer{font-size:10.5px;color:#8A8578;text-align:center;padding:0 12px 8px;flex-shrink:0;}
     @media (max-width:760px){
       .wa-chat-btn{bottom:82px;width:50px;height:50px;font-size:22px;}
-      .wa-chat-panel{bottom:140px;right:12px;width:92vw;height:60vh;}
+      .wa-chat-panel{bottom:260px;right:12px;width:92vw;height:46vh;}
     }
   `;
   document.head.appendChild(style);
@@ -104,8 +104,11 @@
     panel.style.transition = "transform .2s ease";
     panel.style.transform = "";
   }
-  document.getElementById("wa-chat-input").addEventListener("focus", () => setTimeout(liftPanelForKeyboard, 80));
-  document.getElementById("wa-chat-input").addEventListener("blur", () => setTimeout(resetPanelLift, 80));
+  const chatInputEl = document.getElementById("wa-chat-input");
+  chatInputEl.addEventListener("focus", () => setTimeout(liftPanelForKeyboard, 80));
+  chatInputEl.addEventListener("focusin", () => setTimeout(liftPanelForKeyboard, 80));
+  chatInputEl.addEventListener("click", () => setTimeout(liftPanelForKeyboard, 250));
+  chatInputEl.addEventListener("blur", () => setTimeout(resetPanelLift, 80));
 
   function addMessage(text, role){
     const msgs = document.getElementById("wa-chat-messages");
