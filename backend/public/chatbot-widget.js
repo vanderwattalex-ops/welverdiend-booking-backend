@@ -66,39 +66,39 @@
   `;
   document.body.appendChild(panel);
 
-  // On mobile, opening the keyboard shrinks the VISUAL viewport but
-  // .wa-chat-panel is `position:fixed`, which tracks the LAYOUT
-  // viewport — so the panel doesn't move and the keyboard just covers
-  // it. visualViewport tells us the keyboard's actual size so we can
-  // pull the panel up above it and shrink it to fit what's left.
-  function repositionPanel(){
-    if(!isOpen || !window.visualViewport) return;
-    const vv = window.visualViewport;
-    const keyboardHeight = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    panel.style.bottom = (keyboardHeight + 12) + "px";
-    const available = vv.height - 24;
-    panel.style.height = Math.min(available, 460) + "px";
-    panel.style.maxHeight = available + "px";
-  }
-  if(window.visualViewport){
-    window.visualViewport.addEventListener("resize", repositionPanel);
-    window.visualViewport.addEventListener("scroll", repositionPanel);
-  }
-
   function toggle(){
     isOpen = !isOpen;
     panel.classList.toggle("show", isOpen);
     if(isOpen){
       document.getElementById("wa-chat-input").focus();
-      setTimeout(repositionPanel, 50);
-    } else {
-      panel.style.bottom = "";
-      panel.style.height = "";
-      panel.style.maxHeight = "";
+      positionPanel();
     }
   }
   btn.onclick = toggle;
   document.getElementById("wa-chat-close").onclick = toggle;
+
+  // Mobile browsers shrink the VISIBLE (visual) viewport when the
+  // on-screen keyboard opens, but position:fixed elements stay
+  // anchored to the full LAYOUT viewport — so a static "bottom: 162px"
+  // ends up hidden behind the keyboard. This recalculates the panel's
+  // position against the actual visible area whenever the keyboard
+  // opens, closes, or the page scrolls while it's open.
+  function positionPanel(){
+    if(!isOpen || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const isMobile = window.innerWidth <= 760;
+    const sideMargin = isMobile ? 12 : 22;
+    const keyboardGap = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    const availableHeight = vv.height - keyboardGap - (sideMargin * 2);
+    const desiredHeight = isMobile ? vv.height * 0.6 : 460;
+    panel.style.bottom = (keyboardGap + sideMargin) + "px";
+    panel.style.height = Math.max(240, Math.min(desiredHeight, availableHeight)) + "px";
+  }
+  if(window.visualViewport){
+    window.visualViewport.addEventListener("resize", positionPanel);
+    window.visualViewport.addEventListener("scroll", positionPanel);
+  }
+  document.getElementById("wa-chat-input")?.addEventListener("focus", () => setTimeout(positionPanel, 50));
 
   function addMessage(text, role){
     const msgs = document.getElementById("wa-chat-messages");

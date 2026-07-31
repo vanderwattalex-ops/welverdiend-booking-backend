@@ -87,8 +87,12 @@ async function setHeroPhoto(slot, url) {
 
 async function addGalleryPhoto(unitId, url, section) {
   const current = await getSiteContent();
+  const validSection = SECTIONED_GALLERY_IDS.includes(unitId)
+    && (current.gallerySections[unitId] || []).includes(section)
+    ? section
+    : DEFAULT_SECTION;
   const entry = SECTIONED_GALLERY_IDS.includes(unitId)
-    ? { id: uuidv4(), url, section: section || DEFAULT_SECTION }
+    ? { id: uuidv4(), url, section: validSection }
     : url; // wildlife stays a plain string
   const updated = [...current.galleries[unitId], entry];
   const galleries = { ...current.galleries, [unitId]: updated };
@@ -119,7 +123,7 @@ async function movePhoto(unitId, photoId, direction) {
   const current = await getSiteContent();
   const photos = [...current.galleries[unitId]];
   const idx = photos.findIndex(p => p.id === photoId);
-  if (idx === -1) return photos;
+  if (idx === -1) return photos; // photo not found — nothing to change, nothing to write
   const section = photos[idx].section;
 
   let swapIdx = -1;
@@ -132,9 +136,9 @@ async function movePhoto(unitId, photoId, direction) {
       if (photos[i].section === section) { swapIdx = i; break; }
     }
   }
-  if (swapIdx !== -1) {
-    [photos[idx], photos[swapIdx]] = [photos[swapIdx], photos[idx]];
-  }
+  if (swapIdx === -1) return photos; // already first/last in its section — no-op, no write needed
+
+  [photos[idx], photos[swapIdx]] = [photos[swapIdx], photos[idx]];
 
   const galleries = { ...current.galleries, [unitId]: photos };
   await settingsCollection.doc(DOC_ID).set({ galleries }, { merge: true });
@@ -143,7 +147,8 @@ async function movePhoto(unitId, photoId, direction) {
 
 async function setPhotoSection(unitId, photoId, section) {
   const current = await getSiteContent();
-  const photos = current.galleries[unitId].map(p => p.id === photoId ? { ...p, section } : p);
+  const validSection = (current.gallerySections[unitId] || []).includes(section) ? section : DEFAULT_SECTION;
+  const photos = current.galleries[unitId].map(p => p.id === photoId ? { ...p, section: validSection } : p);
   const galleries = { ...current.galleries, [unitId]: photos };
   await settingsCollection.doc(DOC_ID).set({ galleries }, { merge: true });
   return photos;

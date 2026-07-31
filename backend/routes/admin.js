@@ -14,6 +14,7 @@ const {
 const { getSettings, saveSettings } = require("../lib/settings");
 const { generateInvoice } = require("../lib/invoice");
 const {
+  getSiteContent,
   saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
   addGallerySection, renameGallerySection, removeGallerySection,
   setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation,
@@ -481,6 +482,7 @@ router.delete("/admin/site-content/photos", async (req, res) => {
   try {
     const { gallery, identifier } = req.body;
     if (!GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: `gallery must be one of: ${GALLERY_IDS.join(", ")}` });
+    if (!identifier) return res.status(400).json({ ok: false, error: "identifier is required" });
     const updated = await removeGalleryPhoto(gallery, identifier);
     res.json({ ok: true, gallery: updated });
   } catch (err) {
@@ -537,6 +539,10 @@ router.put("/admin/site-content/sections", async (req, res) => {
     const { unitId, oldName, newName } = req.body;
     if (!SECTIONED_GALLERY_IDS.includes(unitId)) return res.status(400).json({ ok: false, error: "Sections are only available for unit1/unit2" });
     if (!newName || !newName.trim()) return res.status(400).json({ ok: false, error: "A new name is required" });
+    const existing = await getSiteContent();
+    if (!(existing.gallerySections[unitId] || []).includes(oldName)) {
+      return res.status(404).json({ ok: false, error: `"${oldName}" isn't a current section — nothing to rename.` });
+    }
     const result = await renameGallerySection(unitId, oldName, newName.trim());
     res.json({ ok: true, sections: result.sections, gallery: result.photos });
   } catch (err) {
@@ -550,6 +556,7 @@ router.delete("/admin/site-content/sections", async (req, res) => {
   try {
     const { unitId, name } = req.body;
     if (!SECTIONED_GALLERY_IDS.includes(unitId)) return res.status(400).json({ ok: false, error: "Sections are only available for unit1/unit2" });
+    if (!name) return res.status(400).json({ ok: false, error: "name is required" });
     const result = await removeGallerySection(unitId, name);
     res.json({ ok: true, sections: result.sections, gallery: result.photos });
   } catch (err) {
@@ -596,6 +603,7 @@ router.post("/admin/site-content/reviews", async (req, res) => {
 router.delete("/admin/site-content/reviews", async (req, res) => {
   try {
     const { id } = req.body;
+    if (!id) return res.status(400).json({ ok: false, error: "id is required" });
     const reviews = await removeReview(id);
     res.json({ ok: true, reviews });
   } catch (err) {
@@ -621,6 +629,7 @@ router.post("/admin/site-content/faqs", async (req, res) => {
 router.delete("/admin/site-content/faqs", async (req, res) => {
   try {
     const { id } = req.body;
+    if (!id) return res.status(400).json({ ok: false, error: "id is required" });
     const faqs = await removeFaq(id);
     res.json({ ok: true, faqs });
   } catch (err) {
@@ -646,6 +655,7 @@ router.post("/admin/site-content/recommendations", async (req, res) => {
 router.delete("/admin/site-content/recommendations", async (req, res) => {
   try {
     const { id } = req.body;
+    if (!id) return res.status(400).json({ ok: false, error: "id is required" });
     const recommendations = await removeRecommendation(id);
     res.json({ ok: true, recommendations });
   } catch (err) {

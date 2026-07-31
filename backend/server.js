@@ -16,18 +16,19 @@ app.use("/api", require("./routes/config"));
 app.use("/api", require("./routes/siteContent"));
 app.use("/api", require("./routes/availability"));
 app.use("/api", require("./routes/bookings"));
-app.use("/api", require("./routes/track"));
-app.use("/api", require("./routes/chatbot"));
-app.use("/api", require("./routes/admin"));
 app.use("/api", require("./routes/sync"));
 app.use("/api", require("./routes/reminders"));
+app.use("/api", require("./routes/track"));
+app.use("/api", require("./routes/chatbot"));
+// admin.js is mounted LAST on purpose — its router-wide requireAdmin
+// middleware has no path scoping, so it would silently intercept any
+// route mounted after it (this exact bug broke /api/site-content, then
+// /api/track and /api/chatbot, on three separate earlier occasions).
+// Mounting it last means nothing can ever be shadowed by it again,
+// including routes added in the future.
+app.use("/api", require("./routes/admin"));
 app.use("/", require("./routes/icalExport"));
 
-// Catch-all error handler — without this, an error thrown by middleware
-// (like a rejected file upload) falls through to Express's default HTML
-// error page, which breaks every frontend fetch() call expecting JSON
-// and shows a misleading "could not reach the server" message instead
-// of the real reason.
 app.use((err, req, res, next) => {
   console.error("[server] unhandled error:", err.message);
   if (res.headersSent) return next(err);

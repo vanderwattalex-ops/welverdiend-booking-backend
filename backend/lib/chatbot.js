@@ -121,6 +121,10 @@ async function askChatbot(message, history) {
     return { ok: true, reply: result.response.text() };
   } catch (err) {
     console.error("[chatbot] request failed:", err.message);
+    const msg = (err.message || "").toLowerCase();
+    if (msg.includes("api key") || msg.includes("api_key") || msg.includes("permission_denied") || msg.includes("unauthenticated")) {
+      return { ok: false, error: "Chat isn't set up correctly yet — the API key needs attention. Please message us on WhatsApp instead." };
+    }
     return { ok: false, error: "Something went wrong answering that — please try again, or message us on WhatsApp." };
   }
 }
