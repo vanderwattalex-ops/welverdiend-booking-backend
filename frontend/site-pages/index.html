@@ -16,6 +16,8 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&version=v19.0"></script>
 <script>(function(){
   var API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
   fetch(API_BASE + "/api/track", {
@@ -110,6 +112,23 @@
   <p>Check live availability and reserve directly — no booking fees.</p>
   <a class="book-btn" href="/booking-widget.html">Check availability</a>
 </div>
+
+<section class="section tinted center">
+  <p class="eyebrow">Stay in touch</p>
+  <h2>Follow us on Facebook</h2>
+  <div style="display:flex;justify-content:center;margin-top:20px;">
+    <div class="fb-page"
+      data-href="https://www.facebook.com/share/1GCYXeoneo/"
+      data-tabs="timeline"
+      data-width="500"
+      data-height="500"
+      data-small-header="false"
+      data-adapt-container-width="true"
+      data-hide-cover="false"
+      data-show-facepile="true">
+    </div>
+  </div>
+</section>
 
 <footer class="site-footer">
   <div class="footer-links">
