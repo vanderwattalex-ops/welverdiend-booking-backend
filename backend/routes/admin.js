@@ -74,6 +74,62 @@ router.get("/admin/bookings", async (req, res) => {
   }
 });
 
+// GET /api/admin/booking-stats
+// A unified, read-only list of confirmed bookings across all four sources
+// (Airbnb, Booking.com, Lekkeslaap, Direct), for external reporting tools
+// (the booking-stats app). Direct bookings come from `bookings` with full
+// detail; OTA bookings only ever exist as anonymized busy ranges in
+// `availability` (iCal feeds carry no price or guest identity), so those
+// come back with guestName/totalAmount left null — the caller is expected
+// to apply its own per-source nightly rate, same as the admin calendar
+// already treats these sources as date-only.
+router.get("/admin/booking-stats", async (req, res) => {
+  try {
+    const bookingsSnap = await bookingsCollection.where("status", "==", "confirmed").get();
+    const direct = bookingsSnap.docs.map(d => {
+      const b = d.data();
+      return {
+        id: b.id,
+        unitId: b.unitId,
+        source: "direct",
+        checkIn: b.checkIn,
+        checkOut: b.checkOut,
+        nights: b.nights,
+        guestName: b.guestName || "",
+        totalAmount: typeof b.totalAmount === "number" ? b.totalAmount : null
+      };
+    });
+
+    const availSnap = await availabilityCollection.get();
+    const ota = [];
+    availSnap.docs.forEach(doc => {
+      const unitId = doc.id;
+      const busyRanges = doc.data().busyRanges || [];
+      busyRanges.forEach(range => {
+        (range.sources || []).forEach(source => {
+          if (source === "direct") return; // already covered above, with real detail
+          ota.push({
+            id: `${range.start}_${unitId}_${source}`,
+            unitId,
+            source,
+            checkIn: range.start,
+            checkOut: range.end,
+            nights: null,
+            guestName: "",
+            totalAmount: null
+          });
+        });
+      });
+    });
+
+    const bookings = [...direct, ...ota].sort((a, b) => (a.checkIn || "").localeCompare(b.checkIn || ""));
+    res.json({ ok: true, bookings });
+  } catch (err) {
+    console.error("[admin] booking-stats failed:", err);
+    res.status(500).json({ ok: false, error: "Could not load booking stats" });
+  }
+});
+
 /**
  * Streams a proof-of-payment file straight from Cloud Storage through
  * the backend, rather than generating a Cloud Storage "signed URL" —
