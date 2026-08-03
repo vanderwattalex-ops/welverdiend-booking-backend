@@ -19,7 +19,13 @@ function mergeRanges(ranges) {
   for (let i = 1; i < sorted.length; i++) {
     const last = merged[merged.length - 1];
     const cur = sorted[i];
-    if (cur.start <= last.end) {
+    // Strictly less-than, matching rangesOverlap()'s own definition above —
+    // ranges are half-open, so a checkout on day X and a new check-in on
+    // that same day X (same-day turnover, very common) don't actually
+    // overlap. Using <= here merged those genuinely separate, back-to-back
+    // bookings into one, hiding that there were two different bookings
+    // (sometimes from two different platforms) rather than one.
+    if (cur.start < last.end) {
       if (cur.end > last.end) last.end = cur.end;
       last.sources = [...new Set([...(last.sources || [last.source]), cur.source])];
       if (cur.detail) last.details = [...new Set([...(last.details || []), cur.detail])];
