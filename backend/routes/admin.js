@@ -106,18 +106,25 @@ router.get("/admin/booking-stats", async (req, res) => {
       const unitId = doc.id;
       const busyRanges = doc.data().busyRanges || [];
       busyRanges.forEach(range => {
-        (range.sources || []).forEach(source => {
-          if (source === "direct") return; // already covered above, with real detail
-          ota.push({
-            id: `${range.start}_${unitId}_${source}`,
-            unitId,
-            source,
-            checkIn: range.start,
-            checkOut: range.end,
-            nights: null,
-            guestName: "",
-            totalAmount: null
-          });
+        // A single stay can block more than one platform's calendar at once
+        // (e.g. a channel-manager sync, or a host-side block mirrored across
+        // sites) — mergeRanges() already folds that overlap into one range
+        // with multiple `sources`. Counting one income entry per source in
+        // that array would double- (or triple-) count the same stay, so
+        // this only ever emits ONE entry per range, using its first
+        // non-direct source.
+        const nonDirectSources = (range.sources || []).filter(s => s !== "direct");
+        if (nonDirectSources.length === 0) return; // direct-only range, already covered above
+        const source = nonDirectSources[0];
+        ota.push({
+          id: `${range.start}_${unitId}_${source}`,
+          unitId,
+          source,
+          checkIn: range.start,
+          checkOut: range.end,
+          nights: null,
+          guestName: "",
+          totalAmount: null
         });
       });
     });
