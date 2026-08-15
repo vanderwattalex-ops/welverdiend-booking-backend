@@ -39,6 +39,10 @@ async function getSettings() {
     extras: saved.extras || staticConfig.extras,
     bankDetails: saved.bankDetails || staticConfig.bankDetails,
     ownerNotificationEmail: saved.ownerNotificationEmail || staticConfig.ownerNotificationEmail,
+    // Keyed by email type (e.g. "approved", "confirmed") — each entry is
+    // { subject, body } and only overrides an email's built-in default
+    // once you've actually customized that type in the Settings tab.
+    emailTemplates: saved.emailTemplates || {},
     frontendBaseUrl: staticConfig.frontendBaseUrl
   };
 }
@@ -48,12 +52,13 @@ async function getSettings() {
  * fields (pricePerNight, description, beds, bathrooms, amenities,
  * photo) — id is used to match back up with the static unit list.
  */
-async function saveSettings({ units, extras, bankDetails, ownerNotificationEmail }) {
+async function saveSettings({ units, extras, bankDetails, ownerNotificationEmail, emailTemplates }) {
   const payload = {};
   if (units) payload.units = units;
   if (extras) payload.extras = extras;
   if (bankDetails !== undefined) payload.bankDetails = bankDetails;
   if (ownerNotificationEmail !== undefined) payload.ownerNotificationEmail = ownerNotificationEmail;
+  if (emailTemplates !== undefined) payload.emailTemplates = emailTemplates;
   payload.updatedAt = new Date().toISOString();
   await settingsCollection.doc(DOC_ID).set(payload, { merge: true });
 }

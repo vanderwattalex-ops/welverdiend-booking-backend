@@ -511,10 +511,13 @@ router.get("/admin/settings", async (req, res) => {
 //         extras: [{id, label, description, price, type, max}], bankDetails, ownerNotificationEmail }
 router.post("/admin/settings", async (req, res) => {
   try {
-    const { units: unitsBody, extras, bankDetails, ownerNotificationEmail } = req.body;
+    const { units: unitsBody, extras, bankDetails, ownerNotificationEmail, emailTemplates } = req.body;
     if (unitsBody && !Array.isArray(unitsBody)) return res.status(400).json({ ok: false, error: "units must be a list" });
     if (extras && !Array.isArray(extras)) return res.status(400).json({ ok: false, error: "extras must be a list" });
-    await saveSettings({ units: unitsBody, extras, bankDetails, ownerNotificationEmail });
+    if (emailTemplates && (typeof emailTemplates !== "object" || Array.isArray(emailTemplates))) {
+      return res.status(400).json({ ok: false, error: "emailTemplates must be an object" });
+    }
+    await saveSettings({ units: unitsBody, extras, bankDetails, ownerNotificationEmail, emailTemplates });
     res.json({ ok: true });
   } catch (err) {
     console.error("[admin] save settings failed:", err);

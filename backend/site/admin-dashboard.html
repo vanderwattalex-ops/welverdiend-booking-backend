@@ -90,6 +90,12 @@
   .settings-field label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--ink);}
   .settings-field input,.settings-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:4px;font-size:13.5px;font-family:'Inter',sans-serif;}
   .settings-field textarea{min-height:70px;resize:vertical;}
+  .email-template-block{border-top:1px solid var(--line);padding-top:14px;margin-top:14px;}
+  .email-template-block:first-of-type{border-top:none;padding-top:0;margin-top:0;}
+  .email-template-block h3{font-size:14.5px;font-weight:600;margin:0 0 3px;color:var(--ink);}
+  .email-template-block .placeholders{font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;font-family:monospace;}
+  .email-template-block textarea{min-height:150px;font-family:monospace;font-size:12.5px;}
+  .btn-reset-template{background:none;border:none;color:var(--ink-soft);font-size:12px;text-decoration:underline;cursor:pointer;padding:0;margin-left:8px;}
   .settings-row{display:flex;gap:12px;}
   .settings-row .settings-field{flex:1;}
   .extra-row{display:flex;gap:8px;align-items:end;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
@@ -621,12 +627,18 @@
         <button type="button" class="btn-add-extra" id="test-email-btn">Send test email to this address</button>
         <div class="settings-msg" id="test-email-msg"></div>
       </div>
+      <div class="unit-block">
+        <h2>Email templates</h2>
+        <p class="range-source" style="margin-bottom:14px;">Customize the wording of any email sent to guests. Leave the subject or body blank to keep using the built-in default for that part. Placeholders like <code>{{guestName}}</code> get filled in automatically when the email is sent.</p>
+        <div id="email-templates-list"></div>
+      </div>
       <button class="btn-save-settings" id="save-settings-btn">Save settings</button>
       <div class="settings-msg" id="settings-msg"></div>
     `;
 
     document.getElementById("test-email-btn").onclick = sendTestEmail;
     renderExtrasList(s.extras);
+    renderEmailTemplatesList(s.emailTemplates || {});
     document.getElementById("add-extra-btn").onclick = () => {
       const newExtra = { id: `extra_${Date.now()}`, label: "", description: "", price: 0, type: "flat", max: 5 };
       settingsState.extras = [...readExtrasFromForm(), newExtra];
@@ -674,6 +686,50 @@
     }));
   }
 
+  const EMAIL_TEMPLATE_META = [
+    { key: "approved", label: "Booking approved (deposit requested)", placeholders: ["guestName","unitName","checkIn","checkOut","nights","depositAmount","balanceAmount","bankDetails","uploadUrl","paymentInstructions"] },
+    { key: "confirmed", label: "Booking confirmed (deposit received)", placeholders: ["guestName","unitName","checkIn","checkOut","nights","balanceAmount"] },
+    { key: "declined", label: "Request declined or rejected", placeholders: ["guestName","unitName","checkIn","checkOut","nights","reason","reasonSuffix"] },
+    { key: "expired", label: "Request expired (no payment within 24h)", placeholders: ["guestName","unitName","checkIn","checkOut","nights"] },
+    { key: "balanceDue", label: "Balance payment reminder", placeholders: ["guestName","unitName","checkIn","checkOut","nights","balanceAmount","uploadUrl","paymentInstructions"] },
+    { key: "checkinReminder", label: "Check-in reminder (2 days before)", placeholders: ["guestName","unitName","checkIn","checkOut","paidSoFar","totalAmount","balanceAmount","uploadUrl","balanceStatusNote"] },
+    { key: "paidInFull", label: "Paid in full receipt", placeholders: ["guestName","unitName","checkIn","checkOut","nights"] }
+  ];
+
+  function renderEmailTemplatesList(templates){
+    const wrap = document.getElementById("email-templates-list");
+    wrap.innerHTML = EMAIL_TEMPLATE_META.map(t => {
+      const saved = templates[t.key] || {};
+      return `
+        <div class="email-template-block" data-key="${t.key}">
+          <h3>${esc(t.label)}<button type="button" class="btn-reset-template" data-key="${t.key}">Reset to default</button></h3>
+          <div class="placeholders">Available: ${t.placeholders.map(p => `{{${p}}}`).join(", ")}</div>
+          <div class="settings-field"><label>Subject (blank = default)</label><input type="text" class="tmpl-subject" data-key="${t.key}" value="${esc(saved.subject || "")}"></div>
+          <div class="settings-field"><label>Body — HTML (blank = default)</label><textarea class="tmpl-body" data-key="${t.key}">${esc(saved.body || "")}</textarea></div>
+        </div>
+      `;
+    }).join("");
+
+    wrap.querySelectorAll(".btn-reset-template").forEach(btn => {
+      btn.onclick = () => {
+        if(!confirm("Clear this customization and go back to the built-in default wording?")) return;
+        const block = wrap.querySelector(`.email-template-block[data-key="${btn.dataset.key}"]`);
+        block.querySelector(".tmpl-subject").value = "";
+        block.querySelector(".tmpl-body").value = "";
+      };
+    });
+  }
+
+  function readEmailTemplatesFromForm(){
+    const result = {};
+    EMAIL_TEMPLATE_META.forEach(t => {
+      const subject = document.querySelector(`.tmpl-subject[data-key="${t.key}"]`).value.trim();
+      const body = document.querySelector(`.tmpl-body[data-key="${t.key}"]`).value.trim();
+      if(subject || body) result[t.key] = { subject, body };
+    });
+    return result;
+  }
+
   async function saveSettingsForm(){
     const msg = document.getElementById("settings-msg");
     const btn = document.getElementById("save-settings-btn");
@@ -691,13 +747,14 @@
     const extras = readExtrasFromForm();
     const bankDetails = document.getElementById("bank-details").value;
     const ownerNotificationEmail = document.getElementById("owner-email").value;
+    const emailTemplates = readEmailTemplatesFromForm();
 
     btn.disabled = true; btn.textContent = "Saving…";
     try{
       const res = await fetch(`${API_BASE}/api/admin/settings`, {
         method: "POST",
         headers: { "x-admin-token": token(), "Content-Type": "application/json" },
-        body: JSON.stringify({ units, extras, bankDetails, ownerNotificationEmail })
+        body: JSON.stringify({ units, extras, bankDetails, ownerNotificationEmail, emailTemplates })
       });
       const data = await res.json();
       if(data.ok){

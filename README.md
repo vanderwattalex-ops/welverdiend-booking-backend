@@ -424,6 +424,23 @@ they update live. What's *not* in Settings (and still lives in
 deliberately kept there since it changes rarely and is more technical:
 each unit's iCal source links, and `frontendBaseUrl`.
 
+## Seeing (and editing) the emails guests get
+
+Every guest email is sent through the `EMAIL_USER` Gmail account — its
+**Sent** folder is a complete history of everything that's gone out, no
+extra setup needed.
+
+To change the wording, scroll to **Email templates** at the bottom of
+the **Settings** tab. Each of the 7 guest-facing emails (approved,
+confirmed, declined/rejected, expired, balance reminder, check-in
+reminder, paid-in-full) has its own subject and HTML body field, with
+the placeholders it supports listed above it (e.g. `{{guestName}}`,
+`{{checkIn}}`) — these get filled in automatically when the email is
+actually sent. Leave the subject or body blank to keep the built-in
+default wording for that half; **Reset to default** clears both at
+once. Changes apply immediately, no redeploy — the very next matching
+email uses the new wording.
+
 ## Seeing why a day is blocked, and unblocking one if needed
 
 The **Calendar** tab in `admin-dashboard.html` lists every booked date
