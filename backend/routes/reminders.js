@@ -51,12 +51,18 @@ router.get("/reminders/checkin", requireAdmin, async (req, res) => {
 // Meant to be triggered hourly by Cloud Scheduler (same pattern as the
 // other jobs above). A booking blocks its dates the moment it's
 // approved — this is what releases that hold automatically if 24 hours
-// pass with no deposit proof received and no final confirmation given,
-// so a guest who never pays doesn't sit blocking those dates forever.
+// pass with no deposit paid, so a guest who never pays doesn't sit
+// blocking those dates forever.
+//
+// Deliberately ONLY "awaiting_payment". A "submitted" booking means the
+// deposit is already settled (guest uploaded proof, or it was marked
+// received manually) and it's now waiting on the owner to confirm —
+// expiring those would release dates a paying guest holds AND email
+// them a false "we never received your payment" notice.
 router.get("/reminders/expire-stale", requireAdmin, async (req, res) => {
   try {
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const snap = await bookingsCollection.where("status", "in", ["awaiting_payment", "submitted"]).get();
+    const snap = await bookingsCollection.where("status", "==", "awaiting_payment").get();
     const stale = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
       .filter(b => b.approvedAt && b.approvedAt <= cutoff);

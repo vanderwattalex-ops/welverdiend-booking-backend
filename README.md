@@ -509,9 +509,16 @@ it's fully confirmed — this is what stops the same dates being
 requested and approved twice while a guest is still paying. To make
 sure an approved-but-never-paid request doesn't hold those dates
 forever, a booking automatically **expires** (status: Expired) if 24
-hours pass after approval with no deposit proof received and no final
-confirmation given. The guest is emailed that their request expired,
-and the dates are released immediately — you don't need to do anything.
+hours pass after approval and the deposit still hasn't been settled.
+The guest is emailed that their request expired, and the dates are
+released immediately — you don't need to do anything.
+
+Only bookings still sitting on **Awaiting deposit** can expire. Once a
+booking reaches **Ready to confirm** — the guest uploaded proof, or you
+clicked *Mark deposit received* — the deposit is settled and it will
+**never** auto-expire, no matter how long it waits for you to confirm.
+It's holding dates someone has actually paid for, so releasing them (or
+emailing that guest "we never got your payment") would be wrong.
 
 This needs one more Cloud Scheduler job, which checks for stale
 bookings once an hour:
