@@ -629,7 +629,7 @@
       </div>
       <div class="unit-block">
         <h2>Email templates</h2>
-        <p class="range-source" style="margin-bottom:14px;">Customize the wording of any email sent to guests. Leave the subject or body blank to keep using the built-in default for that part. Placeholders like <code>{{guestName}}</code> get filled in automatically when the email is sent.</p>
+        <p class="range-source" style="margin-bottom:14px;">Each email below shows its current wording — edit or delete whatever you like. Placeholders like <code>{{guestName}}</code> get filled in automatically when the email is sent; clearing a field entirely puts that part back to the original default.</p>
         <div id="email-templates-list"></div>
       </div>
       <button class="btn-save-settings" id="save-settings-btn">Save settings</button>
@@ -638,7 +638,7 @@
 
     document.getElementById("test-email-btn").onclick = sendTestEmail;
     renderExtrasList(s.extras);
-    renderEmailTemplatesList(s.emailTemplates || {});
+    renderEmailTemplatesList(s.emailTemplates || {}, s.defaultEmailTemplates || {});
     document.getElementById("add-extra-btn").onclick = () => {
       const newExtra = { id: `extra_${Date.now()}`, label: "", description: "", price: 0, type: "flat", max: 5 };
       settingsState.extras = [...readExtrasFromForm(), newExtra];
@@ -696,36 +696,46 @@
     { key: "paidInFull", label: "Paid in full receipt", placeholders: ["guestName","unitName","checkIn","checkOut","nights"] }
   ];
 
-  function renderEmailTemplatesList(templates){
+  function renderEmailTemplatesList(templates, defaults){
     const wrap = document.getElementById("email-templates-list");
     wrap.innerHTML = EMAIL_TEMPLATE_META.map(t => {
       const saved = templates[t.key] || {};
+      const def = defaults[t.key] || { subject: "", body: "" };
+      const subjectValue = saved.subject || def.subject;
+      const bodyValue = (saved.body || def.body || "").trim();
       return `
         <div class="email-template-block" data-key="${t.key}">
           <h3>${esc(t.label)}<button type="button" class="btn-reset-template" data-key="${t.key}">Reset to default</button></h3>
           <div class="placeholders">Available: ${t.placeholders.map(p => `{{${p}}}`).join(", ")}</div>
-          <div class="settings-field"><label>Subject (blank = default)</label><input type="text" class="tmpl-subject" data-key="${t.key}" value="${esc(saved.subject || "")}"></div>
-          <div class="settings-field"><label>Body — HTML (blank = default)</label><textarea class="tmpl-body" data-key="${t.key}">${esc(saved.body || "")}</textarea></div>
+          <div class="settings-field"><label>Subject</label><input type="text" class="tmpl-subject" data-key="${t.key}" value="${esc(subjectValue)}"></div>
+          <div class="settings-field"><label>Body — HTML</label><textarea class="tmpl-body" data-key="${t.key}">${esc(bodyValue)}</textarea></div>
         </div>
       `;
     }).join("");
 
     wrap.querySelectorAll(".btn-reset-template").forEach(btn => {
       btn.onclick = () => {
-        if(!confirm("Clear this customization and go back to the built-in default wording?")) return;
+        if(!confirm("Discard your changes to this email and restore the original default wording?")) return;
+        const def = defaults[btn.dataset.key] || { subject: "", body: "" };
         const block = wrap.querySelector(`.email-template-block[data-key="${btn.dataset.key}"]`);
-        block.querySelector(".tmpl-subject").value = "";
-        block.querySelector(".tmpl-body").value = "";
+        block.querySelector(".tmpl-subject").value = def.subject;
+        block.querySelector(".tmpl-body").value = def.body.trim();
       };
     });
   }
 
   function readEmailTemplatesFromForm(){
+    // Every key is always included, even blank ones — Firestore's
+    // merge:true deep-merges nested objects, so a key just left out of
+    // this payload would silently keep whatever was saved for it last
+    // time instead of actually clearing it. Writing every key
+    // explicitly (blank = "" = use the default, per resolveEmail on
+    // the backend) guarantees clearing a field really clears it.
     const result = {};
     EMAIL_TEMPLATE_META.forEach(t => {
       const subject = document.querySelector(`.tmpl-subject[data-key="${t.key}"]`).value.trim();
       const body = document.querySelector(`.tmpl-body[data-key="${t.key}"]`).value.trim();
-      if(subject || body) result[t.key] = { subject, body };
+      result[t.key] = { subject, body };
     });
     return result;
   }

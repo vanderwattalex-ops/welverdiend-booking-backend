@@ -12,6 +12,7 @@ const {
   notifyGuestBalanceDue, notifyGuestPaidInFull, sendTestEmail
 } = require("../lib/email");
 const { getSettings, saveSettings } = require("../lib/settings");
+const { DEFAULT_EMAIL_TEMPLATES } = require("../lib/emailTemplates");
 const { generateInvoice } = require("../lib/invoice");
 const { syncUnitAndSave } = require("../lib/availabilitySync");
 const {
@@ -499,7 +500,10 @@ router.delete("/admin/overrides/:id", async (req, res) => {
 router.get("/admin/settings", async (req, res) => {
   try {
     const settings = await getSettings();
-    res.json({ ok: true, settings });
+    // defaultEmailTemplates lets the dashboard show the ACTUAL current
+    // wording pre-filled in each email template field (rather than a
+    // blank box) even when nothing's been customized yet.
+    res.json({ ok: true, settings: { ...settings, defaultEmailTemplates: DEFAULT_EMAIL_TEMPLATES } });
   } catch (err) {
     console.error("[admin] get settings failed:", err);
     res.status(500).json({ ok: false, error: "Could not load settings" });
