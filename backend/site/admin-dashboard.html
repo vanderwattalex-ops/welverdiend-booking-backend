@@ -40,6 +40,7 @@
   .status.submitted{background:#DCEAF5;color:#2A5F8A;}
   .status.confirmed{background:#E5EEDF;color:var(--success);}
   .status.rejected{background:#F5E1DC;color:var(--danger);}
+  .status.expired{background:#EFE7DD;color:#8A6A1F;}
   .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0;font-size:13px;}
   .detail-grid .label{color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px;}
   .extras-list{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
@@ -150,6 +151,7 @@
     <button data-status="submitted">Ready to confirm</button>
     <button data-status="confirmed">Confirmed</button>
     <button data-status="rejected">Rejected</button>
+    <button data-status="expired">Expired</button>
   </div>
   <div class="cards" id="cards"></div>
   <div id="empty">Enter your admin token and load bookings.</div>
@@ -287,16 +289,20 @@
       const guestsLine = `${b.adults || 1} adult${(b.adults||1)===1?"":"s"}` + (b.children ? `, ${b.children} child${b.children===1?"":"ren"}${b.childrenAges ? " ("+esc(b.childrenAges)+")" : ""}` : "");
       const petsLine = b.hasPets ? (esc(b.petDetails) || "Yes") : "No";
       const extrasLines = (b.lineItems || []).slice(1).map(li => `${esc(li.label)} — ${rand(li.amount)}`).join("<br>") || "None";
-      const statusLabels = { requested: "New request", awaiting_payment: "Awaiting deposit", submitted: "Ready to confirm", confirmed: "Confirmed", rejected: "Rejected" };
+      const statusLabels = { requested: "New request", awaiting_payment: "Awaiting deposit", submitted: "Ready to confirm", confirmed: "Confirmed", rejected: "Rejected", expired: "Expired" };
       const balanceLabels = { unpaid: "Balance not yet paid", submitted: "Balance proof received", paid: "Balance paid" };
 
       let actionsHtml = "";
       if(b.status === "requested"){
         actionsHtml = `<button class="btn-approve" data-id="${b.id}" data-action="approve">Approve — dates are available</button><button class="btn-reject" data-id="${b.id}" data-action="decline">Decline</button>`;
       } else if(b.status === "awaiting_payment"){
-        actionsHtml = `<button class="btn-reject" data-id="${b.id}" data-action="decline">Cancel request</button>`;
+        actionsHtml = `<button class="btn-confirm" data-id="${b.id}" data-action="mark-deposit-received">Mark deposit received (no proof)</button><button class="btn-reject" data-id="${b.id}" data-action="decline">Cancel request</button>`;
       } else if(b.status === "submitted"){
-        actionsHtml = `<button class="btn-proof" data-id="${b.id}" data-action="proof">View deposit proof</button><button class="btn-confirm" data-id="${b.id}" data-action="confirm">Confirm booking</button><button class="btn-reject" data-id="${b.id}" data-action="reject">Reject</button>`;
+        const submittedParts = [];
+        if(b.proofOfPaymentPath) submittedParts.push(`<button class="btn-proof" data-id="${b.id}" data-action="proof">View deposit proof</button>`);
+        submittedParts.push(`<button class="btn-confirm" data-id="${b.id}" data-action="confirm">Confirm booking</button>`);
+        submittedParts.push(`<button class="btn-reject" data-id="${b.id}" data-action="reject">Reject</button>`);
+        actionsHtml = submittedParts.join("");
       } else if(b.status === "confirmed"){
         const parts = [];
         parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="invoice">Download invoice</button>`);
@@ -314,7 +320,7 @@
       }
       actionsHtml += `<button class="btn-reject" data-id="${b.id}" data-action="delete">Delete</button>`;
 
-      const knownStatus = ["requested","awaiting_payment","submitted","confirmed","rejected"].includes(b.status);
+      const knownStatus = ["requested","awaiting_payment","submitted","confirmed","rejected","expired"].includes(b.status);
 
       const card = document.createElement("div");
       card.className = "card";
@@ -340,6 +346,7 @@
         </div>
         ${b.notes ? `<div class="notes">"${esc(b.notes)}"</div>` : ""}
         ${b.status === "awaiting_payment" ? `<div class="waiting-note">Waiting for the guest to upload deposit proof of payment.</div>` : ""}
+        ${b.status === "expired" ? `<div class="waiting-note">Automatically expired 24 hours after approval — no deposit proof was received. Dates have been released.</div>` : ""}
         <div class="actions">${actionsHtml}</div>
       `;
       cards.appendChild(card);
@@ -349,6 +356,7 @@
     cards.querySelectorAll("[data-action='balance-proof']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "balance"));
     cards.querySelectorAll("[data-action='invoice']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "invoice"));
     cards.querySelectorAll("[data-action='approve']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "approve"));
+    cards.querySelectorAll("[data-action='mark-deposit-received']").forEach(btn => btn.onclick = () => markDepositReceived(btn.dataset.id));
     cards.querySelectorAll("[data-action='confirm']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "confirm"));
     cards.querySelectorAll("[data-action='decline']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "decline"));
     cards.querySelectorAll("[data-action='reject']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "reject"));
@@ -415,6 +423,17 @@
       method: "POST",
       headers: { "x-admin-token": token(), "Content-Type": "application/json" },
       body: JSON.stringify({ reason })
+    });
+    const data = await res.json();
+    if(data.ok) loadBookings();
+    else alert(data.error || "Action failed.");
+  }
+
+  async function markDepositReceived(id){
+    if(!confirm("Mark this booking's deposit as received without proof of payment? Only do this if you've verified payment another way (e.g. bank statement, WhatsApp). This moves the booking straight to 'Ready to confirm'.")) return;
+    const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/mark-deposit-received`, {
+      method: "POST",
+      headers: { "x-admin-token": token() }
     });
     const data = await res.json();
     if(data.ok) loadBookings();

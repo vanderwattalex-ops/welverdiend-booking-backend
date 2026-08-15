@@ -121,6 +121,18 @@ async function notifyGuestDeclined(booking, unitName, reason) {
   });
 }
 
+async function notifyGuestExpired(booking, unitName) {
+  return sendMail({
+    to: booking.email,
+    subject: `Your Welverdiend Accommodation booking request has expired`,
+    html: `
+      <p>Hi ${booking.guestName},</p>
+      <p>Your approved request for ${unitName}, ${fmtDate(booking.checkIn)} → ${fmtDate(booking.checkOut)}, has expired — we didn't receive your deposit proof of payment within 24 hours of approval.</p>
+      <p>These dates have now been released and may be booked by someone else. If you'd still like to stay with us, please feel free to submit a new request.</p>
+    `
+  });
+}
+
 async function notifyGuestBalanceDue(booking, unitName) {
   const { frontendBaseUrl } = await getSettings();
   const uploadUrl = frontendBaseUrl
@@ -201,6 +213,7 @@ module.exports = {
   notifyOwnerProofUploaded,
   notifyGuestConfirmed,
   notifyGuestDeclined,
+  notifyGuestExpired,
   notifyGuestBalanceDue,
   notifyGuestCheckinReminder,
   notifyGuestPaidInFull,

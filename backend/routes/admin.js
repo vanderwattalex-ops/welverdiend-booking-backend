@@ -13,6 +13,7 @@ const {
 } = require("../lib/email");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { generateInvoice } = require("../lib/invoice");
+const { syncUnitAndSave } = require("../lib/availabilitySync");
 const {
   getSiteContent,
   saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
@@ -228,6 +229,10 @@ router.post("/admin/bookings/:id/approve", async (req, res) => {
     }
 
     await ref.update({ status: "awaiting_payment", approvedAt: new Date().toISOString() });
+    // Approving is what actually blocks the dates — re-sync this unit's
+    // availability right away so the calendar reflects it immediately,
+    // instead of waiting up to 5 minutes for the next scheduled sync.
+    syncUnitAndSave(booking.unitId).catch(err => console.error("[admin] immediate sync after approve failed:", err));
     const uName = unitName(booking.unitId);
     generateInvoice({ ...booking, status: "awaiting_payment" }, uName)
       .then(invoiceBuffer => notifyGuestApproved(booking, uName, invoiceBuffer))
@@ -236,6 +241,29 @@ router.post("/admin/bookings/:id/approve", async (req, res) => {
   } catch (err) {
     console.error("[admin] approve failed:", err);
     res.status(500).json({ ok: false, error: "Could not approve booking" });
+  }
+});
+
+// POST /api/admin/bookings/:id/mark-deposit-received
+// For when payment was confirmed some other way (bank statement,
+// WhatsApp, cash) and there's no proof-of-payment file to wait for.
+// Skips straight to "submitted" — the same state a guest's own proof
+// upload would put it in — so it shows up ready for final confirmation.
+router.post("/admin/bookings/:id/mark-deposit-received", async (req, res) => {
+  try {
+    const ref = bookingsCollection.doc(req.params.id);
+    const doc = await ref.get();
+    if (!doc.exists) return res.status(404).json({ ok: false, error: "Not found" });
+    const booking = doc.data();
+    if (booking.status !== "awaiting_payment") {
+      return res.status(409).json({ ok: false, error: `This booking is "${booking.status}" — only bookings awaiting a deposit can be marked this way.` });
+    }
+
+    await ref.update({ status: "submitted", proofUploadedAt: new Date().toISOString(), depositManuallyMarked: true });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[admin] mark-deposit-received failed:", err);
+    res.status(500).json({ ok: false, error: "Could not mark deposit as received" });
   }
 });
 
@@ -251,6 +279,9 @@ router.post("/admin/bookings/:id/decline", async (req, res) => {
     }
 
     await ref.update({ status: "rejected", decidedAt: new Date().toISOString(), declineReason: req.body.reason || "" });
+    // If this was already "awaiting_payment", it was holding the dates —
+    // release them immediately rather than waiting for the next sync.
+    syncUnitAndSave(booking.unitId).catch(err => console.error("[admin] immediate sync after decline failed:", err));
     notifyGuestDeclined(booking, unitName(booking.unitId), req.body.reason).catch(logEmailFail("decline"));
     res.json({ ok: true });
   } catch (err) {
@@ -304,6 +335,9 @@ router.post("/admin/bookings/:id/reject", async (req, res) => {
     }
 
     await ref.update({ status: "rejected", decidedAt: new Date().toISOString(), declineReason: req.body.reason || "" });
+    // This booking was "submitted" — i.e. still holding its dates —
+    // release them immediately rather than waiting for the next sync.
+    syncUnitAndSave(booking.unitId).catch(err => console.error("[admin] immediate sync after reject failed:", err));
     notifyGuestDeclined(booking, unitName(booking.unitId), req.body.reason).catch(logEmailFail("reject"));
     res.json({ ok: true });
   } catch (err) {
@@ -362,7 +396,14 @@ router.post("/admin/bookings/:id/balance/mark-paid", async (req, res) => {
 // this only removes the record itself, no emails are sent.
 router.delete("/admin/bookings/:id", async (req, res) => {
   try {
-    await bookingsCollection.doc(req.params.id).delete();
+    const ref = bookingsCollection.doc(req.params.id);
+    const doc = await ref.get();
+    const booking = doc.exists ? doc.data() : null;
+    await ref.delete();
+    // If this booking was holding dates (awaiting_payment/submitted/
+    // confirmed), releasing them immediately avoids a stale block
+    // sitting there until the next scheduled sync.
+    if (booking) syncUnitAndSave(booking.unitId).catch(err => console.error("[admin] immediate sync after delete failed:", err));
     res.json({ ok: true });
   } catch (err) {
     console.error("[admin] delete booking failed:", err);

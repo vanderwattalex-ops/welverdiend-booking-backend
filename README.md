@@ -13,13 +13,19 @@ Squarespace site.
 2. **You approve or decline** in `admin-dashboard.html`. Approving
    re-checks live availability first, so if a sync gap let something
    slip through, you'll see a conflict warning instead of approving a
-   double-booking.
+   double-booking. **The dates block on the calendar the moment you
+   approve** — not only once the deposit is paid — so nobody else can
+   request the same dates while this guest is paying.
 3. **The guest gets an email** with your bank details and a link to
    `upload-proof.html`, asking for a **50% deposit** to secure the dates.
 4. **You get a second email** once they've uploaded it, and give final
-   confirmation in the dashboard.
-5. **Only now do the dates actually block** on the calendar — and get
-   exported back out so Airbnb/Booking.com/Lekkeslaap pick them up too.
+   confirmation in the dashboard. (If you've confirmed payment some
+   other way — bank statement, WhatsApp — you can skip waiting for the
+   guest's upload with **Mark deposit received (no proof)** on the
+   booking's card; see below.)
+5. **If 24 hours pass with no deposit proof and no final confirmation**,
+   the booking automatically expires and the dates are released — see
+   "Auto-expiring unpaid holds" below.
 6. **Before check-in**, use **Send balance reminder** in the dashboard —
    this emails the guest the same upload link, now asking for the
    remaining 50%. Once they upload it (or you confirm payment another
@@ -467,6 +473,44 @@ This runs daily at 9am and only emails each booking once (it tracks
 this internally), so it's safe to leave running indefinitely. You can
 also still send a balance reminder manually any time from a booking's
 card, regardless of how close check-in is.
+
+## Confirming a deposit without proof of payment
+
+Sometimes you've confirmed a guest's deposit some other way — a bank
+statement, a WhatsApp screenshot, cash — and there's no need to wait
+for them to use the upload link. On any booking that's **Awaiting
+deposit**, click **Mark deposit received (no proof)** to skip straight
+to **Ready to confirm**, exactly as if the guest had uploaded proof
+themselves. Nothing is emailed to the guest at this step — you'll give
+final confirmation (and trigger their confirmation email + invoice) the
+same way as normal, with **Confirm booking**.
+
+## Auto-expiring unpaid holds
+
+A booking blocks its dates the moment you **approve** it, not only once
+it's fully confirmed — this is what stops the same dates being
+requested and approved twice while a guest is still paying. To make
+sure an approved-but-never-paid request doesn't hold those dates
+forever, a booking automatically **expires** (status: Expired) if 24
+hours pass after approval with no deposit proof received and no final
+confirmation given. The guest is emailed that their request expired,
+and the dates are released immediately — you don't need to do anything.
+
+This needs one more Cloud Scheduler job, which checks for stale
+bookings once an hour:
+
+```
+gcloud scheduler jobs create http welverdiend-expire-stale \
+  --schedule="0 * * * *" \
+  --uri="https://YOUR-CLOUD-RUN-URL/api/reminders/expire-stale" \
+  --http-method=GET \
+  --headers="x-admin-token=YOUR_GENERATED_TOKEN" \
+  --location=europe-west1
+```
+
+An expired booking is left in place (not deleted) so you still have a
+record of it — filter to it with the **Expired** tab in the dashboard,
+and delete it manually if you don't need to keep it.
 
 ## Invoices
 
