@@ -31,6 +31,12 @@ Squarespace site.
    remaining 50%. Once they upload it (or you confirm payment another
    way), click **Mark balance received**.
 
+**Booked with you directly instead?** Steps 1–3 are replaced by
+**+ New booking** in the dashboard, where you capture the guest's
+details yourself and pick which stage the booking is already at —
+everything after that is identical. See "Taking a booking yourself
+(WhatsApp, phone, walk-in)" below.
+
 ## How it fits together
 
 ```
@@ -491,6 +497,81 @@ this internally), so it's safe to leave running indefinitely. You can
 also still send a balance reminder manually any time from a booking's
 card, regardless of how close check-in is.
 
+## Taking a booking yourself (WhatsApp, phone, walk-in)
+
+Not every guest comes through the website. When somebody books directly
+— a WhatsApp message, a phone call, someone at the gate — click
+**+ New booking** at the top right of the Bookings tab and capture it
+yourself. From that point on it behaves exactly like a booking made on
+the site: same invoice, same emails, same calendar blocking, same
+balance tracking.
+
+**Filling in the form**
+
+- **Stay** — unit and dates. The number of nights appears as you pick
+  them.
+- **Guest** — name, phone, and **email is optional**. A WhatsApp guest
+  often won't give one; leave it blank and nothing is emailed, but you
+  still get the invoice PDF via **Download invoice** on the booking's
+  card, ready to send them yourself.
+- **Booked via** — WhatsApp, phone, walk-in, email, or other. This shows
+  as a badge on the booking card so you can tell at a glance which
+  bookings came in directly.
+- **Pricing** — the nightly rate is pre-filled from your Settings tab,
+  but you can change it **for this booking only** when you've agreed a
+  different rate. Tick any extras, add a **discount** if you've given
+  one (it appears as its own line on the guest's invoice), and the
+  running total, deposit and balance update as you type. The deposit
+  defaults to half the total — type over it if you agreed something
+  else, or set it to the full amount if they're paying everything up
+  front.
+- **Where is this booking up to?** — this is the important one:
+
+  | Choice | What it does | What the guest gets |
+  |---|---|---|
+  | **Send the deposit invoice** | Holds the dates, waits for payment | Invoice PDF, your bank details, upload link |
+  | **Deposit already paid** | Goes straight to *Ready to confirm* | Nothing — confirming it is what emails them |
+  | **Confirmed** | Fully confirmed, balance still owing | Confirmation email + invoice PDF |
+  | **Paid in full** | Confirmed and settled | "Paid in full" receipt PDF |
+
+- **Email the guest** — untick it to create the booking silently. It
+  switches itself off automatically when there's no email address, and
+  on the *Deposit already paid* stage, which never emails anyone.
+
+**Things worth knowing**
+
+- **The dates block immediately**, at every stage — as soon as the
+  booking exists, nobody can request those dates on the website, and
+  they're exported to Airbnb, Booking.com and Lekkeslaap on the next
+  sync.
+- **Manual bookings never auto-expire.** An approved website request is
+  released after 24 unpaid hours (see below), but a booking you took on
+  the phone holds its dates until you say otherwise — you're already in
+  contact with that guest, and an automatic "your request expired" email
+  would be both wrong and alarming. To release the dates, use **Cancel
+  booking** on the card.
+- **If the dates clash** with something already on the calendar, you get
+  a warning naming the conflicting booking and can either pick different
+  dates or go ahead anyway — useful when you're recording a booking
+  that's already blocking those dates through a platform's calendar.
+- **Nothing is trusted from the form.** The total, deposit and balance
+  are all recalculated on the server from the rate, extras and nights
+  before anything is saved — the figures on screen are a live preview of
+  that same calculation.
+
+**Sending the invoice again**
+
+Any booking with an email address on file has an **Email invoice**
+button (**Email receipt** once it's paid in full). It sends the guest
+the invoice exactly as it stands at that moment, as a PDF attachment —
+handy if the first email went missing or they've asked for another
+copy. It tells you whether it actually sent, rather than failing
+quietly.
+
+The wording of the first email a manual booking sends is editable like
+every other one — **Settings → Email templates → "Manual booking
+captured"**.
+
 ## Confirming a deposit without proof of payment
 
 Sometimes you've confirmed a guest's deposit some other way — a bank
@@ -512,6 +593,10 @@ forever, a booking automatically **expires** (status: Expired) if 24
 hours pass after approval and the deposit still hasn't been settled.
 The guest is emailed that their request expired, and the dates are
 released immediately — you don't need to do anything.
+
+Bookings you captured yourself (**+ New booking** — see "Taking a
+booking yourself" above) are skipped entirely by this sweep, whatever
+stage they're at. They hold their dates until you cancel them.
 
 Only bookings still sitting on **Awaiting deposit** can expire. Once a
 booking reaches **Ready to confirm** — the guest uploaded proof, or you

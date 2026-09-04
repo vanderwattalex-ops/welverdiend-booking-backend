@@ -9,8 +9,9 @@ const multer = require("multer");
 const sharp = require("sharp");
 const {
   notifyGuestApproved, notifyGuestConfirmed, notifyGuestDeclined,
-  notifyGuestBalanceDue, notifyGuestPaidInFull, sendTestEmail
+  notifyGuestBalanceDue, notifyGuestPaidInFull, notifyGuestManualBooking, sendTestEmail
 } = require("../lib/email");
+const { nightsBetween, calculateTotal } = require("../lib/pricing");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { DEFAULT_EMAIL_TEMPLATES } = require("../lib/emailTemplates");
 const { generateInvoice } = require("../lib/invoice");
@@ -196,6 +197,209 @@ router.get("/admin/bookings/:id/invoice", async (req, res) => {
   } catch (err) {
     console.error("[admin] invoice generation failed:", err);
     res.status(500).json({ ok: false, error: "Could not generate invoice" });
+  }
+});
+
+// -----------------------------------------------------------------
+// MANUAL BOOKINGS — for a guest who booked directly over WhatsApp, by
+// phone, or in person, so there's no request coming in through the
+// site to approve. You capture their details here and the booking
+// joins the normal flow from whichever payment stage it's already at.
+//
+// Deliberately reuses the existing statuses rather than inventing new
+// ones: every downstream action (confirm, balance reminder, mark
+// balance paid, invoice, calendar blocking, check-in reminder) then
+// works on a manual booking exactly as it does on a guest's own.
+// -----------------------------------------------------------------
+
+// Which status a manual booking starts in, per stage picked on the form.
+const MANUAL_STAGES = {
+  // Dates held, deposit invoice emailed — the usual starting point.
+  invoice_sent: { status: "awaiting_payment", balanceStatus: "unpaid" },
+  // Deposit already settled; sits in "Ready to confirm" for your final say.
+  deposit_paid: { status: "submitted", balanceStatus: "unpaid" },
+  // Deposit settled and confirmed outright; balance still outstanding.
+  confirmed: { status: "confirmed", balanceStatus: "unpaid" },
+  // Guest paid the whole stay up front.
+  paid_in_full: { status: "confirmed", balanceStatus: "paid" }
+};
+
+// POST /api/admin/bookings
+// body: { unitId, checkIn, checkOut, guestName, email?, phone?, adults?,
+//         children?, childrenAges?, hasPets?, petDetails?, arrivalTime?,
+//         notes?, extras?, ratePerNight?, discount?, depositAmount?,
+//         bookingChannel?, stage?, sendEmail?, force? }
+router.post("/admin/bookings", async (req, res) => {
+  try {
+    const {
+      unitId, checkIn, checkOut, guestName, email, phone,
+      adults, children, childrenAges, hasPets, petDetails, arrivalTime, notes,
+      extras: extrasBody, ratePerNight, discount, depositAmount,
+      bookingChannel, stage, sendEmail, force
+    } = req.body;
+
+    const { units: settingsUnits, extras } = await getSettings();
+    const unit = settingsUnits.find(u => u.id === unitId);
+    if (!unit) return res.status(400).json({ ok: false, error: "Unknown unit" });
+    // Dates are compared as strings elsewhere in the system, so they
+    // have to genuinely be YYYY-MM-DD — anything else would sail past a
+    // ">=" comparison and then turn the night count into NaN.
+    const isDate = d => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(new Date(d).getTime());
+    if (!isDate(checkIn) || !isDate(checkOut) || checkIn >= checkOut) {
+      return res.status(400).json({ ok: false, error: "Check-out must be a later date than check-in." });
+    }
+    if (!guestName || !guestName.trim()) {
+      return res.status(400).json({ ok: false, error: "A guest name is required." });
+    }
+
+    // Email is optional here — a WhatsApp or phone guest often never
+    // gives one. Without it the booking still works end to end; you
+    // just download the invoice and send it to them yourself.
+    const cleanEmail = (email || "").trim();
+    if (cleanEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return res.status(400).json({ ok: false, error: "That email address doesn't look right — check it, or leave it blank." });
+    }
+
+    const stageKey = MANUAL_STAGES[stage] ? stage : "invoice_sent";
+    const { status, balanceStatus } = MANUAL_STAGES[stageKey];
+
+    // Same conflict check the guest flow does, for the same reason —
+    // except you can knowingly override it (`force`), e.g. when the
+    // dates show as blocked by this very booking already sitting on an
+    // Airbnb calendar you're now recording directly.
+    if (!force) {
+      const availDoc = await availabilityCollection.doc(unitId).get();
+      const busyRanges = availDoc.exists ? availDoc.data().busyRanges || [] : [];
+      const clash = busyRanges.find(r => rangesOverlap(checkIn, checkOut, r.start, r.end));
+      if (clash) {
+        return res.status(409).json({
+          ok: false,
+          conflict: true,
+          error: `${unit.name} is already booked ${clash.start} → ${clash.end}${(clash.sources || []).length ? ` (${clash.sources.join(", ")})` : ""}.`
+        });
+      }
+    }
+
+    const nights = nightsBetween(checkIn, checkOut);
+    const selectedExtras = Array.isArray(extrasBody) ? extrasBody : [];
+    const pricing = calculateTotal(unit, nights, selectedExtras, extras, { ratePerNight, discount, depositAmount });
+
+    const now = new Date().toISOString();
+    const bookingId = uuidv4();
+    const booking = {
+      id: bookingId,
+      unitId,
+      checkIn,
+      checkOut,
+      nights,
+      guestName: guestName.trim(),
+      email: cleanEmail,
+      phone: (phone || "").trim(),
+      adults: Math.max(1, Number(adults) || 1),
+      children: Math.max(0, Number(children) || 0),
+      childrenAges: childrenAges || "",
+      hasPets: !!hasPets,
+      petDetails: petDetails || "",
+      arrivalTime: arrivalTime || "",
+      notes: notes || "",
+      extras: selectedExtras,
+      lineItems: pricing.lineItems,
+      totalAmount: pricing.total,
+      depositAmount: pricing.depositAmount,
+      balanceAmount: pricing.balanceAmount,
+      ratePerNight: pricing.ratePerNight,
+      discount: pricing.discount,
+      proofOfPaymentPath: null,
+      balanceProofPath: null,
+      balanceStatus,
+      status,
+      // Flags the record as owner-captured: shows a badge in the
+      // dashboard, and keeps it out of the 24-hour auto-expiry sweep
+      // (see routes/reminders.js) — you're already in direct contact
+      // with this guest, so an automated "your request expired" email
+      // would be both wrong and alarming.
+      manual: true,
+      bookingChannel: bookingChannel || "",
+      createdBy: "admin",
+      createdAt: now,
+      approvedAt: now
+    };
+    if (status === "submitted" || status === "confirmed") {
+      booking.proofUploadedAt = now;
+      booking.depositManuallyMarked = true;
+    }
+    if (status === "confirmed") booking.decidedAt = now;
+    if (balanceStatus === "paid") booking.balancePaidAt = now;
+
+    await bookingsCollection.doc(bookingId).set(booking);
+
+    // Every stage above holds the dates, so block them right away
+    // instead of waiting up to 5 minutes for the next scheduled sync.
+    syncUnitAndSave(unitId).catch(err => console.error("[admin] immediate sync after manual booking failed:", err));
+
+    // "Deposit already paid" sends nothing on purpose — that booking is
+    // waiting on YOUR confirmation, and the Confirm button is what
+    // sends the guest their confirmation email.
+    const willEmail = sendEmail !== false && !!cleanEmail && stageKey !== "deposit_paid";
+    if (willEmail) {
+      const uName = unit.name;
+      const send = {
+        invoice_sent: buf => notifyGuestManualBooking(booking, uName, buf),
+        confirmed: buf => notifyGuestConfirmed(booking, uName, buf),
+        paid_in_full: buf => notifyGuestPaidInFull(booking, uName, buf)
+      }[stageKey];
+      generateInvoice(booking, uName).then(send).catch(logEmailFail("manual booking"));
+    }
+
+    res.json({
+      ok: true,
+      bookingId,
+      totalAmount: pricing.total,
+      depositAmount: pricing.depositAmount,
+      balanceAmount: pricing.balanceAmount,
+      emailed: willEmail
+    });
+  } catch (err) {
+    console.error("[admin] manual booking failed:", err);
+    res.status(500).json({ ok: false, error: "Could not create that booking" });
+  }
+});
+
+// POST /api/admin/bookings/:id/send-invoice
+// Emails the guest the invoice as it stands right now — the deposit
+// request, the confirmation invoice, or the paid-in-full receipt,
+// whichever matches the booking's current stage. Unlike the automatic
+// emails this one is awaited and reports back whether it actually
+// sent, since you clicked it expecting something to leave.
+router.post("/admin/bookings/:id/send-invoice", async (req, res) => {
+  try {
+    const doc = await bookingsCollection.doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ ok: false, error: "Not found" });
+    const booking = doc.data();
+    if (!booking.email) {
+      return res.status(400).json({ ok: false, error: "This booking has no email address on file. Use \"Download invoice\" and send the PDF to the guest yourself." });
+    }
+
+    const uName = unitName(booking.unitId);
+    let send;
+    if (booking.status === "awaiting_payment") {
+      send = buf => booking.manual ? notifyGuestManualBooking(booking, uName, buf) : notifyGuestApproved(booking, uName, buf);
+    } else if (booking.status === "confirmed") {
+      send = booking.balanceStatus === "paid"
+        ? buf => notifyGuestPaidInFull(booking, uName, buf)
+        : buf => notifyGuestConfirmed(booking, uName, buf);
+    } else {
+      return res.status(409).json({
+        ok: false,
+        error: `This booking is "${booking.status}" — there's no invoice email for that stage. Confirm it first, or download the invoice and send it yourself.`
+      });
+    }
+
+    const result = await send(await generateInvoice(booking, uName));
+    res.json({ ok: true, sent: result.sent, reason: result.reason || null });
+  } catch (err) {
+    console.error("[admin] send invoice failed:", err);
+    res.status(500).json({ ok: false, error: "Could not send that invoice" });
   }
 });
 

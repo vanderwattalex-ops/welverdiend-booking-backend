@@ -5,6 +5,7 @@ const router = express.Router();
 const { bookingsCollection, bucket, availabilityCollection } = require("../lib/db");
 const { getSettings } = require("../lib/settings");
 const { rangesOverlap } = require("../lib/rangeUtils");
+const { nightsBetween, calculateTotal } = require("../lib/pricing");
 const { notifyOwnerNewRequest, notifyOwnerProofUploaded, notifyOwnerBalanceProofUploaded } = require("../lib/email");
 
 const upload = multer({
@@ -15,44 +16,6 @@ const upload = multer({
     cb(ok ? null : new Error("Proof of payment must be an image or PDF"), ok);
   }
 });
-
-function nightsBetween(checkIn, checkOut) {
-  const ms = new Date(checkOut) - new Date(checkIn);
-  return Math.round(ms / (1000 * 60 * 60 * 24));
-}
-
-/**
- * Recomputes the total server-side from the config's current prices —
- * never trusts a total the client might send. Also splits it into a
- * 50% deposit (due to secure the booking) and a 50% balance (due
- * before check-in).
- */
-function calculateTotal(unit, nights, selectedExtras, extrasCatalog) {
-  const base = unit.pricePerNight * nights;
-  const lineItems = [{ label: `${unit.name} — ${nights} night${nights === 1 ? "" : "s"}`, amount: base }];
-
-  let extrasTotal = 0;
-  for (const sel of selectedExtras) {
-    const def = extrasCatalog.find(e => e.id === sel.id);
-    if (!def) continue;
-    if (def.type === "flat") {
-      extrasTotal += def.price;
-      lineItems.push({ label: def.label, amount: def.price });
-    } else if (def.type === "qty") {
-      const qty = Math.max(0, Math.min(def.max || 99, Number(sel.qty) || 0));
-      if (qty > 0) {
-        const amount = def.price * qty;
-        extrasTotal += amount;
-        lineItems.push({ label: `${def.label} × ${qty}`, amount });
-      }
-    }
-  }
-
-  const total = base + extrasTotal;
-  const depositAmount = Math.round((total / 2) * 100) / 100;
-  const balanceAmount = Math.round((total - depositAmount) * 100) / 100;
-  return { total, lineItems, depositAmount, balanceAmount };
-}
 
 async function isRangeFree(unitId, checkIn, checkOut) {
   const availDoc = await availabilityCollection.doc(unitId).get();

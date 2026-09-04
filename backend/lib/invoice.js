@@ -3,7 +3,9 @@ const path = require("path");
 const fs = require("fs");
 
 function fmtDate(d) { return new Date(d).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" }); }
-function rand(n) { return `R${Number(n || 0).toFixed(2)}`; }
+// Negative amounts (a manual booking's discount line) read as "-R500.00",
+// not "R-500.00".
+function rand(n) { const v = Number(n || 0); return `${v < 0 ? "-" : ""}R${Math.abs(v).toFixed(2)}`; }
 
 const LOGO_PATH = path.join(__dirname, "..", "public", "letterhead-logo.png");
 
@@ -67,10 +69,10 @@ function generateInvoice(booking, unitName) {
 
     // Bill to
     doc.fontSize(11).fillColor("#2B2A26").text("Billed to:");
-    doc.fontSize(10).fillColor("#66604F")
-      .text(booking.guestName)
-      .text(booking.email)
-      .text(booking.phone);
+    doc.fontSize(10).fillColor("#66604F");
+    // A manually-captured booking (WhatsApp, phone) may have no email
+    // address on file — skip blanks rather than printing empty lines.
+    [booking.guestName, booking.email, booking.phone].filter(Boolean).forEach(line => doc.text(line));
     doc.moveDown(1);
 
     // Stay details

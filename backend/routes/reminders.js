@@ -59,13 +59,19 @@ router.get("/reminders/checkin", requireAdmin, async (req, res) => {
 // received manually) and it's now waiting on the owner to confirm —
 // expiring those would release dates a paying guest holds AND email
 // them a false "we never received your payment" notice.
+//
+// Manual bookings are skipped for a related reason: they were captured
+// by the owner from a direct WhatsApp/phone conversation, so the guest
+// never made a "request" that could expire, and payment terms were
+// agreed verbally rather than by the 24-hour rule. Those hold their
+// dates until the owner decides otherwise.
 router.get("/reminders/expire-stale", requireAdmin, async (req, res) => {
   try {
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const snap = await bookingsCollection.where("status", "==", "awaiting_payment").get();
     const stale = snap.docs
       .map(d => ({ id: d.id, ...d.data() }))
-      .filter(b => b.approvedAt && b.approvedAt <= cutoff);
+      .filter(b => !b.manual && b.approvedAt && b.approvedAt <= cutoff);
 
     const affectedUnits = new Set();
     let expired = 0;

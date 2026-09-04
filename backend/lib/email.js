@@ -39,7 +39,9 @@ async function sendMail({ to, subject, html, attachments }) {
 }
 
 function fmtDate(d) { return new Date(d).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" }); }
-function rand(n) { return `R${Number(n || 0).toFixed(2)}`; }
+// Negative amounts (a manual booking's discount line) read as "-R500.00",
+// not "R-500.00".
+function rand(n) { const v = Number(n || 0); return `${v < 0 ? "-" : ""}R${Math.abs(v).toFixed(2)}`; }
 
 // Fills {{token}} placeholders in a custom template with plain string
 // substitution — no conditionals or loops. Any token with no matching
@@ -98,6 +100,33 @@ async function notifyGuestApproved(booking, unitName, invoiceBuffer) {
     bankDetails, uploadUrl, paymentInstructions
   };
   const { subject, html } = await resolveEmail("approved", vars);
+  return sendMail({
+    to: booking.email, subject, html,
+    attachments: invoiceBuffer ? [{ filename: `invoice-${booking.id.slice(0, 8)}.pdf`, content: invoiceBuffer }] : undefined
+  });
+}
+
+/**
+ * The first email a guest gets for a booking YOU captured for them
+ * (WhatsApp, phone, walk-in) rather than one they requested through the
+ * site. Same deposit-and-bank-details job as the approval email, but
+ * worded for someone who already spoke to you — no "your request has
+ * been approved", since they never made a request.
+ */
+async function notifyGuestManualBooking(booking, unitName, invoiceBuffer) {
+  const { bankDetails, frontendBaseUrl } = await getSettings();
+  const uploadUrl = frontendBaseUrl ? `${frontendBaseUrl}/upload-proof.html?booking=${booking.id}` : "";
+  const paymentInstructions = uploadUrl
+    ? `<p>Once you've paid, you can upload your proof of payment here:<br><a href="${uploadUrl}">${uploadUrl}</a></p>`
+    : `<p>Please reply to this email with your proof of payment once you've paid.</p>`;
+
+  const vars = {
+    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    nights: booking.nights, nightsSuffix: booking.nights === 1 ? "" : "s",
+    depositAmount: rand(booking.depositAmount), balanceAmount: rand(booking.balanceAmount),
+    totalAmount: rand(booking.totalAmount), bankDetails, uploadUrl, paymentInstructions
+  };
+  const { subject, html } = await resolveEmail("manualBooking", vars);
   return sendMail({
     to: booking.email, subject, html,
     attachments: invoiceBuffer ? [{ filename: `invoice-${booking.id.slice(0, 8)}.pdf`, content: invoiceBuffer }] : undefined
@@ -214,6 +243,7 @@ async function sendTestEmail(to) {
 module.exports = {
   notifyOwnerNewRequest,
   notifyGuestApproved,
+  notifyGuestManualBooking,
   notifyOwnerProofUploaded,
   notifyGuestConfirmed,
   notifyGuestDeclined,

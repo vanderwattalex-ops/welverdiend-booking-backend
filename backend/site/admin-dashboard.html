@@ -26,9 +26,15 @@
   .sync-warning.show{display:block;}
   .sync-warning strong{display:block;margin-bottom:4px;}
   .sync-warning ul{margin:4px 0 0;padding-left:18px;}
-  .filters{display:flex;gap:8px;margin-bottom:16px;}
+  .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
   .filters button{padding:7px 14px;border:1px solid var(--line);border-radius:20px;background:var(--white);cursor:pointer;font-size:12.5px;color:var(--ink-soft);}
   .filters button.active{background:var(--taupe-deep);color:var(--white);border-color:var(--taupe-deep);}
+  .bookings-toolbar{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:16px;}
+  .bookings-toolbar .filters{margin-bottom:0;}
+  .btn-new-booking{
+    padding:9px 18px;border:none;border-radius:4px;background:var(--taupe-deep);color:var(--white);
+    cursor:pointer;font-weight:600;font-size:13px;white-space:nowrap;
+  }
   .cards{display:flex;flex-direction:column;gap:12px;}
   .card{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:16px 20px;}
   .card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;}
@@ -41,6 +47,8 @@
   .status.confirmed{background:#E5EEDF;color:var(--success);}
   .status.rejected{background:#F5E1DC;color:var(--danger);}
   .status.expired{background:#EFE7DD;color:#8A6A1F;}
+  .status.manual{background:var(--surface);color:var(--taupe-dark);border:1px solid var(--line);}
+  .head-tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
   .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0;font-size:13px;}
   .detail-grid .label{color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px;}
   .extras-list{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
@@ -86,6 +94,26 @@
   .reason-modal-actions button{flex:1;padding:10px;border-radius:5px;font-size:13.5px;font-weight:600;cursor:pointer;border:none;}
   .reason-modal-actions .cancel-btn{background:var(--surface);border:1px solid var(--line) !important;color:var(--ink);}
   .reason-modal-actions .confirm-btn{background:var(--danger);color:white;}
+  .reason-modal-actions .create-btn{background:var(--success);color:white;}
+  /* The manual-booking form is a full form rather than a one-line
+     prompt, so it needs a wider, scrollable version of the same modal. */
+  .form-modal{max-width:720px;max-height:90vh;overflow-y:auto;}
+  .form-modal h4{
+    font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);
+    margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);font-weight:600;
+  }
+  .form-modal .settings-field label{font-weight:500;color:var(--ink-soft);font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;}
+  .form-modal select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:4px;font-size:13.5px;font-family:'Inter',sans-serif;background:var(--white);}
+  .form-modal .hint{font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+  .nb-extra{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;}
+  .nb-extra label{flex:1;color:var(--ink);}
+  .nb-extra input[type=number]{width:70px;padding:6px 8px;border:1px solid var(--line);border-radius:4px;font-size:13px;}
+  .nb-extra .ex-price{color:var(--ink-soft);font-size:12.5px;}
+  .nb-totals{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin-top:14px;}
+  .nb-total-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;color:var(--ink-soft);}
+  .nb-total-row.grand{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--taupe-deep);padding-top:8px;margin-top:6px;border-top:1px solid var(--line);}
+  .nb-checkbox{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:10px;}
+  .nb-checkbox label{color:var(--ink);}
   .settings-field{margin-bottom:14px;}
   .settings-field label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--ink);}
   .settings-field input,.settings-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:4px;font-size:13.5px;font-family:'Inter',sans-serif;}
@@ -150,14 +178,17 @@
 </div>
 
 <div class="tab-panel active" id="panel-bookings">
-  <div class="filters">
-    <button class="active" data-status="">All</button>
-    <button data-status="requested">New requests</button>
-    <button data-status="awaiting_payment">Awaiting payment</button>
-    <button data-status="submitted">Ready to confirm</button>
-    <button data-status="confirmed">Confirmed</button>
-    <button data-status="rejected">Rejected</button>
-    <button data-status="expired">Expired</button>
+  <div class="bookings-toolbar">
+    <div class="filters">
+      <button class="active" data-status="">All</button>
+      <button data-status="requested">New requests</button>
+      <button data-status="awaiting_payment">Awaiting payment</button>
+      <button data-status="submitted">Ready to confirm</button>
+      <button data-status="confirmed">Confirmed</button>
+      <button data-status="rejected">Rejected</button>
+      <button data-status="expired">Expired</button>
+    </div>
+    <button type="button" class="btn-new-booking" id="new-booking-btn">+ New booking</button>
   </div>
   <div class="cards" id="cards"></div>
   <div id="empty">Enter your admin token and load bookings.</div>
@@ -223,7 +254,9 @@
   };
   function token(){ return document.getElementById("token").value.trim(); }
   function esc(s){ const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
-  function rand(n){ return `R${Number(n||0).toFixed(2)}`; }
+  // Negative amounts (a manual booking's discount line) read as
+  // "-R500.00", not "R-500.00".
+  function rand(n){ const v = Number(n||0); return `${v < 0 ? "-" : ""}R${Math.abs(v).toFixed(2)}`; }
 
   const feedLabels = { airbnb: "Airbnb", "booking.com": "Booking.com", lekkeslaap: "Lekkeslaap" };
 
@@ -294,7 +327,12 @@
     data.bookings.forEach(b => {
       const guestsLine = `${b.adults || 1} adult${(b.adults||1)===1?"":"s"}` + (b.children ? `, ${b.children} child${b.children===1?"":"ren"}${b.childrenAges ? " ("+esc(b.childrenAges)+")" : ""}` : "");
       const petsLine = b.hasPets ? (esc(b.petDetails) || "Yes") : "No";
-      const extrasLines = (b.lineItems || []).slice(1).map(li => `${esc(li.label)} — ${rand(li.amount)}`).join("<br>") || "None";
+      // Everything after the first line item is an add-on — except a
+      // manual booking's discount, which belongs with the money rather
+      // than in a list of things the guest ordered.
+      const addOns = (b.lineItems || []).slice(1);
+      const extrasLines = addOns.filter(li => li.amount >= 0).map(li => `${esc(li.label)} — ${rand(li.amount)}`).join("<br>") || "None";
+      const discountLine = addOns.filter(li => li.amount < 0).map(li => `${esc(li.label)} ${rand(li.amount)}`).join(", ");
       const statusLabels = { requested: "New request", awaiting_payment: "Awaiting deposit", submitted: "Ready to confirm", confirmed: "Confirmed", rejected: "Rejected", expired: "Expired" };
       const balanceLabels = { unpaid: "Balance not yet paid", submitted: "Balance proof received", paid: "Balance paid" };
 
@@ -302,9 +340,13 @@
       if(b.status === "requested"){
         actionsHtml = `<button class="btn-approve" data-id="${b.id}" data-action="approve">Approve — dates are available</button><button class="btn-reject" data-id="${b.id}" data-action="decline">Decline</button>`;
       } else if(b.status === "awaiting_payment"){
-        actionsHtml = `<button class="btn-confirm" data-id="${b.id}" data-action="mark-deposit-received">Mark deposit received (no proof)</button><button class="btn-reject" data-id="${b.id}" data-action="decline">Cancel request</button>`;
+        const parts = [`<button class="btn-proof" data-id="${b.id}" data-action="invoice">Download invoice</button>`];
+        if(b.email) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="send-invoice">Email invoice</button>`);
+        parts.push(`<button class="btn-confirm" data-id="${b.id}" data-action="mark-deposit-received">Mark deposit received (no proof)</button>`);
+        parts.push(`<button class="btn-reject" data-id="${b.id}" data-action="decline">${b.manual ? "Cancel booking" : "Cancel request"}</button>`);
+        actionsHtml = parts.join("");
       } else if(b.status === "submitted"){
-        const submittedParts = [];
+        const submittedParts = [`<button class="btn-proof" data-id="${b.id}" data-action="invoice">Download invoice</button>`];
         if(b.proofOfPaymentPath) submittedParts.push(`<button class="btn-proof" data-id="${b.id}" data-action="proof">View deposit proof</button>`);
         submittedParts.push(`<button class="btn-confirm" data-id="${b.id}" data-action="confirm">Confirm booking</button>`);
         submittedParts.push(`<button class="btn-reject" data-id="${b.id}" data-action="reject">Reject</button>`);
@@ -312,6 +354,7 @@
       } else if(b.status === "confirmed"){
         const parts = [];
         parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="invoice">Download invoice</button>`);
+        if(b.email) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="send-invoice">Email ${b.balanceStatus === "paid" ? "receipt" : "invoice"}</button>`);
         if(b.proofOfPaymentPath) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="proof">View deposit proof</button>`);
         if(b.balanceStatus === "unpaid"){
           parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="remind">Send balance reminder</button>`);
@@ -336,22 +379,26 @@
             <h3>${esc(b.guestName)} · ${esc(b.unitId)}</h3>
             <div class="dates">${b.checkIn} → ${b.checkOut} (${b.nights || ""} night${b.nights===1?"":"s"})${b.arrivalTime ? " · arriving " + esc(b.arrivalTime) : ""}</div>
           </div>
-          <span class="status ${knownStatus ? b.status : ''}">${statusLabels[b.status] || `Unrecognized status: ${esc(b.status)}`}</span>
+          <div class="head-tags">
+            ${b.manual ? `<span class="status manual" title="Captured by you, not requested through the website">Manual${b.bookingChannel && CHANNEL_LABELS[b.bookingChannel] ? " · " + CHANNEL_LABELS[b.bookingChannel] : ""}</span>` : ""}
+            <span class="status ${knownStatus ? b.status : ''}">${statusLabels[b.status] || `Unrecognized status: ${esc(b.status)}`}</span>
+          </div>
         </div>
         ${!knownStatus ? `<div class="notes">This booking has a status from an older version of the system and won't show any action buttons except Delete. Safe to delete if it's old test data.</div>` : ""}
         <div class="detail-grid">
-          <div><div class="label">Contact</div>${esc(b.email)}<br>${esc(b.phone)}</div>
+          <div><div class="label">Contact</div>${b.email ? esc(b.email) : `<span class="range-source">No email on file</span>`}<br>${esc(b.phone)}</div>
           <div><div class="label">Guests</div>${guestsLine}</div>
           <div><div class="label">Pets</div>${petsLine}</div>
           <div><div class="label">Extras</div><div class="extras-list">${extrasLines}</div></div>
           <div>
             <div class="label">Payment</div>
             <div class="total">${rand(b.totalAmount)} total</div>
+            ${discountLine ? `<div class="range-source">${discountLine} applied</div>` : ""}
             <div class="range-source">Deposit ${rand(b.depositAmount)} · Balance ${rand(b.balanceAmount)}${b.status === 'confirmed' ? ` — ${balanceLabels[b.balanceStatus] || b.balanceStatus}` : ''}</div>
           </div>
         </div>
         ${b.notes ? `<div class="notes">"${esc(b.notes)}"</div>` : ""}
-        ${b.status === "awaiting_payment" ? `<div class="waiting-note">Waiting for the guest to upload deposit proof of payment.</div>` : ""}
+        ${b.status === "awaiting_payment" ? `<div class="waiting-note">${b.manual ? "Dates are held for this guest. Manual bookings never auto-expire — cancel it to release the dates." : "Waiting for the guest to upload deposit proof of payment."}</div>` : ""}
         ${b.status === "expired" ? `<div class="waiting-note">Automatically expired 24 hours after approval — no deposit proof was received. Dates have been released.</div>` : ""}
         <div class="actions">${actionsHtml}</div>
       `;
@@ -361,6 +408,7 @@
     cards.querySelectorAll("[data-action='proof']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "deposit"));
     cards.querySelectorAll("[data-action='balance-proof']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "balance"));
     cards.querySelectorAll("[data-action='invoice']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "invoice"));
+    cards.querySelectorAll("[data-action='send-invoice']").forEach(btn => btn.onclick = () => sendInvoiceEmail(btn.dataset.id));
     cards.querySelectorAll("[data-action='approve']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "approve"));
     cards.querySelectorAll("[data-action='mark-deposit-received']").forEach(btn => btn.onclick = () => markDepositReceived(btn.dataset.id));
     cards.querySelectorAll("[data-action='confirm']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "confirm"));
@@ -467,6 +515,362 @@
     const data = await res.json();
     if(data.ok) loadBookings();
     else alert(data.error || "Could not delete that booking.");
+  }
+
+
+  // -----------------------------------------------------------------
+  // Manual bookings — capturing a stay somebody booked with you
+  // directly (WhatsApp, phone, in person) so it joins exactly the same
+  // flow as a booking made through the website: invoice, deposit,
+  // confirmation, balance, receipt.
+  // -----------------------------------------------------------------
+
+  const CHANNEL_LABELS = { whatsapp: "WhatsApp", phone: "Phone call", walkin: "Walk-in", email: "Email", other: "Other" };
+  const STAGE_NOTES = {
+    invoice_sent: "The guest is emailed their invoice, your bank details, and a link to upload proof of payment.",
+    deposit_paid: "Nothing is emailed now — the booking waits in “Ready to confirm”, and confirming it is what emails the guest.",
+    confirmed: "The guest is emailed a confirmation with their invoice attached, showing the deposit paid and the balance still due.",
+    paid_in_full: "The guest is emailed a “paid in full” receipt."
+  };
+
+  let newBookingSettings = null; // units + extras, re-read from Settings every time the form opens
+  let depositEdited = false;     // stops the 50% auto-fill overwriting a deposit you typed yourself
+  let sendEmailEdited = false;   // same idea for the "email the guest" checkbox
+
+  function round2(n){ return Math.round(Number(n||0) * 100) / 100; }
+
+  document.getElementById("new-booking-btn").onclick = openNewBooking;
+  function closeNewBooking(){ document.getElementById("new-booking-overlay").classList.remove("show"); }
+
+  // The modal's markup lives at the very bottom of this file, AFTER
+  // this script — same as the decline-reason modal — so its elements
+  // don't exist yet while this script is running. Wiring happens on
+  // first open instead, guarded so reopening the form never stacks up
+  // duplicate listeners. (Reaching for these at load time throws on a
+  // null element and takes the rest of the dashboard's script down
+  // with it.)
+  let newBookingWired = false;
+  function wireNewBookingModal(){
+    if(newBookingWired) return;
+    document.getElementById("new-booking-cancel").onclick = closeNewBooking;
+    document.getElementById("new-booking-create").onclick = () => submitNewBooking(false);
+    const body = document.getElementById("new-booking-body");
+    // Listens on the container, not each field, so a re-rendered form
+    // needs no re-wiring.
+    body.addEventListener("input", onNewBookingInput);
+    body.addEventListener("change", onNewBookingInput);
+    newBookingWired = true;
+  }
+
+  async function openNewBooking(){
+    if(!token()){ alert("Enter your admin token first."); return; }
+    wireNewBookingModal();
+    const body = document.getElementById("new-booking-body");
+    document.getElementById("new-booking-msg").textContent = "";
+    document.getElementById("new-booking-overlay").classList.add("show");
+
+    // Rates and extras come from your Settings tab, so a manual booking
+    // is priced off exactly the same numbers as a website booking —
+    // re-read on every open, so a price you changed a minute ago in
+    // Settings is the price this form quotes.
+    body.innerHTML = `<p class="no-ranges">Loading your units and prices…</p>`;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/settings`, { headers: { "x-admin-token": token() } });
+      const data = await res.json();
+      if(!data.ok) throw new Error("settings load failed");
+      newBookingSettings = { units: data.settings.units || [], extras: data.settings.extras || [] };
+    }catch(err){
+      body.innerHTML = `<p class="no-ranges">Could not load your units and prices — check your admin token and try again.</p>`;
+      return;
+    }
+    renderNewBookingForm();
+  }
+
+  function renderNewBookingForm(){
+    depositEdited = false;
+    sendEmailEdited = false;
+    const { units, extras } = newBookingSettings;
+    const firstUnit = units[0] || { pricePerNight: 0 };
+
+    const extrasHtml = extras.length ? extras.map(ex => ex.type === "qty"
+      ? `<div class="nb-extra">
+           <label for="nbx-${ex.id}">${esc(ex.label)} <span class="ex-price">${rand(ex.price)} each</span></label>
+           <input type="number" id="nbx-${ex.id}" class="nb-extra-qty" data-id="${ex.id}" min="0" max="${ex.max || 99}" value="0">
+         </div>`
+      : `<div class="nb-extra">
+           <input type="checkbox" id="nbx-${ex.id}" class="nb-extra-flat" data-id="${ex.id}">
+           <label for="nbx-${ex.id}">${esc(ex.label)} <span class="ex-price">${rand(ex.price)}</span></label>
+         </div>`
+    ).join("") : `<p class="hint">No extras set up yet — you can add them in the Settings tab.</p>`;
+
+    document.getElementById("new-booking-body").innerHTML = `
+      <h4>Stay</h4>
+      <div class="settings-row">
+        <div class="settings-field"><label>Unit</label>
+          <select id="nb-unit">${units.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join("")}</select>
+        </div>
+        <div class="settings-field"><label>Check-in</label><input type="date" id="nb-checkin"></div>
+        <div class="settings-field"><label>Check-out</label><input type="date" id="nb-checkout"></div>
+      </div>
+      <div class="hint" id="nb-nights">Pick dates to see the number of nights.</div>
+
+      <h4>Guest</h4>
+      <div class="settings-row">
+        <div class="settings-field"><label>Name</label><input type="text" id="nb-name" placeholder="Full name"></div>
+        <div class="settings-field"><label>Phone</label><input type="text" id="nb-phone" placeholder="082 123 4567"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-field"><label>Email — optional</label><input type="email" id="nb-email" placeholder="Leave blank if they didn't give one">
+          <div class="hint">Without an email nothing can be sent automatically — you'll download the invoice and send it yourself.</div>
+        </div>
+        <div class="settings-field"><label>Booked via</label>
+          <select id="nb-channel">
+            <option value="whatsapp">WhatsApp</option>
+            <option value="phone">Phone call</option>
+            <option value="walkin">Walk-in</option>
+            <option value="email">Email</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-field"><label>Adults</label><input type="number" id="nb-adults" min="1" value="2"></div>
+        <div class="settings-field"><label>Children</label><input type="number" id="nb-children" min="0" value="0"></div>
+        <div class="settings-field"><label>Children's ages</label><input type="text" id="nb-ages" placeholder="e.g. 4 and 7"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-field"><label>Arrival time</label><input type="text" id="nb-arrival" placeholder="e.g. around 16:00"></div>
+        <div class="settings-field"><label>Pet details</label><input type="text" id="nb-petdetails" placeholder="e.g. one small dog"></div>
+      </div>
+      <div class="nb-checkbox"><input type="checkbox" id="nb-pets"><label for="nb-pets">Bringing pets</label></div>
+      <div class="settings-field" style="margin-top:12px;"><label>Notes — for your records</label><textarea id="nb-notes" placeholder="Anything you agreed on the call"></textarea></div>
+
+      <h4>Pricing</h4>
+      <div class="settings-row">
+        <div class="settings-field"><label>Rate per night (R)</label><input type="number" id="nb-rate" min="0" value="${firstUnit.pricePerNight || 0}">
+          <div class="hint">Pre-filled from Settings — change it for a negotiated rate on this booking only.</div>
+        </div>
+        <div class="settings-field"><label>Discount (R)</label><input type="number" id="nb-discount" min="0" value="0">
+          <div class="hint">Shown as its own line on the invoice.</div>
+        </div>
+      </div>
+      <div style="margin-top:6px;">${extrasHtml}</div>
+      <div class="settings-field" style="margin-top:12px;"><label>Deposit due (R)</label><input type="number" id="nb-deposit" min="0" value="0">
+        <div class="hint">Defaults to half the total. Set it to the full amount if they're paying everything up front.</div>
+      </div>
+      <div class="nb-totals">
+        <div class="nb-total-row"><span id="nb-base-label">Accommodation</span><span id="nb-base">R0.00</span></div>
+        <div class="nb-total-row"><span>Extras</span><span id="nb-extras-total">R0.00</span></div>
+        <div class="nb-total-row"><span>Discount</span><span id="nb-discount-total">R0.00</span></div>
+        <div class="nb-total-row grand"><span>Total</span><span id="nb-total">R0.00</span></div>
+        <div class="nb-total-row" style="margin-top:6px;"><span>Deposit</span><span id="nb-deposit-shown">R0.00</span></div>
+        <div class="nb-total-row"><span>Balance before check-in</span><span id="nb-balance">R0.00</span></div>
+      </div>
+
+      <h4>Where is this booking up to?</h4>
+      <div class="settings-field">
+        <select id="nb-stage">
+          <option value="invoice_sent">Send the deposit invoice — waiting on payment</option>
+          <option value="deposit_paid">Deposit already paid — ready for me to confirm</option>
+          <option value="confirmed">Confirmed — balance still outstanding</option>
+          <option value="paid_in_full">Paid in full</option>
+        </select>
+      </div>
+      <div class="nb-checkbox"><input type="checkbox" id="nb-send-email" checked><label for="nb-send-email">Email the guest</label></div>
+      <div class="hint" id="nb-stage-note"></div>
+      <div class="hint" style="margin-top:10px;">These dates are held as soon as you create the booking, and won't auto-expire — cancel the booking to release them.</div>
+    `;
+
+    recalcNewBooking();
+  }
+
+  function onNewBookingInput(e){
+    if(!newBookingSettings) return; // form hasn't been built yet
+    if(e.target.id === "nb-deposit") depositEdited = true;
+    if(e.target.id === "nb-send-email") sendEmailEdited = true;
+    if(e.target.id === "nb-unit"){
+      const u = newBookingSettings.units.find(x => x.id === e.target.value);
+      // A rate you've deliberately typed shouldn't be silently replaced,
+      // but switching units with the default still showing should follow
+      // that unit's own rate.
+      if(u) document.getElementById("nb-rate").value = u.pricePerNight || 0;
+    }
+    recalcNewBooking();
+  }
+
+  function nbVal(id){ const el = document.getElementById(id); return el ? el.value : ""; }
+
+  function nbNights(){
+    const from = nbVal("nb-checkin"), to = nbVal("nb-checkout");
+    if(!from || !to || from >= to) return 0;
+    return Math.round((new Date(to) - new Date(from)) / 86400000);
+  }
+
+  /**
+   * Mirrors the server's pricing so you can see the total change as you
+   * type. The server recalculates it all again on submit and that
+   * result is what's stored — this is a preview, never the source of
+   * truth.
+   */
+  function recalcNewBooking(){
+    const { units, extras } = newBookingSettings;
+    const nights = nbNights();
+    // Matches the server: an empty rate box falls back to the unit's
+    // configured price rather than quietly pricing the stay at zero.
+    const unit = units.find(u => u.id === nbVal("nb-unit")) || units[0] || { pricePerNight: 0 };
+    const rate = nbVal("nb-rate").trim() === "" ? (unit.pricePerNight || 0) : Math.max(0, Number(nbVal("nb-rate")) || 0);
+    const base = round2(rate * nights);
+
+    let extrasTotal = 0;
+    document.querySelectorAll(".nb-extra-flat").forEach(cb => {
+      const ex = extras.find(e => e.id === cb.dataset.id);
+      if(cb.checked && ex) extrasTotal += ex.price;
+    });
+    document.querySelectorAll(".nb-extra-qty").forEach(inp => {
+      const ex = extras.find(e => e.id === inp.dataset.id);
+      if(!ex) return;
+      const qty = Math.max(0, Math.min(ex.max || 99, Number(inp.value) || 0));
+      if(qty > 0) extrasTotal += ex.price * qty;
+    });
+
+    // Until the dates make sense there's nothing to quote — showing a
+    // total made of extras alone, with no stay under it, reads as a
+    // real price and isn't one.
+    const quotable = nights > 0;
+    const discount = quotable ? Math.min(Math.max(0, Number(nbVal("nb-discount")) || 0), base + extrasTotal) : 0;
+    if(!quotable) extrasTotal = 0;
+    const total = quotable ? round2(base + extrasTotal - discount) : 0;
+
+    const depositField = document.getElementById("nb-deposit");
+    if(!depositEdited) depositField.value = round2(total / 2).toFixed(2);
+    const deposit = Math.min(Math.max(0, Number(depositField.value) || 0), total);
+    const balance = round2(total - deposit);
+
+    document.getElementById("nb-nights").textContent = nights > 0
+      ? `${nights} night${nights === 1 ? "" : "s"}`
+      : "Pick dates to see the number of nights.";
+    document.getElementById("nb-base-label").textContent = nights > 0 ? `Accommodation — ${nights} × ${rand(rate)}` : "Accommodation";
+    document.getElementById("nb-base").textContent = rand(base);
+    document.getElementById("nb-extras-total").textContent = rand(extrasTotal);
+    document.getElementById("nb-discount-total").textContent = rand(-discount);
+    document.getElementById("nb-total").textContent = rand(total);
+    document.getElementById("nb-deposit-shown").textContent = rand(deposit);
+    document.getElementById("nb-balance").textContent = rand(balance);
+
+    // The "email the guest" checkbox only means something when there's
+    // an address to send to, and the "deposit already paid" stage
+    // deliberately sends nothing at all.
+    const stage = nbVal("nb-stage");
+    const sendBox = document.getElementById("nb-send-email");
+    const canEmail = !!nbVal("nb-email").trim() && stage !== "deposit_paid";
+    sendBox.disabled = !canEmail;
+    if(!canEmail) sendBox.checked = false;
+    else if(!sendEmailEdited) sendBox.checked = true;
+    document.getElementById("nb-stage-note").textContent = !nbVal("nb-email").trim()
+      ? "No email address on file — nothing will be sent. Use “Download invoice” on the booking card to send the PDF yourself."
+      : STAGE_NOTES[stage] || "";
+  }
+
+  async function submitNewBooking(force){
+    const msg = document.getElementById("new-booking-msg");
+    const btn = document.getElementById("new-booking-create");
+
+    const selectedExtras = [];
+    document.querySelectorAll(".nb-extra-flat").forEach(cb => { if(cb.checked) selectedExtras.push({ id: cb.dataset.id }); });
+    document.querySelectorAll(".nb-extra-qty").forEach(inp => {
+      const qty = Number(inp.value) || 0;
+      if(qty > 0) selectedExtras.push({ id: inp.dataset.id, qty });
+    });
+
+    const payload = {
+      unitId: nbVal("nb-unit"),
+      checkIn: nbVal("nb-checkin"),
+      checkOut: nbVal("nb-checkout"),
+      guestName: nbVal("nb-name"),
+      email: nbVal("nb-email"),
+      phone: nbVal("nb-phone"),
+      adults: nbVal("nb-adults"),
+      children: nbVal("nb-children"),
+      childrenAges: nbVal("nb-ages"),
+      hasPets: document.getElementById("nb-pets").checked,
+      petDetails: nbVal("nb-petdetails"),
+      arrivalTime: nbVal("nb-arrival"),
+      notes: nbVal("nb-notes"),
+      extras: selectedExtras,
+      // Blank means "use the unit's configured rate" — the server makes
+      // the same distinction, so only an explicit 0 is a free stay.
+      ratePerNight: nbVal("nb-rate").trim() === "" ? null : Number(nbVal("nb-rate")) || 0,
+      discount: Number(nbVal("nb-discount")) || 0,
+      depositAmount: Number(nbVal("nb-deposit")) || 0,
+      bookingChannel: nbVal("nb-channel"),
+      stage: nbVal("nb-stage"),
+      sendEmail: document.getElementById("nb-send-email").checked,
+      force: !!force
+    };
+
+    if(!payload.guestName.trim()){ msg.className = "settings-msg error"; msg.textContent = "Enter the guest's name."; return; }
+    if(nbNights() <= 0){ msg.className = "settings-msg error"; msg.textContent = "Check-out has to be after check-in."; return; }
+
+    btn.disabled = true;
+    msg.className = "settings-msg";
+    msg.textContent = "Creating…";
+
+    let data;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/bookings`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      data = await res.json();
+    }catch(err){
+      btn.disabled = false;
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server.";
+      return;
+    }
+    btn.disabled = false;
+
+    // The dates clash with something already on the calendar — you can
+    // still go ahead knowingly (e.g. you're recording a booking that's
+    // already blocking those dates via a platform feed).
+    if(data.conflict){
+      msg.textContent = "";
+      if(confirm(`${data.error}\n\nCreate this booking anyway?`)) return submitNewBooking(true);
+      return;
+    }
+    if(!data.ok){
+      msg.className = "settings-msg error";
+      msg.textContent = data.error || "Could not create that booking.";
+      return;
+    }
+
+    closeNewBooking();
+    currentStatus = "";
+    document.querySelectorAll(".filters button").forEach(b => b.classList.toggle("active", b.dataset.status === ""));
+    loadBookings();
+    alert(data.emailed
+      ? "Booking created — the guest has been emailed their invoice."
+      : "Booking created. No email was sent, so use “Download invoice” on the booking card if you want to send the PDF to the guest yourself.");
+  }
+
+  async function sendInvoiceEmail(id){
+    if(!confirm("Email this guest their invoice as it stands right now, as a PDF attachment?")) return;
+    let data;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/send-invoice`, {
+        method: "POST",
+        headers: { "x-admin-token": token() }
+      });
+      data = await res.json();
+    }catch(err){
+      alert("Could not reach the server.");
+      return;
+    }
+    if(!data.ok){ alert(data.error || "Could not send that invoice."); return; }
+    alert(data.sent
+      ? "Invoice emailed to the guest."
+      : `The invoice couldn't be sent: ${data.reason || "email isn't configured on the server."}`);
   }
 
 
@@ -688,6 +1092,7 @@
 
   const EMAIL_TEMPLATE_META = [
     { key: "approved", label: "Booking approved (deposit requested)", placeholders: ["guestName","unitName","checkIn","checkOut","nights","depositAmount","balanceAmount","bankDetails","uploadUrl","paymentInstructions"] },
+    { key: "manualBooking", label: "Manual booking captured (invoice sent)", placeholders: ["guestName","unitName","checkIn","checkOut","nights","nightsSuffix","depositAmount","balanceAmount","totalAmount","bankDetails","uploadUrl","paymentInstructions"] },
     { key: "confirmed", label: "Booking confirmed (deposit received)", placeholders: ["guestName","unitName","checkIn","checkOut","nights","balanceAmount"] },
     { key: "declined", label: "Request declined or rejected", placeholders: ["guestName","unitName","checkIn","checkOut","nights","reason","reasonSuffix"] },
     { key: "expired", label: "Request expired (no payment within 24h)", placeholders: ["guestName","unitName","checkIn","checkOut","nights"] },
@@ -1517,6 +1922,19 @@
   }
 
 </script>
+
+<div class="reason-modal-overlay" id="new-booking-overlay">
+  <div class="reason-modal form-modal">
+    <h3>New booking</h3>
+    <p>For a guest who booked with you directly — over WhatsApp, on the phone, or in person. Nothing is sent to the guest unless you ask for it at the bottom of this form.</p>
+    <div id="new-booking-body"></div>
+    <div class="reason-modal-actions">
+      <button type="button" class="cancel-btn" id="new-booking-cancel">Cancel</button>
+      <button type="button" class="create-btn" id="new-booking-create">Create booking</button>
+    </div>
+    <div class="settings-msg" id="new-booking-msg"></div>
+  </div>
+</div>
 
 <div class="reason-modal-overlay" id="reason-modal-overlay">
   <div class="reason-modal">

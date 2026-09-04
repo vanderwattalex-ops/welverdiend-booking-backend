@@ -15,6 +15,17 @@ const DEFAULT_EMAIL_TEMPLATES = {
       <p>We'll send a final confirmation as soon as we've checked it.</p>
     `
   },
+  manualBooking: {
+    subject: `Your booking at Welverdiend Accommodation — invoice attached`,
+    body: `
+      <p>Hi {{guestName}},</p>
+      <p>Thank you for booking with us. We've reserved <b>{{unitName}}</b> for you from <b>{{checkIn}} → {{checkOut}}</b> ({{nights}} night{{nightsSuffix}}).</p>
+      <p>Your invoice is attached. A <b>deposit of {{depositAmount}}</b> secures the booking, with the remaining {{balanceAmount}} due before check-in.</p>
+      <p>Please pay the deposit by EFT to:<br>{{bankDetails}}</p>
+      {{paymentInstructions}}
+      <p>Any questions, just reply to this email — we look forward to hosting you.</p>
+    `
+  },
   confirmed: {
     subject: `Confirmed — your stay at Welverdiend Accommodation`,
     body: `
