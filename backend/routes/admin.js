@@ -116,9 +116,13 @@ router.get("/admin/booking-stats", async (req, res) => {
         // that array would double- (or triple-) count the same stay, so
         // this only ever emits ONE entry per range, using its first
         // non-direct source.
-        const nonDirectSources = (range.sources || []).filter(s => s !== "direct");
-        if (nonDirectSources.length === 0) return; // direct-only range, already covered above
-        const source = nonDirectSources[0];
+        // A confirmed direct booking's dates get exported to the OTA
+        // calendars (so they don't get double-booked) and then re-synced
+        // back in, so `sources` can be ["direct", "airbnb"] even though
+        // there's no real Airbnb booking. Any presence of "direct" here
+        // means it's already covered by the `direct` array above.
+        if ((range.sources || []).includes("direct")) return;
+        const source = (range.sources || [])[0];
         ota.push({
           id: `${range.start}_${unitId}_${source}`,
           unitId,
