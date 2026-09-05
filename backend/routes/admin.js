@@ -131,7 +131,12 @@ router.get("/admin/booking-stats", async (req, res) => {
           checkOut: range.end,
           nights: null,
           guestName: "",
-          totalAmount: null
+          totalAmount: null,
+          // Owner-blocked dates rather than a guest reservation (see
+          // isOwnerBlock in lib/icalSync.js). Still reported, because the
+          // unit genuinely isn't available then — but the caller must not
+          // count it as that platform's booking or income.
+          blocked: range.blocked === true
         });
       });
     });

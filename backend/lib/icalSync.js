@@ -26,7 +26,8 @@ async function fetchFeed(url, sourceLabel) {
         ranges.push({
           start: toDateOnly(ev.start),
           end: toDateOnly(ev.end),
-          source: sourceLabel
+          source: sourceLabel,
+          blocked: isOwnerBlock(sourceLabel, ev.summary)
         });
       }
       return { ranges, health: { ok: true, skipped: false, error: null } };
@@ -43,6 +44,28 @@ async function fetchFeed(url, sourceLabel) {
 function toDateOnly(d) {
   const dt = new Date(d);
   return dt.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+/**
+ * True when a feed entry is the owner blocking dates out rather than a
+ * guest reservation — maintenance, building work, personal use, or a
+ * booking taken directly and blocked here so the platform can't sell it
+ * twice. Those dates earn nothing through the platform, so reporting
+ * them as that platform's bookings invents income that was never made.
+ *
+ * Only Airbnb states this unambiguously: "Reserved" for a real booking,
+ * "Airbnb (Not available)" for an owner block. Booking.com labels EVERY
+ * entry "CLOSED - Not available", reservations included, so nothing in
+ * that feed can be classified — and Lekkeslaap's convention is unknown.
+ * Both therefore stay treated as bookings: wrongly hiding a real booking
+ * is far worse than showing an owner block as one. The match is
+ * positive (look for the block wording) rather than "anything that
+ * isn't Reserved", so a feed that stops sending SUMMARY doesn't
+ * silently turn every booking into a block.
+ */
+function isOwnerBlock(sourceLabel, summary) {
+  if (sourceLabel !== "airbnb") return false;
+  return /not available|blocked/i.test(String(summary || ""));
 }
 
 /**

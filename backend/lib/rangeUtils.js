@@ -15,7 +15,7 @@ function mergeRanges(ranges) {
   if (ranges.length === 0) return [];
   const sorted = [...ranges].sort((a, b) => a.start.localeCompare(b.start));
   const seed = sorted[0];
-  const merged = [{ ...seed, sources: [seed.source], details: seed.detail ? [seed.detail] : [] }];
+  const merged = [{ ...seed, sources: [seed.source], details: seed.detail ? [seed.detail] : [], blocked: seed.blocked === true }];
   for (let i = 1; i < sorted.length; i++) {
     const last = merged[merged.length - 1];
     const cur = sorted[i];
@@ -29,11 +29,15 @@ function mergeRanges(ranges) {
       if (cur.end > last.end) last.end = cur.end;
       last.sources = [...new Set([...(last.sources || [last.source]), cur.source])];
       if (cur.detail) last.details = [...new Set([...(last.details || []), cur.detail])];
+      // Only an all-block overlap stays a block. If anything merged in is
+      // a real reservation (or this platform's own confirmed booking),
+      // the range represents a paying stay.
+      last.blocked = last.blocked === true && cur.blocked === true;
     } else {
-      merged.push({ ...cur, sources: [cur.source], details: cur.detail ? [cur.detail] : [] });
+      merged.push({ ...cur, sources: [cur.source], details: cur.detail ? [cur.detail] : [], blocked: cur.blocked === true });
     }
   }
-  return merged.map(({ start, end, sources, details }) => ({ start, end, sources, details }));
+  return merged.map(({ start, end, sources, details, blocked }) => ({ start, end, sources, details, blocked }));
 }
 
 /**
