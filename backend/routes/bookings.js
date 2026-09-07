@@ -17,10 +17,28 @@ const upload = multer({
   }
 });
 
-async function isRangeFree(unitId, checkIn, checkOut) {
+// excludeOwnRange lets a booking's own hold (which the sync already wrote
+// into busyRanges the moment it was approved, so a second guest can't be
+// approved for the same dates) be ignored when THAT SAME booking re-checks
+// itself — otherwise it always "conflicts" with its own hold. Only one
+// direct booking can ever hold an exact date range at a time (this same
+// check enforces that at request time), so an exact-range match whose
+// sources are all "direct" can only be this booking's own hold, never a
+// different booking or an external one.
+async function isRangeFree(unitId, checkIn, checkOut, excludeOwnRange) {
   const availDoc = await availabilityCollection.doc(unitId).get();
   const busyRanges = availDoc.exists ? availDoc.data().busyRanges || [] : [];
-  return !busyRanges.some(r => rangesOverlap(checkIn, checkOut, r.start, r.end));
+  return !busyRanges.some(r => {
+    if (
+      excludeOwnRange &&
+      r.start === excludeOwnRange.checkIn &&
+      r.end === excludeOwnRange.checkOut &&
+      (r.sources || []).every(s => s === "direct")
+    ) {
+      return false;
+    }
+    return rangesOverlap(checkIn, checkOut, r.start, r.end);
+  });
 }
 
 // ---------------------------------------------------------------------
@@ -156,8 +174,13 @@ router.post("/bookings/:id/proof", upload.single("proof"), async (req, res) => {
     }
 
     // Defensive re-check — in case something else got confirmed for an
-    // overlapping date since you approved this request.
-    const free = await isRangeFree(booking.unitId, booking.checkIn, booking.checkOut);
+    // overlapping date since you approved this request. Exclude this
+    // booking's own hold, which the approval sync already wrote into
+    // busyRanges — without that it always "conflicts" with itself.
+    const free = await isRangeFree(booking.unitId, booking.checkIn, booking.checkOut, {
+      checkIn: booking.checkIn,
+      checkOut: booking.checkOut
+    });
     if (!free) {
       return res.status(409).json({ ok: false, error: "Sorry — these dates were booked elsewhere in the meantime. Please contact us directly." });
     }
