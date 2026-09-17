@@ -21,6 +21,10 @@ const bookingsCollection = firestore.collection("bookings");
 const overridesCollection = firestore.collection("overrides");
 const settingsCollection = firestore.collection("settings");
 const pageviewsCollection = firestore.collection("pageviews");
+// Running-account invoices for long-term guests — kept apart from
+// `bookings` on purpose, so nothing here can block dates, trigger guest
+// reminder emails, or count towards booking stats.
+const rentInvoicesCollection = firestore.collection("rentInvoices");
 
 module.exports = {
   firestore,
@@ -31,5 +35,6 @@ module.exports = {
   bookingsCollection,
   overridesCollection,
   settingsCollection,
-  pageviewsCollection
+  pageviewsCollection,
+  rentInvoicesCollection
 };

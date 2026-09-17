@@ -20,6 +20,7 @@ app.use("/api", require("./routes/sync"));
 app.use("/api", require("./routes/reminders"));
 app.use("/api", require("./routes/track"));
 app.use("/api", require("./routes/chatbot"));
+app.use("/api", require("./routes/rentInvoices")); // guards each route itself, so order doesn't matter
 // admin.js is mounted LAST on purpose — its router-wide requireAdmin
 // middleware has no path scoping, so it would silently intercept any
 // route mounted after it (this exact bug broke /api/site-content, then

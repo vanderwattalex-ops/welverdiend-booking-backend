@@ -572,6 +572,66 @@ The wording of the first email a manual booking sends is editable like
 every other one — **Settings → Email templates → "Manual booking
 captured"**.
 
+## Long stay invoices (monthly guests)
+
+For a guest who rents a unit month to month, the **Long stay** tab makes
+their monthly invoice — rent, electricity, water, cleaning, wood,
+payments received, and credits for things the guest bought on your
+behalf. It replaces the separate invoicing site these used to be made on,
+and the PDF looks the same as those did.
+
+It is completely separate from bookings: its own invoices, its own
+numbering and its own banking/terms details. Nothing in this tab blocks
+dates on the calendar, sends booking emails, or counts towards booking
+stats.
+
+**Setting it up once** — at the bottom of the tab, under *Invoice
+details*: set **Next invoice number** (carry on from your last invoice
+on the old site), check the terms, and fill in your **banking details**
+(one item per line). A warning shows at the top of the tab until the
+banking details are filled in. They're stored in the database, not in
+the code — the code is on a public GitHub repository.
+
+**Each month**
+
+1. On the latest invoice, click **Next month's invoice**. It opens a new
+   invoice, already filled in the way these invoices have always worked:
+   - last month's lines, followed by a **Payment** line for the amount
+     that settled them (so that block adds up to R0),
+   - then this month's lines, **highlighted**: the rent with its month
+     moved on (e.g. "October 2026 Rent"), and electricity, water,
+     cleaning and wood with their **quantity left blank**.
+2. Fill in each blank quantity — the meter reading in kWh (decimals are
+   fine, e.g. 364.8), the number of cleans, the bags of wood — and add the
+   period to the electricity description if you like.
+3. Click **Save invoice**. It gets the next number.
+4. On its card: **Download PDF** to send it yourself (e.g. on WhatsApp),
+   or **Email to guest** to email the PDF straight to them.
+5. When the guest pays, click **Mark paid**. Next month's invoice then
+   includes the payment line automatically.
+
+Things worth knowing:
+
+- **An invoice can't be saved with a blank quantity.** That's on purpose
+  — it makes it impossible to send last month's electricity reading again
+  by accident. The message tells you which line still needs one.
+- **If an invoice isn't marked paid** when you make the next one, you'll
+  be asked first: without a payment line, the unpaid amount carries over
+  as still owing, which is right if the guest genuinely hasn't paid.
+- **Payments and credits have negative prices.** The *Payment received*
+  and *Credit* buttons ask for the amount and do that for you — Credit is
+  for things like cat food the guest paid for on your behalf, and these
+  are never repeated into the next month.
+- **The quick-add buttons remember your prices** — a new Wood line comes
+  in as "Wood (20 bags)" at your last price, rent at your last rent.
+- **Edit** changes an invoice at any time; its number never changes.
+  **Delete** removes it permanently, and its number is never reused.
+- A normal month (up to about 14 lines) fits on one page, with the
+  banking details on the same page as the total.
+- The email wording is fixed in `backend/lib/emailTemplates.js`
+  (`rentInvoice`); it isn't in the Settings tab, to keep long stays
+  separate from the booking emails.
+
 ## Confirming a deposit without proof of payment
 
 Sometimes you've confirmed a guest's deposit some other way — a bank

@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 const { getSettings } = require("./settings");
 const { DEFAULT_EMAIL_TEMPLATES } = require("./emailTemplates");
+const { rands } = require("./rentInvoicePdf");
 
 // Uses Gmail's SMTP with an "App Password" — set EMAIL_USER and
 // EMAIL_APP_PASSWORD as environment variables (see README for how to
@@ -133,6 +134,43 @@ async function notifyGuestManualBooking(booking, unitName, invoiceBuffer) {
   });
 }
 
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+// Multi-line text typed into the dashboard (bank details, terms) keeps
+// its line breaks in the email.
+function textToHtml(s) {
+  return escapeHtml(s).replace(/\r?\n/g, "<br>");
+}
+
+/**
+ * Emails a long-term guest their running-account invoice. Unlike the
+ * booking emails this one is always sent on request from the
+ * dashboard, and the caller awaits the result to tell the owner whether
+ * it actually went.
+ */
+async function sendRentInvoice(invoice, settings, pdfBuffer) {
+  const date = /^(\d{4})-(\d{2})-(\d{2})$/.exec(invoice.date || "");
+  const reference = (invoice.reference || "").trim();
+  const vars = {
+    tenantName: escapeHtml(invoice.billTo && invoice.billTo.name),
+    invoiceNumber: escapeHtml(invoice.number),
+    invoiceDate: date ? `${date[3]}/${date[2]}/${date[1]}` : escapeHtml(invoice.date),
+    total: rands(invoice.total),
+    terms: textToHtml(settings.terms),
+    bankDetails: textToHtml(settings.bankDetails),
+    reference: escapeHtml(reference),
+    referenceLine: reference ? `<br>Reference - ${escapeHtml(reference)}` : "",
+    popLine: textToHtml(settings.popLine)
+  };
+  const { subject, html } = await resolveEmail("rentInvoice", vars);
+  return sendMail({
+    to: invoice.billTo && invoice.billTo.email,
+    subject, html,
+    attachments: pdfBuffer ? [{ filename: `invoice-${invoice.number}.pdf`, content: pdfBuffer }] : undefined
+  });
+}
+
 async function notifyOwnerProofUploaded(booking, unitName) {
   const { ownerNotificationEmail } = await getSettings();
   return sendMail({
@@ -244,6 +282,7 @@ module.exports = {
   notifyOwnerNewRequest,
   notifyGuestApproved,
   notifyGuestManualBooking,
+  sendRentInvoice,
   notifyOwnerProofUploaded,
   notifyGuestConfirmed,
   notifyGuestDeclined,

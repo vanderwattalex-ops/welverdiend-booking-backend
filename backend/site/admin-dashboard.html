@@ -53,7 +53,7 @@
   .detail-grid .label{color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px;}
   .extras-list{font-size:12.5px;color:var(--ink-soft);margin-top:4px;}
   .total{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--taupe-deep);}
-  .actions{display:flex;gap:8px;margin-top:14px;}
+  .actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
   .actions button{padding:7px 14px;border:none;border-radius:4px;font-size:12.5px;cursor:pointer;font-weight:600;}
   .btn-confirm{background:var(--success);color:white;}
   .btn-reject{background:var(--danger);color:white;}
@@ -114,6 +114,37 @@
   .nb-total-row.grand{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--taupe-deep);padding-top:8px;margin-top:6px;border-top:1px solid var(--line);}
   .nb-checkbox{display:flex;align-items:center;gap:8px;font-size:13px;margin-top:10px;}
   .nb-checkbox label{color:var(--ink);}
+  /* Long stay tab — invoice line editor */
+  .ls-modal{max-width:840px;}
+  .ls-row{display:grid;grid-template-columns:84px minmax(0,1fr) 112px 104px 28px;gap:6px;align-items:center;margin-bottom:6px;}
+  .ls-row input{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:4px;font-size:13px;font-family:'Inter',sans-serif;background:var(--white);}
+  .ls-row .ls-qty,.ls-row .ls-price{text-align:right;}
+  .ls-head{font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--ink-soft);margin-bottom:4px;}
+  .ls-head span:nth-child(3),.ls-head span:nth-child(4){text-align:right;}
+  .ls-amount{text-align:right;font-size:13px;color:var(--ink);font-variant-numeric:tabular-nums;}
+  .ls-remove{border:none;background:none;color:var(--danger);font-size:19px;cursor:pointer;line-height:1;padding:0;}
+  .ls-row.fresh{background:#FBF6E9;border-radius:5px;box-shadow:0 0 0 4px #FBF6E9;}
+  /* A blank quantity is the one thing that must be filled in each month. */
+  .ls-row input.ls-qty:placeholder-shown{border-color:#D6A734;background:#FFF7E3;}
+  .ls-quick{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:12px 0 4px;}
+  .ls-quick button{padding:6px 11px;border:1px solid var(--line);border-radius:16px;background:var(--white);cursor:pointer;font-size:12px;color:var(--ink);}
+  .ls-static{padding:9px 0;font-size:14px;font-weight:600;color:var(--taupe-deep);}
+  @media (max-width:640px){
+    .ls-row{grid-template-columns:62px minmax(0,1fr) 86px 24px;}
+    .ls-row .ls-amount,.ls-head span:nth-child(4){display:none;}
+    /* Phone layout for the whole dashboard: without these the tab bar
+       (six tabs) is wider than the screen, which stretches the page and
+       pushes the editing windows off the right-hand edge. */
+    body{padding:16px;}
+    .tabs{overflow-x:auto;gap:0;}
+    .tabs button{flex:0 0 auto;margin-right:14px;}
+    .token-bar{flex-wrap:wrap;}
+    .token-bar input{min-width:0;flex-basis:100%;}
+    .settings-row{flex-wrap:wrap;gap:0 12px;}
+    .settings-row .settings-field{flex:1 1 100%;}
+    .reason-modal-overlay{padding:10px;}
+    .reason-modal{padding:20px 16px;}
+  }
   .settings-field{margin-bottom:14px;}
   .settings-field label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--ink);}
   .settings-field input,.settings-field textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:4px;font-size:13.5px;font-family:'Inter',sans-serif;}
@@ -171,6 +202,7 @@
 
 <div class="tabs">
   <button class="active" data-tab="bookings">Bookings</button>
+  <button data-tab="longstay">Long stay</button>
   <button data-tab="calendar">Calendar</button>
   <button data-tab="settings">Settings</button>
   <button data-tab="website">Website</button>
@@ -192,6 +224,12 @@
   </div>
   <div class="cards" id="cards"></div>
   <div id="empty">Enter your admin token and load bookings.</div>
+</div>
+
+<div class="tab-panel" id="panel-longstay">
+  <div id="longstay-content">
+    <p class="no-ranges">Enter your admin token above and open this tab to load long-stay invoices.</p>
+  </div>
 </div>
 
 <div class="tab-panel" id="panel-calendar">
@@ -239,6 +277,7 @@
       btn.classList.add("active");
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${btn.dataset.tab}`).classList.add("active");
+      if(btn.dataset.tab === "longstay" && token()) loadLongStay();
       if(btn.dataset.tab === "calendar" && token()) loadCalendar();
       if(btn.dataset.tab === "settings" && token()) loadSettings();
       if(btn.dataset.tab === "website" && token()) loadWebsiteContent();
@@ -871,6 +910,407 @@
     alert(data.sent
       ? "Invoice emailed to the guest."
       : `The invoice couldn't be sent: ${data.reason || "email isn't configured on the server."}`);
+  }
+
+
+  // -----------------------------------------------------------------
+  // Long stay — monthly running-account invoices for long-term guests
+  // (rent, electricity, water, cleaning, wood, payments received,
+  // credits). Deliberately separate from everything else on this page:
+  // its own data, invoice numbers and invoice details, and nothing here
+  // touches bookings, the calendar or the booking emails.
+  // -----------------------------------------------------------------
+
+  let lsState = { invoices: [], settings: null, today: "" };
+  let lsEditingId = null;      // invoice being edited; null while creating a new one
+  let lsPreviousTotal = null;  // offered as the default for "Payment received"
+  let lsModalWired = false;
+
+  function escAttr(s){ return esc(s).replace(/"/g, "&quot;"); }
+  function lsMoney(n){
+    const v = Math.round(Number(n || 0) * 100) / 100;
+    const [whole, cents] = Math.abs(v).toFixed(2).split(".");
+    return `${v < 0 ? "-" : ""}${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}.${cents}`;
+  }
+  function lsRands(n){ const s = lsMoney(n); return s.startsWith("-") ? `-R${s.slice(1)}` : `R${s}`; }
+  function lsDmy(iso){ const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? `${m[3]}/${m[2]}/${m[1]}` : ""; }
+
+  const LS_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  // Same rule as the server: only a bracket naming a month is period text,
+  // so "(28 July - 24 Aug)" goes but "(20 bags)" and "(Maria)" stay.
+  const LS_MONTH_TOKEN = /(?<![a-z])(jan(uary)?|feb(ruary)?|mar(ch)?|apr(il)?|may|june?|july?|aug(ust)?|sept?(ember)?|oct(ober)?|nov(ember)?|dec(ember)?)(?![a-z])/i;
+  function lsStripPeriod(text){
+    const m = /\s*\(([^)]*)\)\s*$/.exec(text);
+    return m && LS_MONTH_TOKEN.test(m[1]) ? text.slice(0, m.index) : text;
+  }
+
+  async function lsFetch(path, options = {}){
+    const res = await fetch(`${API_BASE}/api/admin${path}`, {
+      ...options,
+      headers: { "x-admin-token": token(), ...(options.body ? { "Content-Type": "application/json" } : {}) }
+    });
+    return res.json().catch(() => ({ ok: false, error: `Unexpected response from the server (status ${res.status}).` }));
+  }
+
+  async function loadLongStay(){
+    const content = document.getElementById("longstay-content");
+    if(!token()){ alert("Enter your admin token first."); return; }
+    content.innerHTML = `<p class="no-ranges">Loading…</p>`;
+    let data;
+    try{ data = await lsFetch("/rent-invoices"); }
+    catch(err){ content.innerHTML = `<p class="no-ranges">Could not reach the server.</p>`; return; }
+    if(!data.ok){ content.innerHTML = `<p class="no-ranges">Could not load long-stay invoices — check your admin token.</p>`; return; }
+    lsState = { invoices: data.invoices || [], settings: data.settings, today: data.today };
+    renderLongStay();
+  }
+
+  function renderLongStay(){
+    const { invoices, settings } = lsState;
+    const content = document.getElementById("longstay-content");
+
+    const cards = invoices.map(inv => {
+      const b = inv.billTo || {};
+      const paid = inv.status === "paid";
+      const count = (inv.lines || []).length;
+      return `
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <h3>#${esc(String(inv.number))} · ${esc(b.name)}</h3>
+              <div class="dates">${lsDmy(inv.date)}${b.unit ? " · " + esc(b.unit) : ""}</div>
+            </div>
+            <div class="head-tags"><span class="status ${paid ? "confirmed" : "requested"}">${paid ? "Paid " + lsDmy(inv.paidAt) : "Unpaid"}</span></div>
+          </div>
+          <div class="detail-grid">
+            <div><div class="label">Contact</div>${b.email ? esc(b.email) : `<span class="range-source">No email on file</span>`}<br>${esc(b.phone)}</div>
+            <div><div class="label">Lines</div>${count} item${count === 1 ? "" : "s"}</div>
+            <div><div class="label">Emailed</div>${inv.sentAt ? lsDmy(inv.sentAt) : `<span class="range-source">Not yet</span>`}</div>
+            <div><div class="label">Total</div><div class="total">${lsRands(inv.total)}</div></div>
+          </div>
+          <div class="actions">
+            <button class="btn-proof" data-ls="pdf" data-id="${inv.id}">Download PDF</button>
+            ${b.email ? `<button class="btn-proof" data-ls="send" data-id="${inv.id}">Email to guest</button>` : ""}
+            <button class="btn-proof" data-ls="edit" data-id="${inv.id}">Edit</button>
+            <button class="${paid ? "btn-proof" : "btn-confirm"}" data-ls="${paid ? "unpaid" : "paid"}" data-id="${inv.id}">${paid ? "Mark unpaid" : "Mark paid"}</button>
+            <button class="btn-approve" data-ls="next" data-id="${inv.id}">Next month's invoice</button>
+            <button class="btn-reject" data-ls="delete" data-id="${inv.id}">Delete</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    content.innerHTML = `
+      ${!(settings.bankDetails || "").trim() ? `<div class="sync-warning show"><strong>Your banking details aren't filled in yet.</strong>They're printed on every long-stay invoice — add them under "Invoice details" at the bottom of this tab.</div>` : ""}
+      <div class="bookings-toolbar">
+        <p class="range-source" style="margin:0;max-width:560px;">Monthly invoices for long-term guests — rent, electricity, water, cleaning, wood, payments received and credits. Kept separate from bookings: nothing here affects the calendar, booking emails or booking stats.</p>
+        <button type="button" class="btn-new-booking" id="ls-new-btn">+ New invoice</button>
+      </div>
+      <div class="cards">${cards || `<p class="no-ranges">No long-stay invoices yet — start with <b>+ New invoice</b>. After that, <b>Next month's invoice</b> on the latest one does most of the work.</p>`}</div>
+      <div class="unit-block" style="margin-top:28px;">
+        <h2>Invoice details</h2>
+        <p class="range-source" style="margin:-6px 0 14px;">Printed on every long-stay invoice.</p>
+        <div class="settings-field" style="max-width:220px;"><label>Next invoice number</label><input type="number" id="ls-next-number" min="1" step="1" value="${escAttr(String(settings.nextNumber))}"></div>
+        <div class="settings-field"><label>Terms &amp; conditions</label><textarea id="ls-terms">${esc(settings.terms)}</textarea></div>
+        <div class="settings-field"><label>Banking details — one item per line</label><textarea id="ls-bank" placeholder="Account holder&#10;Bank (branch code)&#10;Account type&#10;Account number">${esc(settings.bankDetails)}</textarea>
+          <div class="range-source" style="margin-top:4px;">Each invoice's own payment reference (e.g. "Smith Rent") is printed underneath these.</div></div>
+        <div class="settings-field"><label>Proof of payment line</label><input type="text" id="ls-pop" value="${escAttr(settings.popLine)}"></div>
+        <button type="button" class="btn-save-settings" id="ls-save-settings" style="margin-top:6px;">Save invoice details</button>
+        <div class="settings-msg" id="ls-settings-msg"></div>
+      </div>`;
+
+    document.getElementById("ls-new-btn").onclick = () => openLsEditor(null, {
+      date: lsState.today, billTo: {}, reference: "", lines: [{ qty: "", description: "", unitPrice: "" }]
+    });
+    document.getElementById("ls-save-settings").onclick = saveLsSettings;
+    content.querySelectorAll("[data-ls]").forEach(btn => btn.onclick = () => lsAction(btn.dataset.ls, btn.dataset.id));
+  }
+
+  async function saveLsSettings(){
+    let msg = document.getElementById("ls-settings-msg");
+    msg.className = "settings-msg";
+    msg.textContent = "Saving…";
+    let data;
+    try{
+      data = await lsFetch("/rent-invoice-settings", { method: "POST", body: JSON.stringify({
+        nextNumber: document.getElementById("ls-next-number").value,
+        terms: document.getElementById("ls-terms").value,
+        bankDetails: document.getElementById("ls-bank").value,
+        popLine: document.getElementById("ls-pop").value
+      }) });
+    }catch(err){ data = { ok: false, error: "Could not reach the server." }; }
+    if(!data.ok){ msg.className = "settings-msg error"; msg.textContent = data.error || "Could not save."; return; }
+    lsState.settings = data.settings;
+    renderLongStay(); // the missing-bank-details warning may need to go
+    msg = document.getElementById("ls-settings-msg");
+    msg.className = "settings-msg success";
+    msg.textContent = "Saved.";
+  }
+
+  async function lsOpenPdf(inv){
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/rent-invoices/${inv.id}/pdf`, { headers: { "x-admin-token": token() } });
+      if(!res.ok){
+        let msg = `Could not load the PDF (status ${res.status}).`;
+        try{ const e = await res.json(); if(e.error) msg = e.error; }catch(_){}
+        alert(msg);
+        return;
+      }
+      window.open(URL.createObjectURL(await res.blob()), "_blank");
+    }catch(err){
+      alert("Could not reach the server to load the PDF.");
+    }
+  }
+
+  async function lsAction(action, id){
+    const inv = lsState.invoices.find(i => i.id === id);
+    if(!inv) return;
+
+    if(action === "pdf") return lsOpenPdf(inv);
+    if(action === "edit") return openLsEditor(inv.id, inv);
+
+    if(action === "next"){
+      const data = await lsFetch(`/rent-invoices/${id}/next-draft`);
+      if(!data.ok) return alert(data.error || "Could not prepare the next invoice.");
+      const d = data.draft;
+      if(!d.previousPaid && !confirm(
+        `Invoice #${d.previousNumber} isn't marked paid, so no payment line will be added and its ${lsRands(d.previousTotal)} will carry over as still owing.\n\n` +
+        `If the guest has paid it, press Cancel and use "Mark paid" on it first.\n\nContinue anyway?`)) return;
+      const lines = d.lines.map((l, i) => ({ ...l, fresh: i >= d.newPeriodStart }));
+      return openLsEditor(null, { ...d, lines }, d.previousTotal);
+    }
+
+    if(action === "send"){
+      if(!confirm(`Email invoice #${inv.number} (${lsRands(inv.total)}) to ${inv.billTo.email}?`)) return;
+      let data;
+      try{ data = await lsFetch(`/rent-invoices/${id}/send`, { method: "POST" }); }
+      catch(err){ return alert("Could not reach the server."); }
+      if(!data.ok) return alert(data.error || "Could not send the invoice.");
+      alert(data.sent
+        ? `Invoice #${inv.number} emailed to ${data.to}.`
+        : `The invoice couldn't be sent: ${data.reason || "email isn't configured on the server."}`);
+      return loadLongStay();
+    }
+
+    if(action === "paid" || action === "unpaid"){
+      const data = await lsFetch(`/rent-invoices/${id}/status`, { method: "POST", body: JSON.stringify({ paid: action === "paid" }) });
+      if(!data.ok) return alert(data.error || "Could not update the invoice.");
+      return loadLongStay();
+    }
+
+    if(action === "delete"){
+      if(!confirm(`Permanently delete invoice #${inv.number}? This can't be undone, and the number won't be used again.`)) return;
+      const data = await lsFetch(`/rent-invoices/${id}`, { method: "DELETE" });
+      if(!data.ok) return alert(data.error || "Could not delete the invoice.");
+      return loadLongStay();
+    }
+  }
+
+  // The editor's markup lives at the bottom of the page, after this
+  // script, so it's wired on first open rather than at load time.
+  function wireLsModal(){
+    if(lsModalWired) return;
+    document.getElementById("ls-cancel").onclick = () => document.getElementById("ls-overlay").classList.remove("show");
+    document.getElementById("ls-save").onclick = saveLsInvoice;
+    const body = document.getElementById("ls-body");
+    body.addEventListener("input", recalcLs);
+    body.addEventListener("click", e => {
+      const remove = e.target.closest(".ls-remove");
+      if(remove){ remove.closest(".ls-row").remove(); recalcLs(); return; }
+      const add = e.target.closest("[data-ls-add]");
+      if(add) lsQuickAdd(add.dataset.lsAdd);
+    });
+    lsModalWired = true;
+  }
+
+  function lsRowHtml(l){
+    const v = x => (x === undefined || x === null) ? "" : escAttr(String(x));
+    return `<div class="ls-row${l.fresh ? " fresh" : ""}">
+      <input type="number" step="any" class="ls-qty" placeholder="Qty" value="${v(l.qty)}">
+      <input type="text" class="ls-desc" placeholder="Description" value="${v(l.description)}">
+      <input type="number" step="any" class="ls-price" placeholder="Price" value="${v(l.unitPrice)}">
+      <div class="ls-amount">—</div>
+      <button type="button" class="ls-remove" title="Remove this line" aria-label="Remove this line">×</button>
+    </div>`;
+  }
+
+  function openLsEditor(id, data, previousTotal){
+    wireLsModal();
+    lsEditingId = id;
+    lsPreviousTotal = previousTotal ?? null;
+    const b = data.billTo || {};
+    const existing = id ? lsState.invoices.find(i => i.id === id) : null;
+    const hasFresh = (data.lines || []).some(l => l.fresh);
+
+    document.getElementById("ls-title").textContent = existing ? `Edit invoice #${existing.number}` : "New long-stay invoice";
+    document.getElementById("ls-msg").textContent = "";
+    document.getElementById("ls-body").innerHTML = `
+      <h4>Bill to</h4>
+      <div class="settings-row">
+        <div class="settings-field"><label>Name</label><input type="text" id="ls-name" value="${escAttr(b.name || "")}"></div>
+        <div class="settings-field"><label>Phone</label><input type="text" id="ls-phone" value="${escAttr(b.phone || "")}"></div>
+      </div>
+      <div class="settings-row">
+        <div class="settings-field"><label>Email — optional</label><input type="email" id="ls-email" value="${escAttr(b.email || "")}"></div>
+        <div class="settings-field"><label>Unit</label><input type="text" id="ls-unit" placeholder="e.g. Unit 1" value="${escAttr(b.unit || "")}"></div>
+      </div>
+
+      <h4>Invoice</h4>
+      <div class="settings-row">
+        <div class="settings-field"><label>Invoice date</label><input type="date" id="ls-date" value="${escAttr(data.date || lsState.today)}"></div>
+        <div class="settings-field"><label>Invoice number</label>
+          <div class="ls-static">${existing ? "#" + esc(String(existing.number)) : `#${esc(String(lsState.settings.nextNumber))} <span class="hint">(given when you save)</span>`}</div>
+        </div>
+      </div>
+      <div class="settings-field"><label>Payment reference</label><input type="text" id="ls-ref" placeholder="e.g. Smith Rent" value="${escAttr(data.reference || "")}">
+        <div class="hint">Printed under your banking details.</div></div>
+
+      <h4>Lines</h4>
+      ${hasFresh ? `<div class="hint" style="margin:-4px 0 10px;">The <b>highlighted lines</b> are this month's — fill in each blank quantity (meter reading, number of cleans, bags of wood) and check the rent month. The lines above them carry last month over, with the payment against it.</div>` : ""}
+      <div class="ls-row ls-head"><span>Qty</span><span>Description</span><span>Unit price</span><span>Amount</span><span></span></div>
+      <div id="ls-lines">${(data.lines || []).map(lsRowHtml).join("")}</div>
+      <div class="ls-quick">
+        <span class="hint">Add:</span>
+        <button type="button" data-ls-add="rent">Rent</button>
+        <button type="button" data-ls-add="electricity">Electricity</button>
+        <button type="button" data-ls-add="water">Water</button>
+        <button type="button" data-ls-add="cleaning">Cleaning</button>
+        <button type="button" data-ls-add="wood">Wood</button>
+        <button type="button" data-ls-add="payment">Payment received</button>
+        <button type="button" data-ls-add="credit">Credit</button>
+        <button type="button" data-ls-add="other">Other</button>
+      </div>
+      <div class="nb-totals"><div class="nb-total-row grand" style="margin-top:0;padding-top:0;border-top:none;"><span>Total</span><span id="ls-total">R0.00</span></div></div>
+      <div class="hint" style="margin-top:8px;">Payments and credits (things the guest paid for on your behalf) go in with a negative price. Quantities can have decimals, e.g. 364.8 kWh.</div>
+    `;
+    document.getElementById("ls-overlay").classList.add("show");
+    recalcLs();
+  }
+
+  // Most recent price and wording used for a kind of line, so a new
+  // "Wood" line comes in as "Wood (20 bags)" at R40 without retyping.
+  function lsLastLine(pattern){
+    for(const inv of lsState.invoices){           // newest invoice first
+      const lines = inv.lines || [];
+      for(let i = lines.length - 1; i >= 0; i--){
+        if(pattern.test(lines[i].description) && lines[i].unitPrice >= 0) return lines[i];
+      }
+    }
+    return null;
+  }
+
+  // Rent is billed a month ahead: an invoice dated in August is for
+  // September's rent.
+  function lsNextMonthLabel(){
+    const m = /^(\d{4})-(\d{2})/.exec(document.getElementById("ls-date").value || lsState.today);
+    if(!m) return "";
+    const year = Number(m[1]), month = Number(m[2]); // 1-12
+    return month === 12 ? `January ${year + 1}` : `${LS_MONTHS[month]} ${year}`;
+  }
+
+  function lsAskAmount(question, suggested){
+    const answer = prompt(question, suggested ?? "");
+    if(answer === null) return null;
+    const n = Math.abs(Number(String(answer).replace(/[R,\s]/g, "")));
+    if(!Number.isFinite(n) || n === 0){ alert("That doesn't look like an amount."); return null; }
+    return n;
+  }
+
+  function lsQuickAdd(kind){
+    let row;
+    if(kind === "payment"){
+      const n = lsAskAmount("Amount received (R):", lsPreviousTotal != null ? String(lsPreviousTotal) : "");
+      if(n === null) return;
+      row = { qty: 1, description: "Payment", unitPrice: -n };
+    } else if(kind === "credit"){
+      const what = prompt("What did the guest pay for on your behalf? (e.g. Cat food)");
+      if(!what || !what.trim()) return;
+      const n = lsAskAmount(`Amount for "${what.trim()}" (R):`);
+      if(n === null) return;
+      row = { qty: 1, description: what.trim(), unitPrice: -n };
+    } else if(kind === "rent"){
+      const last = lsLastLine(/\brent\b/i);
+      row = { qty: 1, description: `${lsNextMonthLabel()} Rent`, unitPrice: last ? last.unitPrice : "" };
+    } else if(kind === "other"){
+      row = { qty: "", description: "", unitPrice: "" };
+    } else {
+      const word = { electricity: "Electricity", water: "Water", cleaning: "Cleaning", wood: "Wood" }[kind];
+      const last = lsLastLine(new RegExp("^" + word, "i"));
+      row = { qty: "", description: last ? lsStripPeriod(last.description) : word, unitPrice: last ? last.unitPrice : "" };
+    }
+    const container = document.getElementById("ls-lines");
+    container.insertAdjacentHTML("beforeend", lsRowHtml(row));
+    const added = container.lastElementChild;
+    added.querySelector(row.qty === "" ? ".ls-qty" : (row.description ? ".ls-price" : ".ls-desc")).focus();
+    recalcLs();
+  }
+
+  function lsReadLines(){
+    return [...document.querySelectorAll("#ls-lines .ls-row")]
+      .map(r => ({
+        qty: r.querySelector(".ls-qty").value.trim(),
+        description: r.querySelector(".ls-desc").value.trim(),
+        unitPrice: r.querySelector(".ls-price").value.trim()
+      }))
+      // A row left completely empty is just an unused "Other" row.
+      .filter(l => l.qty !== "" || l.description !== "" || l.unitPrice !== "");
+  }
+
+  // Preview only, using the server's rules (price rounded to the cent
+  // first, then qty × price, then summed) — the server recalculates on
+  // save and its figures are what's stored and printed.
+  function recalcLs(){
+    let total = 0;
+    document.querySelectorAll("#ls-lines .ls-row").forEach(r => {
+      const q = r.querySelector(".ls-qty").value.trim();
+      const p = r.querySelector(".ls-price").value.trim();
+      const cell = r.querySelector(".ls-amount");
+      if(q === "" || p === "" || !isFinite(Number(q)) || !isFinite(Number(p))){ cell.textContent = "—"; return; }
+      const price = Math.round(Number(p) * 100) / 100;
+      const amount = Math.round(Number(q) * price * 100) / 100;
+      total += amount;
+      cell.textContent = lsMoney(amount);
+    });
+    const t = document.getElementById("ls-total");
+    if(t) t.textContent = lsRands(Math.round(total * 100) / 100);
+  }
+
+  async function saveLsInvoice(){
+    const msg = document.getElementById("ls-msg");
+    const btn = document.getElementById("ls-save");
+    const payload = {
+      date: document.getElementById("ls-date").value,
+      reference: document.getElementById("ls-ref").value,
+      billTo: {
+        name: document.getElementById("ls-name").value,
+        phone: document.getElementById("ls-phone").value,
+        email: document.getElementById("ls-email").value,
+        unit: document.getElementById("ls-unit").value
+      },
+      lines: lsReadLines()
+    };
+    const editing = lsEditingId;
+    btn.disabled = true;
+    msg.className = "settings-msg";
+    msg.textContent = "Saving…";
+    let data;
+    try{
+      data = await lsFetch(editing ? `/rent-invoices/${editing}` : "/rent-invoices", {
+        method: editing ? "PUT" : "POST",
+        body: JSON.stringify(payload)
+      });
+    }catch(err){
+      data = { ok: false, error: "Could not reach the server." };
+    }
+    btn.disabled = false;
+    if(!data.ok){
+      msg.className = "settings-msg error";
+      msg.textContent = data.error || "Could not save the invoice.";
+      return;
+    }
+    document.getElementById("ls-overlay").classList.remove("show");
+    await loadLongStay();
+    if(!editing){
+      alert(`Invoice #${data.invoice.number} saved — ${lsRands(data.invoice.total)}.\n\nUse "Download PDF" or "Email to guest" on its card.`);
+    }
   }
 
 
@@ -1922,6 +2362,18 @@
   }
 
 </script>
+
+<div class="reason-modal-overlay" id="ls-overlay">
+  <div class="reason-modal form-modal ls-modal">
+    <h3 id="ls-title">New long-stay invoice</h3>
+    <div id="ls-body"></div>
+    <div class="reason-modal-actions">
+      <button type="button" class="cancel-btn" id="ls-cancel">Cancel</button>
+      <button type="button" class="create-btn" id="ls-save">Save invoice</button>
+    </div>
+    <div class="settings-msg" id="ls-msg"></div>
+  </div>
+</div>
 
 <div class="reason-modal-overlay" id="new-booking-overlay">
   <div class="reason-modal form-modal">

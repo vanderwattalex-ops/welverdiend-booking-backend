@@ -26,6 +26,17 @@ const DEFAULT_EMAIL_TEMPLATES = {
       <p>Any questions, just reply to this email — we look forward to hosting you.</p>
     `
   },
+  rentInvoice: {
+    subject: `Invoice {{invoiceNumber}} — Welverdiend Accommodation`,
+    body: `
+      <p>Hi {{tenantName}},</p>
+      <p>Please find attached invoice <b>{{invoiceNumber}}</b>, dated {{invoiceDate}}, for <b>{{total}}</b>.</p>
+      <p>{{terms}}</p>
+      <p>Banking details:<br>{{bankDetails}}{{referenceLine}}</p>
+      <p>{{popLine}}</p>
+      <p>Thank you.</p>
+    `
+  },
   confirmed: {
     subject: `Confirmed — your stay at Welverdiend Accommodation`,
     body: `
