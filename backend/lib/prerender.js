@@ -71,6 +71,12 @@ function replaceContainer(html, id, inner) {
   return html.slice(0, start) + inner + html.slice(i);
 }
 
+function aboutHtml(paragraphs) {
+  return (paragraphs || [])
+    .map(p => `<p class="lede" style="margin:0 0 20px;text-align:left;">${esc(p)}</p>`)
+    .join("");
+}
+
 function faqHtml(faqs) {
   return (faqs || []).map(f => `
         <div class="faq-item">
@@ -145,6 +151,7 @@ function galleryHtml(content, unitId, label) {
 // Which containers each page fills, and with what.
 const PAGES = {
   "index.html":    (c, h) => replaceContainer(h, "reviews-preview", reviewsHtml((c.reviews || []).slice(0, 3))),
+  "about.html":    (c, h) => replaceContainer(h, "about-text", aboutHtml(c.aboutParagraphs)),
   "faq.html":      (c, h) => replaceContainer(h, "faq-list", faqHtml(c.faqs)),
   "reviews.html":  (c, h) => replaceContainer(h, "reviews-list", reviewsHtml(c.reviews)),
   "location.html": (c, h) => replaceContainer(h, "recs-grid", recsHtml(c.recommendations)),
