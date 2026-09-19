@@ -1,0 +1,173 @@
+// ---------------------------------------------------------------------------
+// SERVER-SIDE PRE-RENDERING
+// ---------------------------------------------------------------------------
+// The site pages ship with empty containers ("Loading…") that the browser
+// fills in from /api/site-content. Googlebot runs JavaScript and copes, but
+// Bingbot renders inconsistently and most AI crawlers (GPTBot, ClaudeBot,
+// PerplexityBot) do not render at all -- they read the raw HTML only. Before
+// this, faq.html served them a page whose entire body said "Loading…", and
+// reviews, recommendations and every real photograph were invisible.
+//
+// This fills those same containers server-side, using markup that matches the
+// client templates, so the initial HTML already contains the content. The
+// client JS still runs afterwards and re-renders identical markup, which is
+// harmless and keeps live data (availability, weather) working.
+//
+// Everything here is best-effort: any failure returns null and the caller
+// falls through to serving the original file, i.e. exactly the old behaviour.
+// ---------------------------------------------------------------------------
+
+const fs = require("fs").promises;
+const { getSiteContent } = require("./siteContent");
+
+const CONTENT_TTL_MS = 60 * 1000;
+let contentCache = { at: 0, value: null };
+
+async function cachedContent() {
+  if (contentCache.value && Date.now() - contentCache.at < CONTENT_TTL_MS) {
+    return contentCache.value;
+  }
+  const value = await getSiteContent();
+  contentCache = { at: Date.now(), value };
+  return value;
+}
+
+const fileCache = new Map();
+async function cachedFile(filePath) {
+  if (fileCache.has(filePath)) return fileCache.get(filePath);
+  const html = await fs.readFile(filePath, "utf8");
+  fileCache.set(filePath, html);
+  return html;
+}
+
+function esc(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// Replace everything between a container's opening tag and its matching close.
+// Counts nesting depth rather than stopping at the first </div>, so it stays
+// correct if a placeholder ever gains nested markup.
+function replaceContainer(html, id, inner) {
+  const open = new RegExp(`<div[^>]*\\bid="${id}"[^>]*>`);
+  const match = html.match(open);
+  if (!match) return html;
+
+  const start = match.index + match[0].length;
+  let depth = 1;
+  let i = start;
+  const tag = /<\/?div\b[^>]*>/g;
+  tag.lastIndex = start;
+  let t;
+  while ((t = tag.exec(html))) {
+    depth += t[0][1] === "/" ? -1 : 1;
+    if (depth === 0) { i = t.index; break; }
+  }
+  if (depth !== 0) return html;
+
+  return html.slice(0, start) + inner + html.slice(i);
+}
+
+function faqHtml(faqs) {
+  return (faqs || []).map(f => `
+        <div class="faq-item">
+          <p class="faq-question">${esc(f.question)}</p>
+          <p class="faq-answer">${esc(f.answer)}</p>
+        </div>
+      `).join("");
+}
+
+function reviewsHtml(reviews) {
+  return (reviews || []).map(r => `
+        <div class="review-card">
+          <div class="review-stars">${"★".repeat(r.rating || 0)}${"☆".repeat(Math.max(0, 5 - (r.rating || 0)))}</div>
+          <p class="review-text">"${esc(r.text)}"</p>
+          <div class="review-name">${esc(r.name)}</div>
+        </div>
+      `).join("");
+}
+
+function recsHtml(recs) {
+  return (recs || []).map(r => `
+        <div class="rec-card">
+          ${r.category ? `<div class="rec-category">${esc(r.category)}</div>` : ""}
+          <div class="rec-name">${esc(r.name)}</div>
+          ${r.description ? `<p class="rec-desc">${esc(r.description)}</p>` : ""}
+          ${(r.distance || r.mapLink) ? `
+            <div class="rec-meta">
+              <span class="rec-distance">${esc(r.distance || "")}</span>
+              ${r.mapLink ? `<a href="${esc(r.mapLink)}" target="_blank" rel="noopener" class="rec-maplink">View on map →</a>` : ""}
+            </div>
+          ` : ""}
+        </div>
+      `).join("");
+}
+
+// The wildlife gallery is a different shape to the unit ones: a flat list of
+// URL strings with no sections, rendered as a single grid. Mirrors the markup
+// in wildlife.html.
+function flatGalleryHtml(content, key, alt) {
+  const photos = (content.galleries && content.galleries[key]) || [];
+  if (photos.length === 0) return null;
+  const imgs = photos
+    .map((p, i) => {
+      const url = typeof p === "string" ? p : (p && p.url);
+      if (!url) return "";
+      return `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" data-index="${i}">`;
+    })
+    .join("");
+  return imgs ? `<div class="gallery-grid">${imgs}</div>` : null;
+}
+
+function galleryHtml(content, unitId, label) {
+  const photos = (content.galleries && content.galleries[unitId]) || [];
+  if (photos.length === 0) return null;
+  const sectionNames = (content.gallerySections && content.gallerySections[unitId]) || [];
+  const groups = [...sectionNames, "Other"]
+    .map(name => ({ name, photos: photos.filter(p => p.section === name) }))
+    .filter(g => g.photos.length > 0);
+  if (groups.length === 0) return null;
+
+  let index = 0;
+  return groups.map(g => `
+        <div class="gallery-section">
+          <h3>${esc(g.name)}</h3>
+          <div class="gallery-grid">
+            ${g.photos.map(p => `<img src="${esc(p.url)}" alt="${esc(label)} — ${esc(g.name)}" loading="lazy" data-index="${index++}">`).join("")}
+          </div>
+        </div>
+      `).join("");
+}
+
+// Which containers each page fills, and with what.
+const PAGES = {
+  "index.html":    (c, h) => replaceContainer(h, "reviews-preview", reviewsHtml((c.reviews || []).slice(0, 3))),
+  "faq.html":      (c, h) => replaceContainer(h, "faq-list", faqHtml(c.faqs)),
+  "reviews.html":  (c, h) => replaceContainer(h, "reviews-list", reviewsHtml(c.reviews)),
+  "location.html": (c, h) => replaceContainer(h, "recs-grid", recsHtml(c.recommendations)),
+  "unit1.html":    (c, h) => { const g = galleryHtml(c, "unit1", "Unit 1"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
+  "unit2.html":    (c, h) => { const g = galleryHtml(c, "unit2", "Unit 2"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
+  "wildlife.html": (c, h) => { const g = flatGalleryHtml(c, "wildlife", "Welverdiend wildlife"); return g ? replaceContainer(h, "gallery-wrap", g) : h; }
+};
+
+function handles(page) {
+  return Object.prototype.hasOwnProperty.call(PAGES, page);
+}
+
+// Returns the pre-rendered HTML, or null to let the caller serve the file
+// untouched. Never throws.
+async function prerender(filePath, page) {
+  try {
+    if (!handles(page)) return null;
+    const [html, content] = await Promise.all([cachedFile(filePath), cachedContent()]);
+    return PAGES[page](content, html);
+  } catch (err) {
+    console.error("[prerender] falling back to static for", page, "-", err.message);
+    return null;
+  }
+}
+
+module.exports = { prerender, handles };

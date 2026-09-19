@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const compression = require("compression");
+const { prerender, handles } = require("./lib/prerender");
 
 const app = express();
 app.use(cors()); // widget is embedded cross-origin on Squarespace — allow it
@@ -25,6 +26,20 @@ app.use((req, res, next) => {
   const proto = req.headers["x-forwarded-proto"] || req.protocol;
   if (host === "welverdiendaccommodation.com" && proto === "https") return next();
   return res.redirect(301, "https://welverdiendaccommodation.com" + req.originalUrl);
+});
+
+
+// Serve the site pages with their content already in the HTML. Crawlers that
+// do not run JavaScript -- Bing at times, and most AI crawlers -- otherwise
+// receive a page whose body just says "Loading...". Falls through to the
+// static file on any failure, which is the previous behaviour exactly.
+// Mounted before express.static so it wins for these paths.
+app.get(["/", "/:page.html"], async (req, res, next) => {
+  const page = req.path === "/" ? "index.html" : req.path.slice(1);
+  if (!handles(page)) return next();
+  const html = await prerender(path.join(__dirname, "site", page), page);
+  if (!html) return next();
+  res.type("html").send(html);
 });
 
 app.use("/assets", express.static(path.join(__dirname, "public"))); // unit photos
