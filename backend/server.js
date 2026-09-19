@@ -2,10 +2,31 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const compression = require("compression");
 
 const app = express();
 app.use(cors()); // widget is embedded cross-origin on Squarespace — allow it
 app.use(express.json());
+
+// gzip/br for HTML, CSS and JS. Must come before the static handlers so
+// it can compress what they serve.
+app.use(compression());
+
+// Canonical host: 301 www -> non-www and http -> https.
+// Scoped deliberately:
+//   - GET only, so POST bodies are never lost to a redirect
+//   - /api excluded, because the booking widget and admin dashboard call
+//     it cross-origin and a redirect breaks preflight
+//   - only the custom domain, so the *.run.app URL keeps working as-is
+app.use((req, res, next) => {
+  if (req.method !== "GET" || req.path.startsWith("/api")) return next();
+  const host = (req.headers.host || "").toLowerCase();
+  if (!host.endsWith("welverdiendaccommodation.com")) return next();
+  const proto = req.headers["x-forwarded-proto"] || req.protocol;
+  if (host === "welverdiendaccommodation.com" && proto === "https") return next();
+  return res.redirect(301, "https://welverdiendaccommodation.com" + req.originalUrl);
+});
+
 app.use("/assets", express.static(path.join(__dirname, "public"))); // unit photos
 app.use(express.static(path.join(__dirname, "site"))); // booking-widget.html, admin-dashboard.html, upload-proof.html
 
