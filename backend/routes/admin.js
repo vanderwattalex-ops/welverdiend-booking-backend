@@ -24,6 +24,7 @@ const {
   GALLERY_IDS, SECTIONED_GALLERY_IDS
 } = require("../lib/siteContent");
 const { getAnalyticsSummary } = require("../lib/analytics");
+const { saveThumbnail, IMMUTABLE } = require("../lib/thumbnails");
 
 const photoUpload = multer({
   storage: multer.memoryStorage(),
@@ -789,8 +790,16 @@ router.post("/admin/site-content/photos", photoUpload.single("photo"), async (re
     const objectPath = `gallery-photos/${gallery}/${uuidv4()}.jpg`;
     const compressed = await compressPhoto(req.file.buffer);
     await siteAssetsBucket.file(objectPath).save(compressed, {
-      contentType: "image/jpeg"
+      contentType: "image/jpeg",
+      metadata: { cacheControl: IMMUTABLE }
     });
+    // The grid tile. Best-effort: without it the page falls back to the
+    // full photo, so a failure here shouldn't fail the upload.
+    try {
+      await saveThumbnail(siteAssetsBucket, objectPath, compressed);
+    } catch (err) {
+      console.error("[admin] thumbnail failed for", objectPath, "-", err.message);
+    }
     const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
     const updated = await addGalleryPhoto(gallery, publicUrl, section);
     res.json({ ok: true, url: publicUrl, gallery: updated });
@@ -900,7 +909,7 @@ router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async
 
     const objectPath = `hero-photos/${slot}/${uuidv4()}.jpg`;
     const compressed = await compressPhoto(req.file.buffer);
-    await siteAssetsBucket.file(objectPath).save(compressed, { contentType: "image/jpeg" });
+    await siteAssetsBucket.file(objectPath).save(compressed, { contentType: "image/jpeg", metadata: { cacheControl: IMMUTABLE } });
     const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
     const heroPhotos = await setHeroPhoto(slot, publicUrl);
     res.json({ ok: true, url: publicUrl, heroPhotos });

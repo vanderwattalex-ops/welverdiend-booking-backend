@@ -86,6 +86,17 @@
   const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
   let allPhotoUrls = [];
 
+  // Grid tile = small thumbnail, with the full photo as a fallback if the
+  // thumbnail is missing. Mirrors lib/thumbnails.js and lib/prerender.js.
+  function thumbUrl(url){
+    if(/^https:\/\/storage\.googleapis\.com\/[^/]+\/gallery-photos\/.+\.jpg$/i.test(url)) return url.replace(/\.jpg$/i, "-thumb.webp");
+    if(url.indexOf("https://images.squarespace-cdn.com/") === 0) return url.split("?")[0] + "?format=750w";
+    return url;
+  }
+  function galleryImg(url, alt, index){
+    return `<img src="${thumbUrl(url)}" data-full="${url}" onerror="this.onerror=null;this.src=this.dataset.full" alt="${alt}" width="400" height="220" loading="lazy" data-index="${index}">`;
+  }
+
   fetch(`${API_BASE}/api/site-content`)
     .then(r => r.json())
     .then(data => {
@@ -101,7 +112,7 @@
       }
       allPhotoUrls = photos;
       wrap.innerHTML = `<div class="gallery-grid">` +
-        photos.map((url, i) => `<img src="${url}" alt="Welverdiend wildlife" loading="lazy" data-index="${i}">`).join("") +
+        photos.map((url, i) => galleryImg(url, "Welverdiend wildlife", i)).join("") +
         `</div>`;
       wrap.querySelectorAll("img[data-index]").forEach(img => {
         img.onclick = () => openLightbox(allPhotoUrls, Number(img.dataset.index));

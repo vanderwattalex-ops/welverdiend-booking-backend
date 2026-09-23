@@ -19,6 +19,7 @@
 
 const fs = require("fs").promises;
 const { getSiteContent } = require("./siteContent");
+const { thumbUrl } = require("./thumbnails");
 
 const CONTENT_TTL_MS = 60 * 1000;
 let contentCache = { at: 0, value: null };
@@ -69,6 +70,29 @@ function replaceContainer(html, id, inner) {
   if (depth !== 0) return html;
 
   return html.slice(0, start) + inner + html.slice(i);
+}
+
+// Grid tile: the small thumbnail, falling back to the full photo if the
+// thumbnail is missing. The lightbox reads full URLs from the page's own
+// photo list, not from these tags. Mirrors galleryImg() in the page scripts.
+function galleryImg(url, alt, index) {
+  return `<img src="${esc(thumbUrl(url))}" data-full="${esc(url)}" onerror="this.onerror=null;this.src=this.dataset.full" alt="${esc(alt)}" width="400" height="220" loading="lazy" data-index="${index}">`;
+}
+
+// Put a photo URL into an <img id="..." src=""> placeholder, so the browser
+// can start fetching it straight away instead of waiting for the page script
+// to fetch /api/site-content first.
+function setImgSrc(html, id, url, extra) {
+  if (!url) return html;
+  return html.replace(new RegExp(`<img\\b[^>]*\\bid="${id}"[^>]*>`), tag =>
+    tag.replace(`src=""`, `src="${esc(url)}"${extra ? " " + extra : ""}`));
+}
+
+// Preload the above-the-fold photo from <head>, ahead of CSS and fonts.
+function preloadImage(html, url) {
+  if (!url) return html;
+  return html.replace("</head>", `<link rel="preload" as="image" href="${esc(url)}" fetchpriority="high">
+</head>`);
 }
 
 function aboutHtml(paragraphs) {
@@ -122,7 +146,7 @@ function flatGalleryHtml(content, key, alt) {
     .map((p, i) => {
       const url = typeof p === "string" ? p : (p && p.url);
       if (!url) return "";
-      return `<img src="${esc(url)}" alt="${esc(alt)}" loading="lazy" data-index="${i}">`;
+      return galleryImg(url, alt, i);
     })
     .join("");
   return imgs ? `<div class="gallery-grid">${imgs}</div>` : null;
@@ -142,7 +166,7 @@ function galleryHtml(content, unitId, label) {
         <div class="gallery-section">
           <h3>${esc(g.name)}</h3>
           <div class="gallery-grid">
-            ${g.photos.map(p => `<img src="${esc(p.url)}" alt="${esc(label)} — ${esc(g.name)}" loading="lazy" data-index="${index++}">`).join("")}
+            ${g.photos.map(p => galleryImg(p.url, `${label} — ${g.name}`, index++)).join("")}
           </div>
         </div>
       `).join("");
@@ -150,8 +174,17 @@ function galleryHtml(content, unitId, label) {
 
 // Which containers each page fills, and with what.
 const PAGES = {
-  "index.html":    (c, h) => replaceContainer(h, "reviews-preview", reviewsHtml((c.reviews || []).slice(0, 3))),
-  "about.html":    (c, h) => replaceContainer(h, "about-text", aboutHtml(c.aboutParagraphs)),
+  "index.html":    (c, h) => {
+    const hero = c.heroPhotos || {};
+    h = preloadImage(h, hero.homeTop);
+    h = setImgSrc(h, "hero-top-img", hero.homeTop, 'fetchpriority="high"');
+    h = setImgSrc(h, "hero-second-img", hero.homeSecond, 'loading="lazy"');
+    return replaceContainer(h, "reviews-preview", reviewsHtml((c.reviews || []).slice(0, 3)));
+  },
+  "about.html":    (c, h) => {
+    h = setImgSrc(h, "about-photo-img", (c.heroPhotos || {}).aboutPhoto);
+    return replaceContainer(h, "about-text", aboutHtml(c.aboutParagraphs));
+  },
   "faq.html":      (c, h) => replaceContainer(h, "faq-list", faqHtml(c.faqs)),
   "reviews.html":  (c, h) => replaceContainer(h, "reviews-list", reviewsHtml(c.reviews)),
   "location.html": (c, h) => replaceContainer(h, "recs-grid", recsHtml(c.recommendations)),

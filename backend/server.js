@@ -42,8 +42,17 @@ app.get(["/", "/:page.html"], async (req, res, next) => {
   res.type("html").send(html);
 });
 
-app.use("/assets", express.static(path.join(__dirname, "public"))); // unit photos
-app.use(express.static(path.join(__dirname, "site"))); // booking-widget.html, admin-dashboard.html, upload-proof.html
+// Browser caching. Without it every page view re-downloaded the logos, badge
+// and stylesheet (max-age=0). File names here aren't versioned, so lifetimes
+// are kept modest: images a week, CSS/JS an hour -- long enough to cover a
+// browsing session, short enough that a deploy shows up the same day.
+// HTML is left at the default (always revalidated via ETag).
+function cacheFor(res, filePath) {
+  if (/\.(png|jpe?g|webp|svg|ico)$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=604800");
+  else if (/\.(css|js)$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=3600");
+}
+app.use("/assets", express.static(path.join(__dirname, "public"), { setHeaders: cacheFor })); // unit photos
+app.use(express.static(path.join(__dirname, "site"), { setHeaders: cacheFor })); // booking-widget.html, admin-dashboard.html, upload-proof.html
 
 app.get("/", (req, res) => res.json({ ok: true, service: "welverdiend-booking-backend" }));
 app.get("/healthz", (req, res) => res.json({ ok: true }));
