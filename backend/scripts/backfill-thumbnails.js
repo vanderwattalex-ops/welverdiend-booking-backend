@@ -8,7 +8,17 @@
 //   npm install --omit=dev && node scripts/backfill-thumbnails.js
 
 const { siteAssetsBucket } = require("../lib/db");
-const { thumbPath, saveThumbnail, IMMUTABLE } = require("../lib/thumbnails");
+const { thumbPath, makeThumbnail, IMMUTABLE } = require("../lib/thumbnails");
+
+// Some steps occasionally never returned when run from Cloud Shell, stalling
+// the whole run. Every step now has a time limit and each photo is retried.
+function withTimeout(promise, ms, step) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`${step} timed out after ${ms / 1000}s`)), ms); })
+  ]).finally(() => clearTimeout(timer));
+}
 
 async function main() {
   const [galleryFiles] = await siteAssetsBucket.getFiles({ prefix: "gallery-photos/" });
@@ -24,18 +34,34 @@ async function main() {
   // A few at a time -- one by one was very slow from Cloud Shell. Timings
   // per step show where the time goes if it is ever slow again.
   let made = 0, failed = 0;
-  async function one(file) {
+  async function attempt(file) {
     const t0 = Date.now();
-    try {
-      const [buffer] = await file.download({ validation: false });
-      const t1 = Date.now();
-      await saveThumbnail(siteAssetsBucket, file.name, buffer);
-      made++;
-      console.log(`thumb ${made + failed}/${todo.length}  download ${t1 - t0}ms, resize+upload ${Date.now() - t1}ms  ${file.name}`);
-    } catch (err) {
-      failed++;
-      console.error("FAILED ", file.name, "-", err.message);
+    // The bucket is public, so a plain HTTPS fetch works and can be aborted.
+    const url = `https://storage.googleapis.com/${siteAssetsBucket.name}/${file.name}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+    if (!res.ok) throw new Error(`download HTTP ${res.status}`);
+    const buffer = Buffer.from(await withTimeout(res.arrayBuffer(), 30000, "download"));
+    const t1 = Date.now();
+    const thumb = await withTimeout(makeThumbnail(buffer), 30000, "resize");
+    const t2 = Date.now();
+    await withTimeout(siteAssetsBucket.file(thumbPath(file.name)).save(thumb, {
+      contentType: "image/webp", metadata: { cacheControl: IMMUTABLE }, resumable: false
+    }), 30000, "upload");
+    return `download ${t1 - t0}ms, resize ${t2 - t1}ms, upload ${Date.now() - t2}ms`;
+  }
+  async function one(file) {
+    for (let tries = 1; tries <= 3; tries++) {
+      try {
+        const timing = await attempt(file);
+        made++;
+        console.log(`thumb ${made + failed}/${todo.length}  ${timing}  ${file.name}`);
+        return;
+      } catch (err) {
+        console.error(`  try ${tries} failed (${err.message})  ${file.name}`);
+      }
     }
+    failed++;
+    console.error("FAILED ", file.name);
   }
   const queue = [...todo];
   await Promise.all(Array.from({ length: 4 }, async () => {
@@ -45,12 +71,17 @@ async function main() {
   // Photo names are uuids and never reused, so browsers can keep them for a year.
   for (const file of [...originals, ...heroFiles.filter(f => /\.jpg$/i.test(f.name))]) {
     if (file.metadata.cacheControl === IMMUTABLE) continue;
-    await file.setMetadata({ cacheControl: IMMUTABLE });
+    try {
+      await withTimeout(file.setMetadata({ cacheControl: IMMUTABLE }), 30000, "cache header");
+    } catch (err) {
+      console.error("  cache header not set -", err.message, file.name);
+    }
   }
 
   console.log(`\nThumbnails: ${made} made, ${skipped} already there, ${failed} failed.`);
   console.log(`Cache headers set on ${originals.length} gallery and ${heroFiles.length} hero photos.`);
-  if (failed) process.exitCode = 1;
+  // Exit explicitly: a step abandoned by a time-out can keep the process alive.
+  process.exit(failed ? 1 : 0);
 }
 
 main().catch(err => { console.error(err); process.exit(1); });
