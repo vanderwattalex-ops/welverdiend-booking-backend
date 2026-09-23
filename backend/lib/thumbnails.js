@@ -49,7 +49,8 @@ async function saveThumbnail(bucket, objectPath, buffer) {
   const thumb = await makeThumbnail(buffer);
   await bucket.file(thumbPath(objectPath)).save(thumb, {
     contentType: "image/webp",
-    metadata: { cacheControl: IMMUTABLE }
+    metadata: { cacheControl: IMMUTABLE },
+    resumable: false // tiny file: one request instead of a resumable-session handshake
   });
 }
 

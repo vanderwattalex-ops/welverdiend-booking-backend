@@ -17,19 +17,30 @@ async function main() {
   const existing = new Set(galleryFiles.map(f => f.name));
   const originals = galleryFiles.filter(f => /\.jpg$/i.test(f.name));
 
-  let made = 0, skipped = 0, failed = 0;
-  for (const file of originals) {
-    if (existing.has(thumbPath(file.name))) { skipped++; continue; }
+  const todo = originals.filter(f => !existing.has(thumbPath(f.name)));
+  const skipped = originals.length - todo.length;
+  console.log(`${todo.length} to make, ${skipped} already there.`);
+
+  // A few at a time -- one by one was very slow from Cloud Shell. Timings
+  // per step show where the time goes if it is ever slow again.
+  let made = 0, failed = 0;
+  async function one(file) {
+    const t0 = Date.now();
     try {
-      const [buffer] = await file.download();
+      const [buffer] = await file.download({ validation: false });
+      const t1 = Date.now();
       await saveThumbnail(siteAssetsBucket, file.name, buffer);
       made++;
-      console.log("thumb  ", file.name);
+      console.log(`thumb ${made + failed}/${todo.length}  download ${t1 - t0}ms, resize+upload ${Date.now() - t1}ms  ${file.name}`);
     } catch (err) {
       failed++;
       console.error("FAILED ", file.name, "-", err.message);
     }
   }
+  const queue = [...todo];
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (queue.length) await one(queue.shift());
+  }));
 
   // Photo names are uuids and never reused, so browsers can keep them for a year.
   for (const file of [...originals, ...heroFiles.filter(f => /\.jpg$/i.test(f.name))]) {
