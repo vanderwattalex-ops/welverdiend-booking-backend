@@ -20,6 +20,7 @@
 const fs = require("fs").promises;
 const { getSiteContent } = require("./siteContent");
 const { thumbUrl } = require("./thumbnails");
+const { getFacts, factsHtml, SITE } = require("./siteFacts");
 
 const CONTENT_TTL_MS = 60 * 1000;
 let contentCache = { at: 0, value: null };
@@ -172,6 +173,111 @@ function galleryHtml(content, unitId, label) {
       `).join("");
 }
 
+// ---------------------------------------------------------------------------
+// Additions applied to every page (see applyCommon)
+// ---------------------------------------------------------------------------
+
+const BUSINESS_ID = `${SITE}/#business`;
+
+// Breadcrumb name and schema.org page type for each page. index.html is the
+// root and carries the LodgingBusiness + WebSite entities in its own file.
+const PAGE_INFO = {
+  "about.html":    { name: "About",    type: "AboutPage" },
+  "unit1.html":    { name: "Unit 1",   type: "WebPage" },
+  "unit2.html":    { name: "Unit 2",   type: "WebPage" },
+  "wildlife.html": { name: "Wildlife", type: "WebPage" },
+  "location.html": { name: "Location", type: "WebPage" },
+  "faq.html":      { name: "FAQ",      type: "WebPage" }, // the FAQPage entity is already in faq.html
+  "reviews.html":  { name: "Reviews",  type: "WebPage" },
+  "contact.html":  { name: "Contact",  type: "ContactPage" }
+};
+
+// JSON for a <script> block: "</" would end the script early.
+function jsonLd(obj) {
+  return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, "\u003c")}</script>`;
+}
+
+function pageLdHtml(page, html) {
+  const info = PAGE_INFO[page];
+  if (!info) return "";
+  const url = `${SITE}/${page}`;
+  const title = ((html.match(/<title>([^<]*)<\/title>/) || [])[1] || info.name).trim();
+  return jsonLd({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": info.type,
+        "@id": `${url}#webpage`,
+        url,
+        name: title,
+        inLanguage: "en-ZA",
+        isPartOf: { "@id": `${SITE}/#website` },
+        about: { "@id": BUSINESS_ID },
+        breadcrumb: { "@id": `${url}#breadcrumb` }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${url}#breadcrumb`,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+          { "@type": "ListItem", position: 2, name: info.name, item: url }
+        ]
+      }
+    ]
+  });
+}
+
+// Add the unit's own photos to its Accommodation JSON-LD block.
+function addUnitImages(html, urls) {
+  if (!urls.length) return html;
+  return html.replace(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/, (whole, json) => {
+    try {
+      const data = JSON.parse(json);
+      if (data["@type"] !== "Accommodation") return whole;
+      data.image = urls;
+      return jsonLd(data);
+    } catch (err) {
+      return whole;
+    }
+  });
+}
+
+// Each page's own photo when the link is shared (WhatsApp, Facebook), instead
+// of every page showing the home page's hero.
+function setShareImage(html, url) {
+  if (!url) return html;
+  return html
+    .replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${esc(url)}$2`)
+    .replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${esc(url)}$2`);
+}
+
+function galleryUrls(c, key, max) {
+  return ((c.galleries && c.galleries[key]) || [])
+    .map(p => (typeof p === "string" ? p : p && p.url))
+    .filter(Boolean)
+    .slice(0, max);
+}
+
+function shareImageFor(page, c) {
+  const hero = c.heroPhotos || {};
+  if (page === "about.html") return hero.aboutPhoto;
+  if (page === "unit1.html" || page === "unit2.html" || page === "wildlife.html") {
+    return galleryUrls(c, page.replace(".html", ""), 1)[0];
+  }
+  return null;
+}
+
+function applyCommon(page, c, facts, html) {
+  if (facts) html = html.replace('<footer class="site-footer">', factsHtml(facts) + '\n<footer class="site-footer">');
+  const ld = pageLdHtml(page, html);
+  if (ld) html = html.replace("</head>", ld + "\n</head>");
+  html = setShareImage(html, shareImageFor(page, c));
+  if (page === "unit1.html" || page === "unit2.html") {
+    html = addUnitImages(html, galleryUrls(c, page.replace(".html", ""), 8));
+  }
+  return html;
+}
+
 // Which containers each page fills, and with what.
 const PAGES = {
   "index.html":    (c, h) => {
@@ -188,6 +294,7 @@ const PAGES = {
   "faq.html":      (c, h) => replaceContainer(h, "faq-list", faqHtml(c.faqs)),
   "reviews.html":  (c, h) => replaceContainer(h, "reviews-list", reviewsHtml(c.reviews)),
   "location.html": (c, h) => replaceContainer(h, "recs-grid", recsHtml(c.recommendations)),
+  "contact.html":  (c, h) => h,
   "unit1.html":    (c, h) => { const g = galleryHtml(c, "unit1", "Unit 1"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "unit2.html":    (c, h) => { const g = galleryHtml(c, "unit2", "Unit 2"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "wildlife.html": (c, h) => { const g = flatGalleryHtml(c, "wildlife", "Welverdiend wildlife"); return g ? replaceContainer(h, "gallery-wrap", g) : h; }
@@ -197,17 +304,28 @@ function handles(page) {
   return Object.prototype.hasOwnProperty.call(PAGES, page);
 }
 
+// Facts are an addition, not the page: if settings can't be read, serve the
+// page without the panel rather than falling back to the bare file.
+async function factsOrNull() {
+  try {
+    return await getFacts();
+  } catch (err) {
+    console.error("[prerender] facts unavailable -", err.message);
+    return null;
+  }
+}
+
 // Returns the pre-rendered HTML, or null to let the caller serve the file
 // untouched. Never throws.
 async function prerender(filePath, page) {
   try {
     if (!handles(page)) return null;
-    const [html, content] = await Promise.all([cachedFile(filePath), cachedContent()]);
-    return PAGES[page](content, html);
+    const [html, content, facts] = await Promise.all([cachedFile(filePath), cachedContent(), factsOrNull()]);
+    return applyCommon(page, content, facts, PAGES[page](content, html));
   } catch (err) {
     console.error("[prerender] falling back to static for", page, "-", err.message);
     return null;
   }
 }
 
-module.exports = { prerender, handles };
+module.exports = { prerender, handles, cachedContent, galleryUrls };

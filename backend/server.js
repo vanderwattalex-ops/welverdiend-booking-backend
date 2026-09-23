@@ -6,12 +6,25 @@ const compression = require("compression");
 const { prerender, handles } = require("./lib/prerender");
 
 const app = express();
+app.disable("x-powered-by"); // don't advertise the framework
 app.use(cors()); // widget is embedded cross-origin on Squarespace — allow it
 app.use(express.json());
 
 // gzip/br for HTML, CSS and JS. Must come before the static handlers so
 // it can compress what they serve.
 app.use(compression());
+
+// Baseline security headers. HSTS only on the custom domain: the run.app URL
+// is Google's and not ours to pin. No frame restrictions -- the booking
+// widget may still be embedded on other sites.
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  if ((req.headers.host || "").toLowerCase() === "welverdiendaccommodation.com") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000");
+  }
+  next();
+});
 
 // Canonical host: 301 www -> non-www and http -> https.
 // Scoped deliberately:
@@ -28,6 +41,9 @@ app.use((req, res, next) => {
   return res.redirect(301, "https://welverdiendaccommodation.com" + req.originalUrl);
 });
 
+
+// llms.txt, the live sitemap, icons, IndexNow key (see routes/seo.js).
+app.use(require("./routes/seo"));
 
 // Serve the site pages with their content already in the HTML. Crawlers that
 // do not run JavaScript -- Bing at times, and most AI crawlers -- otherwise
@@ -74,6 +90,12 @@ app.use("/api", require("./routes/rentInvoices")); // guards each route itself, 
 // including routes added in the future.
 app.use("/api", require("./routes/admin"));
 app.use("/", require("./routes/icalExport"));
+
+// Nothing matched: a real page for people, JSON for API callers.
+app.use((req, res) => {
+  if (req.path.startsWith("/api")) return res.status(404).json({ ok: false, error: "Not found" });
+  res.status(404).sendFile(path.join(__dirname, "site", "404.html"));
+});
 
 app.use((err, req, res, next) => {
   console.error("[server] unhandled error:", err.message);

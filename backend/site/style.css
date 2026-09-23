@@ -262,3 +262,25 @@ h3{font-size:20px;}
 @media (max-width: 760px){
   .pet-friendly-stamp{width:72px;bottom:16px;left:16px;}
 }
+
+/* Skip link — hidden until a keyboard user tabs to it */
+.skip-link{
+  position:absolute;left:12px;top:-60px;z-index:1000;
+  background:var(--taupe-deep);color:var(--white);padding:10px 16px;border-radius:3px;
+  font-size:14px;font-weight:600;text-decoration:none;
+}
+.skip-link:focus{top:12px;}
+
+/* "At a glance" facts panel (filled server-side by lib/siteFacts.js) */
+.quick-facts{max-width:1100px;margin:0 auto;padding:48px 5vw;}
+.quick-facts h2{text-align:center;margin-bottom:24px;}
+.quick-facts dl{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin:0;
+}
+.quick-facts dl > div{
+  background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;
+}
+.quick-facts dt{
+  font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;
+}
+.quick-facts dd{margin:0;font-size:14.5px;line-height:1.5;color:var(--ink);}
