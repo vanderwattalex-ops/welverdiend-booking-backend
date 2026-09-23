@@ -2,6 +2,7 @@ const { syncUnit } = require("./icalSync");
 const { units } = require("../config/units");
 const { availabilityCollection, bookingsCollection, overridesCollection } = require("./db");
 const { subtractRanges } = require("./rangeUtils");
+const { recordStartedStays } = require("./reviews");
 
 /**
  * A booking blocks the calendar as soon as you APPROVE it — not only
@@ -45,6 +46,10 @@ async function syncUnitAndSave(unitId) {
   const overrides = await getOverrides(unitId);
   if (overrides.length) result.busyRanges = subtractRanges(result.busyRanges, overrides);
   await availabilityCollection.doc(unitId).set(result);
+  // Remember OTA stays for the Reviews tab before the feed forgets them.
+  // Never allowed to fail the sync itself.
+  await recordStartedStays(unitId, result.busyRanges)
+    .catch(err => console.error("[availabilitySync] recording stays for reviews failed:", err.message));
   return result;
 }
 

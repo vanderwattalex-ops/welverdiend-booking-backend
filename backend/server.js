@@ -58,6 +58,9 @@ app.get(["/", "/:page.html"], async (req, res, next) => {
   res.type("html").send(html);
 });
 
+// Tracked Google-review links sent to guests (see routes/reviews.js).
+app.get("/r/:token", require("./routes/reviews").redirectPage);
+
 // Browser caching. Without it every page view re-downloaded the logos, badge
 // and stylesheet (max-age=0). File names here aren't versioned, so lifetimes
 // are kept modest: images a week, CSS/JS an hour -- long enough to cover a
@@ -82,6 +85,7 @@ app.use("/api", require("./routes/reminders"));
 app.use("/api", require("./routes/track"));
 app.use("/api", require("./routes/chatbot"));
 app.use("/api", require("./routes/rentInvoices")); // guards each route itself, so order doesn't matter
+app.use("/api", require("./routes/reviews")); // same — per-route guards; /review-click is public
 // admin.js is mounted LAST on purpose — its router-wide requireAdmin
 // middleware has no path scoping, so it would silently intercept any
 // route mounted after it (this exact bug broke /api/site-content, then
