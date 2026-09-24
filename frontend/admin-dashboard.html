@@ -180,6 +180,23 @@
   .photo-upload-btn:disabled{background:var(--busy);cursor:not-allowed;}
   .photo-move-btn{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:3px 7px;cursor:pointer;color:var(--ink);}
   .photo-move-btn:disabled{opacity:.35;cursor:not-allowed;}
+  /* Reviews tab */
+  .rv-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;}
+  .rv-stats .unit-block{margin-bottom:0;padding:14px 16px;}
+  .rv-stats .big-stat{font-size:34px;}
+  .rv-channels{font-size:12.5px;color:var(--ink-soft);margin:-8px 0 22px;}
+  .rv-section{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:600;color:var(--taupe-deep);margin:26px 0 10px;}
+  .rv-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:var(--white);border:1px solid var(--line);border-radius:6px;padding:12px 16px;margin-bottom:8px;}
+  .rv-row .rv-main{min-width:0;flex:1 1 220px;}
+  .rv-row .rv-name{font-weight:600;font-size:14px;}
+  .rv-row .rv-meta{font-size:12.5px;color:var(--ink-soft);margin-top:2px;word-break:break-word;}
+  .rv-row .actions{margin-top:0;}
+  .rv-sender{font-size:12.5px;color:var(--ink-soft);}
+  .rv-sender button{background:none;border:none;color:var(--taupe-deep);text-decoration:underline;cursor:pointer;font-size:12.5px;padding:0;}
+  .rv-channel-pick{display:flex;gap:6px;flex-wrap:wrap;}
+  .rv-channel-pick button{padding:8px 14px;border:1px solid var(--line);border-radius:20px;background:var(--white);cursor:pointer;font-size:13px;color:var(--ink);}
+  .rv-channel-pick button.active{background:var(--taupe-deep);color:var(--white);border-color:var(--taupe-deep);}
+  .rv-open-btn{display:block;text-align:center;text-decoration:none;padding:11px;border-radius:5px;background:var(--success);color:white;font-weight:600;font-size:14px;margin-top:14px;}
   .stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
   .stat-row:last-child{border-bottom:none;}
   .stat-row .stat-count{font-weight:600;color:var(--taupe-deep);}
@@ -203,6 +220,7 @@
 <div class="tabs">
   <button class="active" data-tab="bookings">Bookings</button>
   <button data-tab="longstay">Long stay</button>
+  <button data-tab="reviews">Reviews</button>
   <button data-tab="calendar">Calendar</button>
   <button data-tab="settings">Settings</button>
   <button data-tab="website">Website</button>
@@ -229,6 +247,12 @@
 <div class="tab-panel" id="panel-longstay">
   <div id="longstay-content">
     <p class="no-ranges">Enter your admin token above and open this tab to load long-stay invoices.</p>
+  </div>
+</div>
+
+<div class="tab-panel" id="panel-reviews">
+  <div id="reviews-content">
+    <p class="no-ranges">Enter your admin token above and open this tab to load review requests.</p>
   </div>
 </div>
 
@@ -278,6 +302,7 @@
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${btn.dataset.tab}`).classList.add("active");
       if(btn.dataset.tab === "longstay" && token()) loadLongStay();
+      if(btn.dataset.tab === "reviews" && token()) loadReviews();
       if(btn.dataset.tab === "calendar" && token()) loadCalendar();
       if(btn.dataset.tab === "settings" && token()) loadSettings();
       if(btn.dataset.tab === "website" && token()) loadWebsiteContent();
@@ -2361,6 +2386,306 @@
     `;
   }
 
+  // ---------------------------------------------------------------
+  // Reviews tab — ask guests for a Google review over WhatsApp, SMS or
+  // email with a tracked welverdiendaccommodation.com/r/… link. The
+  // dashboard only opens the message in the right app; you press send.
+  // ---------------------------------------------------------------
+  let rvState = { requests: [], due: [], settings: null, today: "" };
+  let rvModal = null; // { step, due, channel, request }
+  const RV_CHANNELS = { whatsapp: "WhatsApp", sms: "SMS", email: "Email" };
+  const RV_SOURCES = { direct: "Direct booking", airbnb: "Airbnb", "booking.com": "Booking.com", lekkeslaap: "Lekkeslaap", manual: "Added by hand" };
+  const RV_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  function rvSource(s){ return String(s || "").split(" + ").map(x => RV_SOURCES[x] || x).join(" + "); }
+  function rvUnit(id){ return String(id || "").replace(/^unit(\d+)$/, "Unit $1"); }
+  function rvDate(iso){ const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || ""); return m ? `${+m[3]} ${RV_MONTHS[+m[2]-1]} ${m[1]}` : ""; }
+  function rvAgo(iso){
+    const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if(days <= 0) return "today";
+    if(days === 1) return "yesterday";
+    if(days < 30) return `${days} days ago`;
+    return rvDate(iso);
+  }
+  function rvContact(r){ return r.channel === "email" ? r.contact : "+" + r.contact; }
+  function rvSender(){ try{ return localStorage.getItem("wv-review-sender") || ""; }catch(_){ return ""; } }
+  function rvSetSender(){
+    const name = (prompt("Your name — saved on this device and recorded as who sent each request:", rvSender()) || "").trim();
+    if(name){ try{ localStorage.setItem("wv-review-sender", name.slice(0, 40)); }catch(_){} }
+    return name || rvSender();
+  }
+
+  async function loadReviews(){
+    const content = document.getElementById("reviews-content");
+    if(!token()){ alert("Enter your admin token first."); return; }
+    content.innerHTML = `<p class="no-ranges">Loading…</p>`;
+    let data;
+    try{ data = await lsFetch("/reviews"); }
+    catch(err){ content.innerHTML = `<p class="no-ranges">Could not reach the server.</p>`; return; }
+    if(!data.ok){ content.innerHTML = `<p class="no-ranges">Could not load review requests — check your admin token.</p>`; return; }
+    rvState = { requests: data.requests || [], due: data.due || [], settings: data.settings, today: data.today };
+    renderReviews();
+  }
+
+  function renderReviews(){
+    const { requests, due, settings } = rvState;
+    const content = document.getElementById("reviews-content");
+    const clicked = requests.filter(r => r.clickCount > 0).length;
+    const reviewed = requests.filter(r => r.reviewedAt).length;
+    const pct = (a, b) => b ? Math.round(a / b * 100) + "%" : "—";
+
+    const byChannel = Object.keys(RV_CHANNELS).map(ch => {
+      const list = requests.filter(r => r.channel === ch);
+      if(!list.length) return "";
+      const c = list.filter(r => r.clickCount > 0).length;
+      return `<b>${RV_CHANNELS[ch]}</b>: ${list.length} sent · ${c} clicked (${pct(c, list.length)})`;
+    }).filter(Boolean).join(" &nbsp;·&nbsp; ");
+
+    const sender = rvSender();
+
+    const dueRows = due.map((d, i) => {
+      const ota = !d.phone && !d.email;
+      return `
+        <div class="rv-row">
+          <div class="rv-main">
+            <div class="rv-name">${d.guestName ? esc(d.guestName) : `${esc(rvSource(d.source))} guest`}</div>
+            <div class="rv-meta">${esc(rvUnit(d.unitId))} · ${rvDate(d.checkIn)} → ${rvDate(d.checkOut)} · ${esc(rvSource(d.source))}${ota ? ` · <i>copy their number from the ${esc(rvSource(d.source))} app</i>` : ""}</div>
+          </div>
+          <div class="actions">
+            <button class="btn-approve" data-rv="ask" data-i="${i}">Ask for review</button>
+            <button class="btn-proof" data-rv="skip" data-i="${i}">Skip</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    const historyRows = requests.map(r => {
+      const badge = r.reviewedAt
+        ? `<span class="status confirmed">Reviewed ✓</span>`
+        : r.clickCount > 0
+          ? `<span class="status submitted">Clicked${r.clickCount > 1 ? " ×" + r.clickCount : ""}</span>`
+          : `<span class="status requested">Sent</span>`;
+      return `
+        <div class="rv-row">
+          <div class="rv-main">
+            <div class="rv-name">${esc(r.guestName)} ${badge}</div>
+            <div class="rv-meta">${RV_CHANNELS[r.channel] || esc(r.channel)} · ${esc(rvContact(r))}${r.unitId ? " · " + esc(rvUnit(r.unitId)) : ""} · sent ${rvAgo(r.createdAt)}${r.sentBy ? " by " + esc(r.sentBy) : ""}${r.firstClickedAt ? ` · first clicked ${rvAgo(r.firstClickedAt)}` : ""}</div>
+          </div>
+          <div class="actions">
+            <button class="btn-proof" data-rv="copy" data-id="${escAttr(r.id)}">Copy link</button>
+            <button class="${r.reviewedAt ? "btn-proof" : "btn-confirm"}" data-rv="${r.reviewedAt ? "unreview" : "review"}" data-id="${escAttr(r.id)}">${r.reviewedAt ? "Undo reviewed" : "Mark reviewed"}</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    content.innerHTML = `
+      <div class="rv-stats">
+        <div class="unit-block"><div class="big-stat">${requests.length}</div><div class="big-stat-label">Sent</div></div>
+        <div class="unit-block"><div class="big-stat">${clicked}</div><div class="big-stat-label">Clicked</div></div>
+        <div class="unit-block"><div class="big-stat">${pct(clicked, requests.length)}</div><div class="big-stat-label">Click rate</div></div>
+        <div class="unit-block"><div class="big-stat">${reviewed}</div><div class="big-stat-label">Reviews received</div></div>
+      </div>
+      ${byChannel ? `<div class="rv-channels">${byChannel}</div>` : ""}
+
+      <div class="bookings-toolbar">
+        <div>
+          <p class="range-source" style="margin:0 0 6px;max-width:560px;">Ask guests for a Google review. Each guest gets their own link, so you can see who clicked it. Nothing is sent automatically: the message opens in WhatsApp, SMS or email and you press send.</p>
+          <div class="rv-sender">${sender ? `Sending as <b>${esc(sender)}</b> · <button type="button" id="rv-sender-btn">change</button>` : `<button type="button" id="rv-sender-btn">Set your name</button> so requests show who sent them`}</div>
+        </div>
+        <button type="button" class="btn-new-booking" id="rv-new-btn">+ Ask a guest</button>
+      </div>
+
+      <div class="rv-section">Due for a review request${due.length ? ` (${due.length})` : ""}</div>
+      ${dueRows || `<p class="no-ranges">Nobody is waiting. Guests show up here once they've checked out: direct bookings with their details filled in, and Airbnb, Booking.com and Lekkeslaap stays with dates only.</p>`}
+
+      <div class="rv-section">Sent requests</div>
+      ${historyRows || `<p class="no-ranges">No review requests yet.</p>`}
+
+      <div class="unit-block" style="margin-top:28px;">
+        <h2>Review settings</h2>
+        <div class="settings-field"><label>Google review link</label><input type="url" id="rv-url" value="${escAttr(settings.googleReviewUrl)}">
+          <div class="range-source" style="margin-top:4px;">Where guests end up after tapping their link. Only Google links are accepted.</div></div>
+        <div class="settings-field"><label>Message</label><textarea id="rv-template" style="min-height:150px;">${esc(settings.messageTemplate)}</textarea>
+          <div class="range-source" style="margin-top:4px;"><code>{name}</code> = the guest's first name, <code>{link}</code> = their personal review link (required). You can still change each message before it's sent. <button type="button" class="btn-reset-template" id="rv-reset-template">Reset to default</button></div></div>
+        <button type="button" class="btn-save-settings" id="rv-save-settings" style="margin-top:6px;">Save review settings</button>
+        <div class="settings-msg" id="rv-settings-msg"></div>
+      </div>`;
+
+    document.getElementById("rv-new-btn").onclick = () => openRvModal(null);
+    document.getElementById("rv-sender-btn").onclick = () => { rvSetSender(); renderReviews(); };
+    document.getElementById("rv-save-settings").onclick = saveRvSettings;
+    document.getElementById("rv-reset-template").onclick = () => { document.getElementById("rv-template").value = settings.defaultMessageTemplate; };
+    content.querySelectorAll("[data-rv]").forEach(btn => btn.onclick = () => rvAction(btn.dataset.rv, btn.dataset));
+  }
+
+  async function saveRvSettings(){
+    let msg = document.getElementById("rv-settings-msg");
+    msg.className = "settings-msg";
+    msg.textContent = "Saving…";
+    let data;
+    try{
+      data = await lsFetch("/review-settings", { method: "POST", body: JSON.stringify({
+        googleReviewUrl: document.getElementById("rv-url").value,
+        messageTemplate: document.getElementById("rv-template").value
+      }) });
+    }catch(err){ data = { ok: false, error: "Could not reach the server." }; }
+    if(!data.ok){ msg.className = "settings-msg error"; msg.textContent = data.error || "Could not save."; return; }
+    rvState.settings = data.settings;
+    renderReviews();
+    msg = document.getElementById("rv-settings-msg");
+    msg.className = "settings-msg success";
+    msg.textContent = "Saved.";
+  }
+
+  async function rvCopy(text){
+    try{ await navigator.clipboard.writeText(text); return true; }
+    catch(_){ prompt("Copy this:", text); return false; }
+  }
+
+  async function rvAction(action, ds){
+    if(action === "ask") return openRvModal(rvState.due[+ds.i]);
+    if(action === "skip"){
+      const d = rvState.due[+ds.i];
+      if(!confirm(`Skip ${d.guestName || rvSource(d.source) + " guest"} (${rvUnit(d.unitId)}, ${rvDate(d.checkIn)} → ${rvDate(d.checkOut)})? They'll be removed from the due list. You can still ask them later with + Ask a guest.`)) return;
+      const data = await lsFetch("/review-skips", { method: "POST", body: JSON.stringify({ stayKey: d.stayKey }) });
+      if(!data.ok) return alert(data.error || "Could not skip that stay.");
+      return loadReviews();
+    }
+    const r = rvState.requests.find(x => x.id === ds.id);
+    if(!r) return;
+    if(action === "copy"){
+      if(await rvCopy(r.link)) alert("Link copied.");
+      return;
+    }
+    if(action === "review" || action === "unreview"){
+      const data = await lsFetch(`/review-requests/${encodeURIComponent(r.id)}/reviewed`, { method: "POST", body: JSON.stringify({ reviewed: action === "review" }) });
+      if(!data.ok) return alert(data.error || "Could not update.");
+      r.reviewedAt = data.reviewedAt;
+      renderReviews();
+    }
+  }
+
+  function wireRvModal(){
+    if(wireRvModal.done) return;
+    document.getElementById("rv-cancel").onclick = closeRvModal;
+    document.getElementById("rv-primary").onclick = () => rvModal.step === 1 ? rvContinue() : closeRvModal();
+    wireRvModal.done = true;
+  }
+
+  function closeRvModal(){
+    document.getElementById("rv-overlay").classList.remove("show");
+    const created = rvModal && rvModal.request;
+    rvModal = null;
+    if(created) loadReviews();
+  }
+
+  function openRvModal(due){
+    wireRvModal();
+    if(!rvSender()) rvSetSender();
+    const phone = due ? due.phone : "";
+    const email = due ? due.email : "";
+    rvModal = { step: 1, due, channel: phone || !email ? "whatsapp" : "email", request: null, phone, email };
+    document.getElementById("rv-title").textContent = "Ask for a Google review";
+    document.getElementById("rv-msg").textContent = "";
+    document.getElementById("rv-cancel").style.display = "";
+    document.getElementById("rv-primary").textContent = "Continue";
+    document.getElementById("rv-primary").className = "create-btn";
+    const ota = due && !due.guestName && !phone && !email;
+    document.getElementById("rv-body").innerHTML = `
+      ${due ? `<p style="margin-top:0;">${esc(rvUnit(due.unitId))} · ${rvDate(due.checkIn)} → ${rvDate(due.checkOut)} · ${esc(rvSource(due.source))}</p>` : ""}
+      ${ota ? `<div class="hint" style="margin:-6px 0 14px;">${esc(rvSource(due.source))} doesn't share guest details with your calendar. Open the reservation in the ${esc(rvSource(due.source))} app and copy the guest's name and number from there.</div>` : ""}
+      <div class="settings-field"><label>Guest name</label><input type="text" id="rv-name" value="${escAttr(due ? due.guestName : "")}"></div>
+      <div class="settings-field"><label>Send by</label>
+        <div class="rv-channel-pick">${Object.entries(RV_CHANNELS).map(([k, v]) => `<button type="button" data-ch="${k}" class="${k === rvModal.channel ? "active" : ""}">${v}</button>`).join("")}</div></div>
+      <div class="settings-field"><label id="rv-contact-label"></label><input type="text" id="rv-contact">
+        <div class="hint" id="rv-contact-hint"></div></div>
+      ${due ? "" : `<div class="settings-field"><label>Unit — optional</label><select id="rv-unit"><option value="">—</option><option value="unit1">Unit 1</option><option value="unit2">Unit 2</option></select></div>`}`;
+    document.querySelectorAll("#rv-body [data-ch]").forEach(b => b.onclick = () => rvPickChannel(b.dataset.ch));
+    rvPickChannel(rvModal.channel, true);
+    document.getElementById("rv-overlay").classList.add("show");
+  }
+
+  function rvPickChannel(ch, initial){
+    const input = document.getElementById("rv-contact");
+    // Remember what was typed for the other kind of contact, so switching
+    // back and forth doesn't lose it.
+    if(!initial){ if(rvModal.channel === "email") rvModal.email = input.value; else rvModal.phone = input.value; }
+    rvModal.channel = ch;
+    document.querySelectorAll("#rv-body [data-ch]").forEach(b => b.classList.toggle("active", b.dataset.ch === ch));
+    const isEmail = ch === "email";
+    document.getElementById("rv-contact-label").textContent = isEmail ? "Email address" : "Cellphone number";
+    document.getElementById("rv-contact-hint").textContent = isEmail ? "" : "e.g. 082 123 4567. Foreign numbers need their country code, e.g. +44 7700 900123.";
+    input.type = isEmail ? "email" : "tel";
+    input.value = (isEmail ? rvModal.email : rvModal.phone) || "";
+  }
+
+  async function rvContinue(force){
+    const msg = document.getElementById("rv-msg");
+    msg.className = "settings-msg";
+    msg.textContent = "Creating link…";
+    const due = rvModal.due;
+    const unitSel = document.getElementById("rv-unit");
+    const body = {
+      guestName: document.getElementById("rv-name").value,
+      channel: rvModal.channel,
+      contact: document.getElementById("rv-contact").value,
+      stayKey: due ? due.stayKey : null,
+      source: due ? due.source : "manual",
+      unitId: due ? due.unitId : (unitSel && unitSel.value) || null,
+      checkOut: due ? due.checkOut : null,
+      sentBy: rvSender(),
+      force: !!force
+    };
+    let data;
+    try{ data = await lsFetch("/review-requests", { method: "POST", body: JSON.stringify(body) }); }
+    catch(err){ data = { ok: false, error: "Could not reach the server." }; }
+    if(!data.ok && data.duplicate){
+      const d = data.duplicate;
+      msg.textContent = "";
+      if(confirm(`You already asked ${d.guestName} at this ${rvModal.channel === "email" ? "address" : "number"} on ${rvDate(d.createdAt)}${d.sentBy ? " (sent by " + d.sentBy + ")" : ""}.\n\nAsk again anyway?`)) return rvContinue(true);
+      return;
+    }
+    if(!data.ok){ msg.className = "settings-msg error"; msg.textContent = data.error || "Could not create the request."; return; }
+    rvModal.request = data.request;
+    rvModal.step = 2;
+    rvShowMessage();
+  }
+
+  function rvRender(template, r){
+    const first = String(r.guestName || "").trim().split(/\s+/)[0] || "there";
+    return String(template).split("{name}").join(first).split("{link}").join(r.link);
+  }
+
+  function rvDeepLink(r, text){
+    const enc = encodeURIComponent(text);
+    if(r.channel === "whatsapp") return `https://wa.me/${r.contact}?text=${enc}`;
+    if(r.channel === "sms") return `sms:+${r.contact}?&body=${enc}`;
+    return `mailto:${r.contact}?subject=${encodeURIComponent("Thank you for staying at Welverdiend")}&body=${enc}`;
+  }
+
+  function rvShowMessage(){
+    const r = rvModal.request;
+    document.getElementById("rv-msg").textContent = "";
+    document.getElementById("rv-cancel").style.display = "none";
+    const done = document.getElementById("rv-primary");
+    done.textContent = "Done";
+    done.className = "cancel-btn"; // the green button on this step is "Open in …"
+    document.getElementById("rv-body").innerHTML = `
+      <p style="margin-top:0;">Link created for <b>${esc(r.guestName)}</b> (${esc(rvContact(r))}). Check the message, then open it in ${RV_CHANNELS[r.channel]} and press send.</p>
+      <div class="settings-field"><label>Message</label><textarea id="rv-text" style="min-height:190px;">${esc(rvRender(rvState.settings.messageTemplate, r))}</textarea></div>
+      <a class="rv-open-btn" id="rv-open" ${r.channel === "whatsapp" ? `target="_blank" rel="noopener"` : ""}>Open in ${RV_CHANNELS[r.channel]}</a>
+      <div class="actions" style="justify-content:center;">
+        <button type="button" class="btn-proof" id="rv-copy-msg">Copy message</button>
+        <button type="button" class="btn-proof" id="rv-copy-link">Copy link only</button>
+      </div>`;
+    const text = document.getElementById("rv-text");
+    const open = document.getElementById("rv-open");
+    const refresh = () => { open.href = rvDeepLink(r, text.value); };
+    text.addEventListener("input", refresh);
+    refresh();
+    document.getElementById("rv-copy-msg").onclick = async () => { if(await rvCopy(text.value)) alert("Message copied."); };
+    document.getElementById("rv-copy-link").onclick = async () => { if(await rvCopy(r.link)) alert("Link copied."); };
+  }
+
 </script>
 
 <div class="reason-modal-overlay" id="ls-overlay">
@@ -2372,6 +2697,18 @@
       <button type="button" class="create-btn" id="ls-save">Save invoice</button>
     </div>
     <div class="settings-msg" id="ls-msg"></div>
+  </div>
+</div>
+
+<div class="reason-modal-overlay" id="rv-overlay">
+  <div class="reason-modal form-modal" style="max-width:520px;">
+    <h3 id="rv-title">Ask for a Google review</h3>
+    <div id="rv-body"></div>
+    <div class="reason-modal-actions">
+      <button type="button" class="cancel-btn" id="rv-cancel">Cancel</button>
+      <button type="button" class="create-btn" id="rv-primary">Continue</button>
+    </div>
+    <div class="settings-msg" id="rv-msg"></div>
   </div>
 </div>
 
