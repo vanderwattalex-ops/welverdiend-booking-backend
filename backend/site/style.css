@@ -127,7 +127,7 @@ h3{font-size:20px;}
 
 /* Sectioned gallery (Unit 1 / Unit 2) */
 .gallery-section{margin-bottom:44px;}
-.gallery-section h3{font-size:22px;margin-bottom:16px;}
+.gallery-section h2,.gallery-section h3{font-size:22px;margin-bottom:16px;}
 
 /* Lightbox */
 .lightbox-overlay{

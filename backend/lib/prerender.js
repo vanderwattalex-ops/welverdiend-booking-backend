@@ -165,7 +165,7 @@ function galleryHtml(content, unitId, label) {
   let index = 0;
   return groups.map(g => `
         <div class="gallery-section">
-          <h3>${esc(g.name)}</h3>
+          <h2 style="font-size:22px;margin-bottom:16px;">${esc(g.name)}</h2>
           <div class="gallery-grid">
             ${g.photos.map(p => galleryImg(p.url, `${label} — ${g.name}`, index++)).join("")}
           </div>

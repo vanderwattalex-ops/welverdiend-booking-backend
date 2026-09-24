@@ -114,9 +114,9 @@
 })();</script>
 
 <header class="site-header">
-  <a class="logo" href="index.html"><img src="/assets/logo-wordmark.png" alt="Welverdiend Accommodation"></a>
+  <a class="logo" href="/"><img src="/assets/logo-wordmark.png" alt="Welverdiend Accommodation" width="2497" height="1121"></a>
   <nav class="site-nav">
-    <a href="index.html">Home</a>
+    <a href="/">Home</a>
     <a href="about.html">About</a>
     <a href="unit1.html" class="active">Unit 1</a>
     <a href="unit2.html">Unit 2</a>
@@ -130,7 +130,7 @@
 </header>
 <main id="main">
 
-<a href="index.html" class="back-link" onclick="if(document.referrer){event.preventDefault();history.back();}">← Back</a>
+<a href="/" class="back-link" onclick="if(document.referrer){event.preventDefault();history.back();}">← Back</a>
 
 <div class="watermark-strip"><img src="/assets/logo-mark.png" alt=""></div>
 
@@ -219,7 +219,7 @@
 
       wrap.innerHTML = groups.map(g => `
         <div class="gallery-section">
-          <h3>${g.name}</h3>
+          <h2 style="font-size:22px;margin-bottom:16px;">${g.name}</h2>
           <div class="gallery-grid">
             ${g.photos.map(p => {
               const html = galleryImg(p.url, `Unit 1 — ${g.name}`, globalIndex);

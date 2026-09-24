@@ -50,6 +50,13 @@ app.use(require("./routes/seo"));
 // receive a page whose body just says "Loading...". Falls through to the
 // static file on any failure, which is the previous behaviour exactly.
 // Mounted before express.static so it wins for these paths.
+// /index.html is the same page as / -- send it to the one address so search
+// engines see a single URL for the homepage. Query string is preserved.
+app.get("/index.html", (req, res) => {
+  const q = req.originalUrl.indexOf("?");
+  res.redirect(301, "/" + (q >= 0 ? req.originalUrl.slice(q) : ""));
+});
+
 app.get(["/", "/:page.html"], async (req, res, next) => {
   const page = req.path === "/" ? "index.html" : req.path.slice(1);
   if (!handles(page)) return next();
