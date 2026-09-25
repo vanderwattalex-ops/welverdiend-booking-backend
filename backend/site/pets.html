@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Wildlife on the Property | Welverdiend Bloemfontein</title>
-<meta name="description" content="Springbok, ostriches and ducks roam freely across the smallholding. Walking paths, open veld and quiet countryside, just minutes from central Bloemfontein.">
+<title>Pets Welcome at Welverdiend | Pet-Friendly Stays in Bloemfontein</title>
+<meta name="description" content="Both self-catering units at Welverdiend are pet-friendly. Meet some of the pets who have stayed with us at our Groenvlei smallholding in Bloemfontein.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Welverdiend Accommodation">
-<meta property="og:title" content="Wildlife on the Property | Welverdiend Bloemfontein">
-<meta property="og:description" content="Springbok, ostriches and ducks roam freely across the smallholding. Walking paths, open veld and quiet countryside, just minutes from central Bloemfontein.">
-<meta property="og:url" content="https://welverdiendaccommodation.com/wildlife.html">
+<meta property="og:title" content="Pets Welcome at Welverdiend | Pet-Friendly Stays in Bloemfontein">
+<meta property="og:description" content="Both self-catering units at Welverdiend are pet-friendly. Meet some of the pets who have stayed with us at our Groenvlei smallholding in Bloemfontein.">
+<meta property="og:url" content="https://welverdiendaccommodation.com/pets.html">
 <meta property="og:image" content="https://storage.googleapis.com/welverdiend-site-assets/hero-photos/homeTop/14055794-59b0-4b8a-bc82-6b0528274633.jpg">
 <meta property="og:locale" content="en_ZA">
-<link rel="canonical" href="https://welverdiendaccommodation.com/wildlife.html">
+<link rel="canonical" href="https://welverdiendaccommodation.com/pets.html">
 <link rel="icon" type="image/png" href="/assets/logo-mark.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,8 +37,8 @@
     <a href="about.html">About</a>
     <a href="unit1.html">Unit 1</a>
     <a href="unit2.html">Unit 2</a>
-    <a href="wildlife.html" class="active">Wildlife</a>
-    <a href="pets.html">Pet-Friendly Stays</a>
+    <a href="wildlife.html">Wildlife</a>
+    <a href="pets.html" class="active">Pet-Friendly Stays</a>
     <a href="location.html">Location</a>
     <a href="faq.html">FAQ</a>
     <a href="reviews.html">Reviews</a>
@@ -53,12 +53,10 @@
 <div class="watermark-strip"><img src="/assets/logo-mark.png" alt=""></div>
 
 <section class="section narrow center" style="padding-bottom:20px;padding-top:20px;">
-  <p class="eyebrow">Roaming free</p>
-  <h1 style="font-size:36px;">Welverdiend Wildlife</h1>
-  <p class="lede">One of the things that makes Welverdiend special is the wildlife you may encounter during your stay. Animals and birds roam freely around the property, often coming surprisingly close to the accommodation and garden.</p>
-  <p class="lede" style="margin-top:14px;">You might spot Springbok (Antidorcas marsupialis) quietly grazing nearby, Common Ostrich (Struthio camelus) wandering through the property, or Domestic Ducks (Anas platyrhynchos domesticus) and Domestic Chickens (Gallus gallus domesticus) going about their day. Every stay can be a little different, and there is something special about sitting outside with your morning coffee or relaxing around the braai while wildlife moves naturally through the surroundings.</p>
-  <p class="lede" style="margin-top:14px;">It is a peaceful reminder that although Welverdiend is close to the city, you are staying somewhere with a genuine connection to nature.</p>
-  <p class="lede" style="margin-top:14px;">The wildlife is part of the setting, not a staged attraction. Guests are simply invited to enjoy watching it as it goes about its day.</p>
+  <p class="eyebrow">Pets welcome</p>
+  <h1 style="font-size:36px;">Pet-Friendly Stays at Welverdiend</h1>
+  <p class="lede">Both of our self-catering units are pet-friendly, so your four-legged companion is welcome to come along.</p>
+  <p class="lede" style="margin-top:14px;">Below are some of the pets who have stayed with us. If you have any questions about bringing your pet, <a href="contact.html">get in touch</a> or see our <a href="faq.html">frequently asked questions</a>.</p>
 </section>
 
 <section class="section">
@@ -67,8 +65,14 @@
   </div>
 </section>
 
+<section class="section narrow center" style="padding-top:10px;">
+  <h2 style="font-size:26px;">Stayed with us with your pet?</h2>
+  <p class="lede">We would love to see them. Send us a photo of your pet at Welverdiend on <a href="https://wa.me/27791183173?text=Hi%2C%20here%20is%20a%20photo%20of%20my%20pet%20at%20Welverdiend" target="_blank" rel="noopener">WhatsApp</a> (079 118 3173) or by <a href="mailto:bookings@welverdiendaccommodation.com?subject=Pet%20photo">email</a>, and we may add it to this page.</p>
+  <p class="lede" style="margin-top:14px;font-size:0.9em;">By sending us a photo you are happy for us to show it on this page.</p>
+</section>
+
 <div class="cta-band">
-  <h2>Come experience it yourself</h2>
+  <h2>Bring your pet along</h2>
   <p>Check live availability and reserve directly — no booking fees.</p>
   <a class="book-btn" href="/booking-widget.html">Check availability</a>
 </div>
@@ -114,14 +118,14 @@
         wrap.innerHTML = `<p style="text-align:center;color:var(--ink-soft);">Could not load photos right now — please refresh.</p>`;
         return;
       }
-      const photos = (data.galleries && data.galleries.wildlife) || [];
+      const photos = (data.galleries && data.galleries.pets) || [];
       if(photos.length === 0){
-        wrap.innerHTML = `<div class="gallery-empty"><p style="margin:0;">Photos are on their way — check back soon.</p></div>`;
+        wrap.innerHTML = `<div class="gallery-empty"><p style="margin:0;">Photos of our four-legged guests are on their way — check back soon.</p></div>`;
         return;
       }
       allPhotoUrls = photos;
       wrap.innerHTML = `<div class="gallery-grid">` +
-        photos.map((url, i) => galleryImg(url, "Welverdiend wildlife", i)).join("") +
+        photos.map((url, i) => galleryImg(url, "A guest's pet at Welverdiend", i)).join("") +
         `</div>`;
       wrap.querySelectorAll("img[data-index]").forEach(img => {
         img.onclick = () => openLightbox(allPhotoUrls, Number(img.dataset.index));

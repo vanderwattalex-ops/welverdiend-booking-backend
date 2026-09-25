@@ -127,6 +127,7 @@ function llmsTxt(f, content) {
     `- [Home](${SITE}/): overview, availability and guest reviews`,
     `- [About](${SITE}/about.html): the story behind Welverdiend`,
     `- [Wildlife](${SITE}/wildlife.html): the animals on the property`,
+    `- [Pet-Friendly Stays](${SITE}/pets.html): pets are welcome, with photos of guests' pets`,
     `- [Location](${SITE}/location.html): where it is, with nearby restaurants and shops`,
     `- [FAQ](${SITE}/faq.html): pets, check-in, booking and payment`,
     `- [Reviews](${SITE}/reviews.html): what guests say`,

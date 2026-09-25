@@ -41,6 +41,12 @@ img{max-width:100%;display:block;}
   border-radius:3px;font-weight:600;
 }
 .site-nav .book-btn:hover{background:var(--ink);}
+/* Eleven menu items: tighten the spacing on laptop-width screens so the menu stays beside the logo. */
+@media (min-width:761px) and (max-width:1400px){
+  .site-nav{gap:14px;}
+  .site-nav a{font-size:12px;letter-spacing:.04em;}
+  .site-nav .book-btn{padding:10px 16px;}
+}
 
 /* Back link */
 .back-link{

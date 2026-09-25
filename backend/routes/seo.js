@@ -25,6 +25,7 @@ const PAGES = [
   { path: "/unit1.html", images: c => galleryUrls(c, "unit1", 1000) },
   { path: "/unit2.html", images: c => galleryUrls(c, "unit2", 1000) },
   { path: "/wildlife.html", images: c => galleryUrls(c, "wildlife", 1000) },
+  { path: "/pets.html", images: c => galleryUrls(c, "pets", 1000) },
   { path: "/location.html" },
   { path: "/faq.html" },
   { path: "/reviews.html" },

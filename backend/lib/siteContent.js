@@ -7,9 +7,9 @@ const { v4: uuidv4 } = require("uuid");
 // separate concerns even though they're both admin-editable.
 const DOC_ID = "site";
 
-const GALLERY_IDS = ["unit1", "unit2", "wildlife"];
+const GALLERY_IDS = ["unit1", "unit2", "wildlife", "pets"];
 // Unit 1 and Unit 2 galleries are organized into sections (Bedroom 1,
-// Kitchen, etc). Wildlife stays a simple flat list — sections wouldn't
+// Kitchen, etc). Wildlife and pets stay simple flat lists — sections wouldn't
 // add anything there.
 const SECTIONED_GALLERY_IDS = ["unit1", "unit2"];
 const DEFAULT_SECTION = "Other";
@@ -46,7 +46,7 @@ async function getSiteContent() {
       galleries[id] = photos;
       if (changed) needsMigrationWrite = true;
     } else {
-      galleries[id] = raw; // wildlife — stays flat strings
+      galleries[id] = raw; // wildlife, pets — stay flat strings
     }
   });
 

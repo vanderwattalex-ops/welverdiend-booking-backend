@@ -186,6 +186,7 @@ const PAGE_INFO = {
   "unit1.html":    { name: "Unit 1",   type: "WebPage" },
   "unit2.html":    { name: "Unit 2",   type: "WebPage" },
   "wildlife.html": { name: "Wildlife", type: "WebPage" },
+  "pets.html":     { name: "Pet-Friendly Stays", type: "WebPage" },
   "location.html": { name: "Location", type: "WebPage" },
   "faq.html":      { name: "FAQ",      type: "WebPage" }, // the FAQPage entity is already in faq.html
   "reviews.html":  { name: "Reviews",  type: "WebPage" },
@@ -261,7 +262,7 @@ function galleryUrls(c, key, max) {
 function shareImageFor(page, c) {
   const hero = c.heroPhotos || {};
   if (page === "about.html") return hero.aboutPhoto;
-  if (page === "unit1.html" || page === "unit2.html" || page === "wildlife.html") {
+  if (page === "unit1.html" || page === "unit2.html" || page === "wildlife.html" || page === "pets.html") {
     return galleryUrls(c, page.replace(".html", ""), 1)[0];
   }
   return null;
@@ -297,7 +298,13 @@ const PAGES = {
   "contact.html":  (c, h) => h,
   "unit1.html":    (c, h) => { const g = galleryHtml(c, "unit1", "Unit 1"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "unit2.html":    (c, h) => { const g = galleryHtml(c, "unit2", "Unit 2"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
-  "wildlife.html": (c, h) => { const g = flatGalleryHtml(c, "wildlife", "Welverdiend wildlife"); return g ? replaceContainer(h, "gallery-wrap", g) : h; }
+  "wildlife.html": (c, h) => { const g = flatGalleryHtml(c, "wildlife", "Welverdiend wildlife"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
+  "pets.html":     (c, h) => {
+    const g = flatGalleryHtml(c, "pets", "A guest's pet at Welverdiend");
+    // Until the first photo is added, say so in the HTML itself rather than leaving "Loading photos..." for crawlers.
+    const empty = '<div class="gallery-empty"><p style="margin:0;">Photos of our four-legged guests are on their way — check back soon.</p></div>';
+    return replaceContainer(h, "gallery-wrap", g || empty);
+  }
 };
 
 function handles(page) {

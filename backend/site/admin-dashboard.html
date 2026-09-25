@@ -1701,7 +1701,7 @@
     renderWebsiteContent();
   }
 
-  const galleryLabels = { unit1: "Unit 1 gallery photos", unit2: "Unit 2 gallery photos", wildlife: "Welverdiend Wildlife photos" };
+  const galleryLabels = { unit1: "Unit 1 gallery photos", unit2: "Unit 2 gallery photos", wildlife: "Welverdiend Wildlife photos", pets: "Guest pet photos (Pets page)" };
 
   const SECTIONED_GALLERIES = ["unit1", "unit2"];
 
@@ -1792,7 +1792,7 @@
   function renderWebsiteContent(){
     const content = document.getElementById("website-content");
     const paras = websiteContentState.aboutParagraphs || [];
-    const galleries = websiteContentState.galleries || { unit1: [], unit2: [], wildlife: [] };
+    const galleries = websiteContentState.galleries || { unit1: [], unit2: [], wildlife: [], pets: [] };
     const heroPhotos = websiteContentState.heroPhotos || {};
     const reviews = websiteContentState.reviews || [];
     const faqs = websiteContentState.faqs || [];
@@ -2352,7 +2352,7 @@
 
     const pageLabels = {
       "/": "Home", "/index.html": "Home", "/about.html": "About",
-      "/unit1.html": "Unit 1", "/unit2.html": "Unit 2", "/wildlife.html": "Wildlife",
+      "/unit1.html": "Unit 1", "/unit2.html": "Unit 2", "/wildlife.html": "Wildlife", "/pets.html": "Pet-Friendly Stays",
       "/location.html": "Location", "/faq.html": "FAQ", "/reviews.html": "Reviews",
       "/contact.html": "Contact", "/booking-widget.html": "Booking calendar"
     };
