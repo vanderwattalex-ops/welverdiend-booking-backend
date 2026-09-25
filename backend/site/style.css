@@ -36,16 +36,23 @@ img{max-width:100%;display:block;}
   text-decoration:none;color:var(--ink-soft);
 }
 .site-nav a:hover, .site-nav a.active{color:var(--taupe-deep);}
+/* Book now: the main call to action -- gold, larger, with the direct-booking saving underneath. */
 .site-nav .book-btn{
-  background:var(--taupe-deep);color:var(--white);padding:11px 22px;
-  border-radius:3px;font-weight:600;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;
+  background:var(--gold);color:var(--ink);padding:11px 24px;
+  border-radius:4px;font-weight:700;font-size:15px;letter-spacing:.07em;
+  box-shadow:0 2px 8px rgba(74,68,54,.28);
 }
-.site-nav .book-btn:hover{background:var(--ink);}
+.site-nav .book-btn small{
+  display:block;margin-top:2px;font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:none;
+}
+.site-nav .book-btn:hover{background:#9C8047;color:var(--white);}
 /* Eleven menu items: tighten the spacing on laptop-width screens so the menu stays beside the logo. */
 @media (min-width:761px) and (max-width:1400px){
   .site-nav{gap:14px;}
   .site-nav a{font-size:12px;letter-spacing:.04em;}
-  .site-nav .book-btn{padding:10px 16px;}
+  .site-nav .book-btn{padding:9px 14px;font-size:14px;}
+  .site-nav .book-btn small{font-size:10.5px;}
 }
 
 /* Back link */
