@@ -21,7 +21,7 @@ const {
   saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
   addGallerySection, renameGallerySection, removeGallerySection,
   setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation,
-  GALLERY_IDS, SECTIONED_GALLERY_IDS
+  GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, setPhotoCaption
 } = require("../lib/siteContent");
 const { getAnalyticsSummary } = require("../lib/analytics");
 const { saveThumbnail, IMMUTABLE } = require("../lib/thumbnails");
@@ -821,6 +821,20 @@ router.delete("/admin/site-content/photos", async (req, res) => {
   } catch (err) {
     console.error("[admin] photo remove failed:", err);
     res.status(500).json({ ok: false, error: "Could not remove photo" });
+  }
+});
+
+// POST /api/admin/site-content/photos/caption   body: { gallery: 'pets', photoId, caption }
+router.post("/admin/site-content/photos/caption", async (req, res) => {
+  try {
+    const { gallery, photoId, caption } = req.body;
+    if (!CAPTIONED_GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: "Captions are only available for the pet photos" });
+    if (!photoId) return res.status(400).json({ ok: false, error: "photoId is required" });
+    const updated = await setPhotoCaption(gallery, photoId, caption);
+    res.json({ ok: true, gallery: updated });
+  } catch (err) {
+    console.error("[admin] set caption failed:", err);
+    res.status(err.userMessage ? 400 : 500).json({ ok: false, error: err.userMessage || "Could not save the caption" });
   }
 });
 

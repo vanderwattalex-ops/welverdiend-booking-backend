@@ -153,6 +153,25 @@ function flatGalleryHtml(content, key, alt) {
   return imgs ? `<div class="gallery-grid">${imgs}</div>` : null;
 }
 
+// Pet photos: a grid of photo + optional caption. Mirrors the markup built by
+// pets.html in the browser. Entries are {id, url, caption}; plain strings
+// (older data) are accepted too.
+function petGalleryHtml(content) {
+  const photos = (content.galleries && content.galleries.pets) || [];
+  const items = photos
+    .map(p => (typeof p === "string" ? { url: p, caption: "" } : p))
+    .filter(p => p && p.url);
+  if (items.length === 0) return null;
+  const figs = items
+    .map((p, i) => {
+      const cap = String(p.caption || "").trim();
+      const alt = cap || "A guest's pet at Welverdiend";
+      return `<figure class="pet-photo">${galleryImg(p.url, alt, i)}${cap ? `<figcaption>${esc(cap)}</figcaption>` : ""}</figure>`;
+    })
+    .join("");
+  return `<div class="gallery-grid pet-grid">${figs}</div>`;
+}
+
 function galleryHtml(content, unitId, label) {
   const photos = (content.galleries && content.galleries[unitId]) || [];
   if (photos.length === 0) return null;
@@ -300,7 +319,7 @@ const PAGES = {
   "unit2.html":    (c, h) => { const g = galleryHtml(c, "unit2", "Unit 2"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "wildlife.html": (c, h) => { const g = flatGalleryHtml(c, "wildlife", "Welverdiend wildlife"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "pets.html":     (c, h) => {
-    const g = flatGalleryHtml(c, "pets", "A guest's pet at Welverdiend");
+    const g = petGalleryHtml(c);
     // Until the first photo is added, say so in the HTML itself rather than leaving "Loading photos..." for crawlers.
     const empty = '<div class="gallery-empty"><p style="margin:0;">Photos of our four-legged guests are on their way — check back soon.</p></div>';
     return replaceContainer(h, "gallery-wrap", g || empty);

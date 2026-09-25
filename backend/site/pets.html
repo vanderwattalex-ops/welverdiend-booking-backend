@@ -19,6 +19,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 <style>
+  .pet-photo{margin:0;}
+  .pet-photo figcaption{margin-top:8px;text-align:center;font-size:15px;line-height:1.4;color:var(--ink-soft);}
   .pet-btn{display:inline-block;text-decoration:none;padding:15px 32px;border-radius:4px;font-weight:600;font-size:16px;letter-spacing:.04em;background:var(--taupe-deep);color:#fff;border:2px solid var(--taupe-deep);transition:background .15s,color .15s;}
   .pet-btn:hover{background:var(--ink);border-color:var(--ink);}
   .pet-btn.alt{background:transparent;color:var(--taupe-deep);}
@@ -125,6 +127,9 @@
 (function(){
   const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app";
   let allPhotoUrls = [];
+  function escHtml(s){
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
 
   // Grid tile = small thumbnail, with the full photo as a fallback if the
   // thumbnail is missing. Mirrors lib/thumbnails.js and lib/prerender.js.
@@ -150,9 +155,14 @@
         wrap.innerHTML = `<div class="gallery-empty"><p style="margin:0;">Photos of our four-legged guests are on their way — check back soon.</p></div>`;
         return;
       }
-      allPhotoUrls = photos;
-      wrap.innerHTML = `<div class="gallery-grid">` +
-        photos.map((url, i) => galleryImg(url, "A guest's pet at Welverdiend", i)).join("") +
+      // Entries are {url, caption}; plain strings are older photos with no caption.
+      const items = photos.map(p => typeof p === "string" ? { url: p, caption: "" } : p);
+      allPhotoUrls = items.map(p => p.url);
+      wrap.innerHTML = `<div class="gallery-grid pet-grid">` +
+        items.map((p, i) => `<figure class="pet-photo">` +
+          galleryImg(p.url, escHtml(p.caption || "A guest's pet at Welverdiend"), i) +
+          (p.caption ? `<figcaption>${escHtml(p.caption)}</figcaption>` : "") +
+          `</figure>`).join("") +
         `</div>`;
       wrap.querySelectorAll("img[data-index]").forEach(img => {
         img.onclick = () => openLightbox(allPhotoUrls, Number(img.dataset.index));

@@ -173,6 +173,8 @@
     position:absolute;top:5px;right:5px;background:rgba(163,64,47,.92);color:white;
     border:none;border-radius:4px;padding:3px 7px;font-size:11px;cursor:pointer;
   }
+  .photo-caption-input{width:100%;margin-top:6px;padding:6px 8px;font-size:12.5px;border:1px solid var(--line);border-radius:4px;font-family:inherit;}
+  .save-caption-btn{width:100%;margin-top:4px;padding:6px 8px;font-size:12px;border:1px solid var(--taupe-deep);background:var(--white);color:var(--taupe-deep);border-radius:4px;cursor:pointer;}
   .photo-upload-btn{
     display:inline-block;background:var(--taupe-deep);color:white;border:none;border-radius:5px;
     padding:9px 16px;font-size:13px;cursor:pointer;font-weight:600;margin-top:6px;
@@ -1710,12 +1712,21 @@
       <div class="unit-block">
         <h2>${galleryLabels[galleryId]}</h2>
         <div class="photo-grid" id="photo-grid-${galleryId}">
-          ${photos.map(url => `
+          ${photos.map(p => {
+            // Most galleries are plain URL strings; the pet photos are {id, url, caption}.
+            const url = typeof p === "string" ? p : p.url;
+            const id = typeof p === "string" ? p : p.id;
+            const caption = typeof p === "string" ? "" : (p.caption || "");
+            const captionBox = galleryId === "pets" ? `
+              <input type="text" class="photo-caption-input" maxlength="120" value="${esc(caption)}" placeholder="Caption, e.g. Bella (sent by the Smith family)">
+              <button type="button" class="save-caption-btn" data-gallery="${galleryId}" data-photo-id="${esc(id)}">Save caption</button>` : "";
+            return `
             <div class="photo-tile">
               <img src="${url}" alt="${galleryId}">
-              <button type="button" data-gallery="${galleryId}" data-identifier="${esc(url)}" class="remove-photo-btn">Remove</button>
-            </div>
-          `).join("") || `<p class="no-ranges">No photos yet.</p>`}
+              ${captionBox}
+              <button type="button" data-gallery="${galleryId}" data-identifier="${esc(id)}" class="remove-photo-btn">Remove</button>
+            </div>`;
+          }).join("") || `<p class="no-ranges">No photos yet.</p>`}
         </div>
         <input type="file" accept="image/*" id="photo-input-${galleryId}" style="display:none" multiple>
         <button type="button" class="photo-upload-btn" data-gallery="${galleryId}" id="upload-btn-${galleryId}">+ Upload photos</button>
@@ -1926,6 +1937,9 @@
     });
     content.querySelectorAll(".remove-photo-btn").forEach(btn => {
       btn.onclick = () => removePhoto(btn.dataset.gallery, btn.dataset.identifier);
+    });
+    content.querySelectorAll(".save-caption-btn").forEach(btn => {
+      btn.onclick = () => saveCaptionAction(btn.dataset.gallery, btn.dataset.photoId, btn);
     });
     content.querySelectorAll(".photo-move-btn").forEach(btn => {
       btn.onclick = () => movePhotoAction(btn.dataset.gallery, btn.dataset.photoId, btn.dataset.direction);
@@ -2208,6 +2222,31 @@
         successMsg.className = "settings-msg success";
         successMsg.textContent = `${succeeded} photo${succeeded===1?"":"s"} uploaded.`;
       }
+    }
+  }
+
+  async function saveCaptionAction(galleryId, photoId, btn){
+    const input = btn.parentElement.querySelector(".photo-caption-input");
+    const label = btn.textContent;
+    btn.disabled = true; btn.textContent = "Saving…";
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/photos/caption`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ gallery: galleryId, photoId, caption: input.value })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.galleries[galleryId] = data.gallery;
+        btn.textContent = "Saved ✓";
+        setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 1500);
+      } else {
+        alert(data.error || "Could not save the caption.");
+        btn.textContent = label; btn.disabled = false;
+      }
+    }catch(err){
+      alert("Could not reach the server.");
+      btn.textContent = label; btn.disabled = false;
     }
   }
 

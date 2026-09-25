@@ -12,6 +12,22 @@ const GALLERY_IDS = ["unit1", "unit2", "wildlife", "pets"];
 // Kitchen, etc). Wildlife and pets stay simple flat lists — sections wouldn't
 // add anything there.
 const SECTIONED_GALLERY_IDS = ["unit1", "unit2"];
+// Pet photos carry a short caption (the pet's name, who sent it). Older
+// entries were plain URL strings; they are converted on read, like the units.
+const CAPTIONED_GALLERY_IDS = ["pets"];
+const MAX_CAPTION = 120;
+
+function migrateCaptioned(list) {
+  let changed = false;
+  const photos = (list || []).map(p => {
+    if (typeof p === "string") {
+      changed = true;
+      return { id: uuidv4(), url: p, caption: "" };
+    }
+    return p;
+  });
+  return { photos, changed };
+}
 const DEFAULT_SECTION = "Other";
 
 /**
@@ -45,8 +61,12 @@ async function getSiteContent() {
       const { photos, changed } = migratePhotos(raw);
       galleries[id] = photos;
       if (changed) needsMigrationWrite = true;
+    } else if (CAPTIONED_GALLERY_IDS.includes(id)) {
+      const { photos, changed } = migrateCaptioned(raw);
+      galleries[id] = photos;
+      if (changed) needsMigrationWrite = true;
     } else {
-      galleries[id] = raw; // wildlife, pets — stay flat strings
+      galleries[id] = raw; // wildlife — stays flat strings
     }
   });
 
@@ -93,7 +113,9 @@ async function addGalleryPhoto(unitId, url, section) {
     : DEFAULT_SECTION;
   const entry = SECTIONED_GALLERY_IDS.includes(unitId)
     ? { id: uuidv4(), url, section: validSection }
-    : url; // wildlife stays a plain string
+    : CAPTIONED_GALLERY_IDS.includes(unitId)
+      ? { id: uuidv4(), url, caption: "" }
+      : url; // wildlife stays a plain string
   const updated = [...current.galleries[unitId], entry];
   const galleries = { ...current.galleries, [unitId]: updated };
   await settingsCollection.doc(DOC_ID).set({ galleries }, { merge: true });
@@ -108,7 +130,9 @@ async function removeGalleryPhoto(unitId, identifier) {
   const current = await getSiteContent();
   const updated = SECTIONED_GALLERY_IDS.includes(unitId)
     ? current.galleries[unitId].filter(p => p.id !== identifier)
-    : current.galleries[unitId].filter(u => u !== identifier);
+    : CAPTIONED_GALLERY_IDS.includes(unitId)
+      ? current.galleries[unitId].filter(p => p.id !== identifier && p.url !== identifier)
+      : current.galleries[unitId].filter(u => u !== identifier);
   const galleries = { ...current.galleries, [unitId]: updated };
   await settingsCollection.doc(DOC_ID).set({ galleries }, { merge: true });
   return updated;
@@ -231,8 +255,24 @@ async function removeRecommendation(id) {
   return recommendations;
 }
 
+/** Sets the caption on one photo of a captioned gallery. Returns the updated list. */
+async function setPhotoCaption(galleryId, photoId, caption) {
+  const current = await getSiteContent();
+  const list = current.galleries[galleryId] || [];
+  if (!list.some(p => p.id === photoId)) {
+    const err = new Error("Photo not found");
+    err.userMessage = "That photo could not be found — refresh the page and try again.";
+    throw err;
+  }
+  const clean = String(caption == null ? "" : caption).replace(/\s+/g, " ").trim().slice(0, MAX_CAPTION);
+  const updated = list.map(p => (p.id === photoId ? { ...p, caption: clean } : p));
+  const galleries = { ...current.galleries, [galleryId]: updated };
+  await settingsCollection.doc(DOC_ID).set({ galleries }, { merge: true });
+  return updated;
+}
+
 module.exports = {
-  GALLERY_IDS, SECTIONED_GALLERY_IDS,
+  GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, MAX_CAPTION, setPhotoCaption,
   getSiteContent, saveAboutParagraphs, setHeroPhoto,
   addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
   addGallerySection, renameGallerySection, removeGallerySection,
