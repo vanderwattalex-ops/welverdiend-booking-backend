@@ -1,7 +1,7 @@
 const ical = require("ical-generator").default;
 
 /**
- * Builds an .ics feed of a unit's CONFIRMED direct (EFT) bookings, so it can
+ * Builds an .ics feed of a unit's date-holding direct (EFT) bookings, so it can
  * be pasted as an "import calendar" URL into Airbnb / Booking.com /
  * Lekkeslaap. This is what closes the loop for two-way sync: a direct
  * booking here blocks the dates everywhere else too.

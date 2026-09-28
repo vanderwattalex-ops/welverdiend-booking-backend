@@ -14,12 +14,20 @@ router.get("/ical/:unitFile", async (req, res) => {
   if (!unit) return res.status(404).send("Unknown unit");
 
   try {
+    // Every status that holds the dates here — the same list
+    // lib/availabilitySync.js blocks our own calendar with — not just
+    // "confirmed". Otherwise a booking waiting on its deposit is blocked
+    // on this site but still bookable on Airbnb/Booking.com/Lekkeslaap.
+    // A website hold that isn't paid within 24h turns "expired"
+    // (routes/reminders.js) and drops out of this feed, so the platforms
+    // reopen the dates on their next fetch. Manual bookings never expire:
+    // they stay here until the owner cancels them.
     const snap = await bookingsCollection
       .where("unitId", "==", unitId)
-      .where("status", "==", "confirmed")
+      .where("status", "in", ["awaiting_payment", "submitted", "confirmed"])
       .get();
-    const confirmed = snap.docs.map(d => d.data());
-    const ics = buildUnitExport(unit.name, confirmed);
+    const holding = snap.docs.map(d => d.data());
+    const ics = buildUnitExport(unit.name, holding);
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
     res.send(ics);
   } catch (err) {
