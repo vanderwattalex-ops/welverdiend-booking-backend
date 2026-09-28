@@ -69,6 +69,28 @@ function isOwnerBlock(sourceLabel, summary) {
 }
 
 /**
+ * Our own export feed (routes/icalExport.js) is imported by Airbnb,
+ * Booking.com and Lekkeslaap, and they then list those dates in THEIR
+ * feeds as blocked — which we import straight back. Left in, a direct
+ * booking's own dates come back tagged "airbnb" as well as "direct", and
+ * then:
+ *  - the deposit-proof upload re-check (routes/bookings.js isRangeFree)
+ *    no longer recognises the range as the booking's own hold and tells
+ *    the guest "these dates were booked elsewhere" — the same bug fixed
+ *    in 02b3fe5, returning a few hours after approval;
+ *  - Booking.com's echo ("CLOSED - Not available", indistinguishable from
+ *    a reservation) would count as Booking.com income in the stats.
+ * So an external range with EXACTLY the dates of one of our own holding
+ * bookings is treated as the echo and dropped. A genuine platform
+ * booking on precisely those dates would already be a double booking;
+ * the direct booking still blocks the dates either way.
+ */
+function dropEchoes(externalRanges, ownRanges) {
+  const ownKeys = new Set(ownRanges.map(r => `${r.start}|${r.end}`));
+  return externalRanges.filter(r => !ownKeys.has(`${r.start}|${r.end}`));
+}
+
+/**
  * Pulls all three external feeds for a single unit + adds this platform's
  * own confirmed direct bookings (passed in separately), then returns one
  * merged, deduplicated list of busy ranges for that unit, each tagged
@@ -83,7 +105,8 @@ async function syncUnit(unitConfig, ownConfirmedRanges = []) {
   ]);
 
   const own = ownConfirmedRanges.map(r => ({ ...r, source: "direct", detail: r.guestName }));
-  const merged = mergeRanges([...airbnb.ranges, ...booking.ranges, ...lekkeslaap.ranges, ...own]);
+  const external = dropEchoes([...airbnb.ranges, ...booking.ranges, ...lekkeslaap.ranges], own);
+  const merged = mergeRanges([...external, ...own]);
 
   return {
     unitId: unitConfig.id,
@@ -109,4 +132,4 @@ async function syncAllUnits(getOwnConfirmedRangesForUnit) {
   return results;
 }
 
-module.exports = { syncAllUnits, syncUnit };
+module.exports = { syncAllUnits, syncUnit, dropEchoes };
