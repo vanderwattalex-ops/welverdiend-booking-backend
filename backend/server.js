@@ -68,6 +68,9 @@ app.get(["/", "/:page.html"], async (req, res, next) => {
 // Tracked Google-review links sent to guests (see routes/reviews.js).
 app.get("/r/:token", require("./routes/reviews").redirectPage);
 
+// Per-booking invoice links sent to guests over WhatsApp (see routes/invoiceLink.js).
+app.get("/i/:id/:key", require("./routes/invoiceLink").invoicePage);
+
 // Browser caching. Without it every page view re-downloaded the logos, badge
 // and stylesheet (max-age=0). File names here aren't versioned, so lifetimes
 // are kept modest: images a week, CSS/JS an hour -- long enough to cover a

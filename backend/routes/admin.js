@@ -15,6 +15,7 @@ const { nightsBetween, calculateTotal } = require("../lib/pricing");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { DEFAULT_EMAIL_TEMPLATES } = require("../lib/emailTemplates");
 const { generateInvoice } = require("../lib/invoice");
+const { invoiceLinkKey } = require("./invoiceLink");
 const { syncUnitAndSave } = require("../lib/availabilitySync");
 const {
   getSiteContent,
@@ -207,6 +208,21 @@ router.get("/admin/bookings/:id/invoice", async (req, res) => {
   } catch (err) {
     console.error("[admin] invoice generation failed:", err);
     res.status(500).json({ ok: false, error: "Could not generate invoice" });
+  }
+});
+
+// GET /api/admin/bookings/:id/invoice-link  -> { link } the guest can open
+// without the admin token, for sending the invoice over WhatsApp.
+router.get("/admin/bookings/:id/invoice-link", async (req, res) => {
+  try {
+    const doc = await bookingsCollection.doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ ok: false, error: "Not found" });
+    const { frontendBaseUrl } = await getSettings();
+    const base = frontendBaseUrl || `${req.protocol}://${req.get("host")}`;
+    res.json({ ok: true, link: `${base}/i/${req.params.id}/${invoiceLinkKey(req.params.id)}` });
+  } catch (err) {
+    console.error("[admin] invoice link failed:", err);
+    res.status(500).json({ ok: false, error: "Could not make an invoice link" });
   }
 });
 

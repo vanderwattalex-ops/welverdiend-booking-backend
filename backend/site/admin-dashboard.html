@@ -359,6 +359,8 @@
   }
 
 
+  let bookingsById = {}; // the bookings last loaded, for the WhatsApp message builder
+
   async function loadBookings(){
     if(!token()){ alert("Enter your admin token first."); return; }
     checkFeedHealth();
@@ -390,7 +392,9 @@
     }
     empty.style.display = "none";
 
+    bookingsById = {};
     data.bookings.forEach(b => {
+      bookingsById[b.id] = b;
       const guestsLine = `${b.adults || 1} adult${(b.adults||1)===1?"":"s"}` + (b.children ? `, ${b.children} child${b.children===1?"":"ren"}${b.childrenAges ? " ("+esc(b.childrenAges)+")" : ""}` : "");
       const petsLine = b.hasPets ? (esc(b.petDetails) || "Yes") : "No";
       // Everything after the first line item is an add-on — except a
@@ -408,11 +412,13 @@
       } else if(b.status === "awaiting_payment"){
         const parts = [`<button class="btn-proof" data-id="${b.id}" data-action="invoice">Download invoice</button>`];
         if(b.email) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="send-invoice">Email invoice</button>`);
+        if(waPhone(b.phone)) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="whatsapp">WhatsApp guest</button>`);
         parts.push(`<button class="btn-confirm" data-id="${b.id}" data-action="mark-deposit-received">Mark deposit received (no proof)</button>`);
         parts.push(`<button class="btn-reject" data-id="${b.id}" data-action="decline">${b.manual ? "Cancel booking" : "Cancel request"}</button>`);
         actionsHtml = parts.join("");
       } else if(b.status === "submitted"){
         const submittedParts = [`<button class="btn-proof" data-id="${b.id}" data-action="invoice">Download invoice</button>`];
+        if(waPhone(b.phone)) submittedParts.push(`<button class="btn-proof" data-id="${b.id}" data-action="whatsapp">WhatsApp guest</button>`);
         if(b.proofOfPaymentPath) submittedParts.push(`<button class="btn-proof" data-id="${b.id}" data-action="proof">View deposit proof</button>`);
         submittedParts.push(`<button class="btn-confirm" data-id="${b.id}" data-action="confirm">Confirm booking</button>`);
         submittedParts.push(`<button class="btn-reject" data-id="${b.id}" data-action="reject">Reject</button>`);
@@ -421,6 +427,7 @@
         const parts = [];
         parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="invoice">Download invoice</button>`);
         if(b.email) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="send-invoice">Email ${b.balanceStatus === "paid" ? "receipt" : "invoice"}</button>`);
+        if(waPhone(b.phone)) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="whatsapp">WhatsApp guest</button>`);
         if(b.proofOfPaymentPath) parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="proof">View deposit proof</button>`);
         if(b.balanceStatus === "unpaid"){
           parts.push(`<button class="btn-proof" data-id="${b.id}" data-action="remind">Send balance reminder</button>`);
@@ -475,6 +482,7 @@
     cards.querySelectorAll("[data-action='balance-proof']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "balance"));
     cards.querySelectorAll("[data-action='invoice']").forEach(btn => btn.onclick = () => viewProof(btn.dataset.id, "invoice"));
     cards.querySelectorAll("[data-action='send-invoice']").forEach(btn => btn.onclick = () => sendInvoiceEmail(btn.dataset.id));
+    cards.querySelectorAll("[data-action='whatsapp']").forEach(btn => btn.onclick = () => openWaModal(bookingsById[btn.dataset.id]));
     cards.querySelectorAll("[data-action='approve']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "approve"));
     cards.querySelectorAll("[data-action='mark-deposit-received']").forEach(btn => btn.onclick = () => markDepositReceived(btn.dataset.id));
     cards.querySelectorAll("[data-action='confirm']").forEach(btn => btn.onclick = () => decide(btn.dataset.id, "confirm"));
@@ -602,6 +610,7 @@
   let newBookingSettings = null; // units + extras, re-read from Settings every time the form opens
   let depositEdited = false;     // stops the 50% auto-fill overwriting a deposit you typed yourself
   let sendEmailEdited = false;   // same idea for the "email the guest" checkbox
+  let sendWaEdited = false;      // and for the "send on WhatsApp" one
 
   function round2(n){ return Math.round(Number(n||0) * 100) / 100; }
 
@@ -655,6 +664,7 @@
   function renderNewBookingForm(){
     depositEdited = false;
     sendEmailEdited = false;
+    sendWaEdited = false;
     const { units, extras } = newBookingSettings;
     const firstUnit = units[0] || { pricePerNight: 0 };
 
@@ -743,6 +753,7 @@
         </select>
       </div>
       <div class="nb-checkbox"><input type="checkbox" id="nb-send-email" checked><label for="nb-send-email">Email the guest</label></div>
+      <div class="nb-checkbox"><input type="checkbox" id="nb-send-wa"><label for="nb-send-wa">Send the booking details on WhatsApp</label></div>
       <div class="hint" id="nb-stage-note"></div>
       <div class="hint" style="margin-top:10px;">These dates are held as soon as you create the booking, and won't auto-expire — cancel the booking to release them.</div>
     `;
@@ -754,6 +765,7 @@
     if(!newBookingSettings) return; // form hasn't been built yet
     if(e.target.id === "nb-deposit") depositEdited = true;
     if(e.target.id === "nb-send-email") sendEmailEdited = true;
+    if(e.target.id === "nb-send-wa") sendWaEdited = true;
     if(e.target.id === "nb-unit"){
       const u = newBookingSettings.units.find(x => x.id === e.target.value);
       // A rate you've deliberately typed shouldn't be silently replaced,
@@ -832,9 +844,20 @@
     sendBox.disabled = !canEmail;
     if(!canEmail) sendBox.checked = false;
     else if(!sendEmailEdited) sendBox.checked = true;
-    document.getElementById("nb-stage-note").textContent = !nbVal("nb-email").trim()
-      ? "No email address on file — nothing will be sent. Use “Download invoice” on the booking card to send the PDF yourself."
+    // WhatsApp needs a number that wa.me can dial. Ticked by default
+    // for a guest who booked over WhatsApp, since that's where they are.
+    const waBox = document.getElementById("nb-send-wa");
+    const canWa = !!waPhone(nbVal("nb-phone"));
+    waBox.disabled = !canWa;
+    if(!canWa) waBox.checked = false;
+    else if(!sendWaEdited) waBox.checked = nbVal("nb-channel") === "whatsapp";
+    const emailNote = !nbVal("nb-email").trim()
+      ? "No email address on file — nothing will be emailed."
       : STAGE_NOTES[stage] || "";
+    const waNote = waBox.checked
+      ? " After you create the booking, a WhatsApp message with all the booking details and the invoice opens for you to check and send."
+      : !canWa && nbVal("nb-phone").trim() ? " That phone number doesn't look right for WhatsApp — e.g. 082 123 4567 or +44 7700 900123." : "";
+    document.getElementById("nb-stage-note").textContent = (emailNote + waNote).trim();
   }
 
   async function submitNewBooking(force){
@@ -911,13 +934,19 @@
       return;
     }
 
+    const wantWa = document.getElementById("nb-send-wa").checked;
     closeNewBooking();
     currentStatus = "";
     document.querySelectorAll(".filters button").forEach(b => b.classList.toggle("active", b.dataset.status === ""));
-    loadBookings();
+    await loadBookings();
+    const created = bookingsById[data.bookingId];
+    if(wantWa && created){
+      openWaModal(created, data.emailed ? "Booking created — also emailed. Now send it on WhatsApp" : "Booking created — now send it on WhatsApp");
+      return;
+    }
     alert(data.emailed
       ? "Booking created — the guest has been emailed their invoice."
-      : "Booking created. No email was sent, so use “Download invoice” on the booking card if you want to send the PDF to the guest yourself.");
+      : "Booking created. Nothing was sent to the guest — use “WhatsApp guest” or “Download invoice” on the booking card to send it yourself.");
   }
 
   async function sendInvoiceEmail(id){
@@ -937,6 +966,212 @@
     alert(data.sent
       ? "Invoice emailed to the guest."
       : `The invoice couldn't be sent: ${data.reason || "email isn't configured on the server."}`);
+  }
+
+  // -----------------------------------------------------------------
+  // WhatsApp — the same booking details the guest's email carries,
+  // written out as a WhatsApp message, plus the invoice PDF. Nothing is
+  // sent automatically: WhatsApp opens on the guest's chat and you press
+  // send.
+  // -----------------------------------------------------------------
+
+  // Same rules as the Reviews tab (lib/reviews.js normalisePhone): a
+  // local SA number's leading 0 becomes 27; "+44…" / "0044…" are kept.
+  function waPhone(raw){
+    let s = String(raw || "").trim();
+    const hadPlus = s.startsWith("+");
+    s = s.replace(/\D/g, "");
+    if(!hadPlus && s.startsWith("00")) s = s.slice(2);
+    else if(!hadPlus && s.startsWith("0")) s = "27" + s.slice(1);
+    return /^\d{9,15}$/.test(s) ? s : null;
+  }
+
+  function waDate(iso){
+    const d = new Date(iso + "T00:00:00Z");
+    return isNaN(d) ? iso : d.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+  }
+
+  // Bank details and unit names live in Settings — re-read each time,
+  // so a change made there a minute ago is what the guest gets.
+  async function waLoadSettings(){
+    const res = await fetch(`${API_BASE}/api/admin/settings`, { headers: { "x-admin-token": token() } });
+    const data = await res.json();
+    if(!data.ok) throw new Error("settings load failed");
+    return data.settings;
+  }
+
+  function waMessage(b, settings, invoiceLink){
+    const unit = (settings.units || []).find(u => u.id === b.unitId);
+    const first = String(b.guestName || "").trim().split(/\s+/)[0] || "there";
+    const paidInFull = b.status === "confirmed" && b.balanceStatus === "paid";
+    const depositIn = b.status === "submitted" || b.status === "confirmed";
+    const lines = [];
+
+    lines.push(`Hi ${first},`, "");
+    if(b.status === "awaiting_payment") lines.push("Thank you for booking with Welverdiend Accommodation! Here are your booking details:");
+    else if(b.status === "submitted") lines.push("Thank you — we've received your deposit. Here are your booking details:");
+    else if(paidInFull) lines.push("Thank you — your stay is paid in full and your booking is confirmed. Here are your booking details:");
+    else lines.push("Your booking at Welverdiend Accommodation is confirmed! Here are your booking details:");
+    lines.push("");
+
+    lines.push(`*${unit ? unit.name : b.unitId}*`);
+    lines.push(`Check-in: ${waDate(b.checkIn)}${b.arrivalTime ? " (arriving " + b.arrivalTime + ")" : ""}`);
+    lines.push(`Check-out: ${waDate(b.checkOut)}`);
+    lines.push(`${b.nights} night${b.nights === 1 ? "" : "s"}`);
+    const adults = b.adults || 1;
+    let guests = `${adults} adult${adults === 1 ? "" : "s"}`;
+    if(b.children) guests += `, ${b.children} child${b.children === 1 ? "" : "ren"}${b.childrenAges ? " (" + b.childrenAges + ")" : ""}`;
+    lines.push(`Guests: ${guests}`);
+    if(b.hasPets) lines.push(`Pets: ${b.petDetails || "Yes"}`);
+    lines.push("");
+
+    lines.push("*Costs*");
+    (b.lineItems || []).forEach(li => lines.push(`${li.label}: ${rand(li.amount)}`));
+    lines.push(`*Total: ${rand(b.totalAmount)}*`);
+    lines.push("");
+
+    if(b.status === "awaiting_payment"){
+      lines.push(`*Deposit due now: ${rand(b.depositAmount)}*`);
+      if(b.balanceAmount > 0) lines.push(`Balance before check-in: ${rand(b.balanceAmount)}`);
+    } else if(paidInFull){
+      lines.push(`Paid: ${rand(b.totalAmount)} — nothing further is due.`);
+    } else if(depositIn){
+      lines.push(`Deposit received: ${rand(b.depositAmount)}`);
+      if(b.balanceAmount > 0) lines.push(`*Balance due before check-in: ${rand(b.balanceAmount)}*`);
+    }
+
+    const owing = b.status === "awaiting_payment" || (depositIn && !paidInFull && b.balanceAmount > 0);
+    if(owing && (settings.bankDetails || "").trim()){
+      lines.push("", "*Banking details*", settings.bankDetails.trim());
+    }
+    if(b.status === "awaiting_payment"){
+      lines.push("", "Once you've paid, please upload your proof of payment here:", `${API_BASE}/upload-proof.html?booking=${b.id}`);
+    }
+    if(invoiceLink){
+      lines.push("", `Your ${paidInFull ? "receipt" : "invoice"} (PDF):`, invoiceLink);
+    }
+    lines.push("", "Looking forward to hosting you!", "Welverdiend Accommodation");
+    return lines.join("\n");
+  }
+
+  // How the PDF gets across — the same three ways the Kenilworth
+  // Storages invoice app does it:
+  //  1. Send PDF: on a phone, or a PC with the WhatsApp desktop app
+  //     installed (it registers as a share target), the share sheet
+  //     hands WhatsApp the real document. Offered only where
+  //     navigator.canShare says files work, rather than guessing by device.
+  //  2. Download PDF & open chat: WhatsApp Web is another site's tab and
+  //     nothing here can attach a file to it, so the PDF is saved first
+  //     and the chat opens with the message ready — one paperclip click.
+  //  3. The message itself carries a per-booking link to the invoice
+  //     (routes/invoiceLink.js), so the guest can always open the PDF
+  //     even if nothing was attached.
+  let waWired = false;
+  let waState = null; // { booking, phone, file, blob, name }
+
+  async function waFetchInvoice(id){
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/invoice`, { headers: { "x-admin-token": token() } });
+      return res.ok ? await res.blob() : null;
+    }catch(_){ return null; }
+  }
+
+  async function waFetchInvoiceLink(id){
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/bookings/${id}/invoice-link`, { headers: { "x-admin-token": token() } });
+      const data = await res.json();
+      return data.ok ? data.link : "";
+    }catch(_){ return ""; }
+  }
+
+  async function openWaModal(b, heading){
+    if(!b) return;
+    const phone = waPhone(b.phone);
+    if(!phone){ alert("This booking has no phone number that WhatsApp can use."); return; }
+    let settings;
+    try{ settings = await waLoadSettings(); }
+    catch(err){ alert("Could not load your banking details from Settings — check your admin token and try again."); return; }
+
+    // Everything is fetched BEFORE the window is drawn, so Send PDF can
+    // call navigator.share() straight from the click: iOS Safari treats
+    // the tap as used up once an await sits in between, and the share
+    // sheet then never opens.
+    const [blob, link] = await Promise.all([waFetchInvoice(b.id), waFetchInvoiceLink(b.id)]);
+    const name = `Welverdiend invoice - ${b.guestName}.pdf`.replace(/[\\/:*?"<>|]/g, "");
+    let file = null;
+    if(blob && typeof navigator.canShare === "function" && typeof navigator.share === "function"){
+      try{
+        const f = new File([blob], name, { type: "application/pdf" });
+        if(navigator.canShare({ files: [f] })) file = f;
+      }catch(_){}
+    }
+    waState = { booking: b, phone, file, blob, name };
+
+    if(!waWired){
+      document.getElementById("wa-done").onclick = () => document.getElementById("wa-overlay").classList.remove("show");
+      waWired = true;
+    }
+    document.getElementById("wa-title").textContent = heading || "Send on WhatsApp";
+    document.getElementById("wa-body").innerHTML = `
+      <p style="margin-top:0;">To <b>${esc(b.guestName)}</b> (+${phone}). Check the message first — you can change it here.</p>
+      <div class="settings-field"><label>Message</label><textarea id="wa-text" style="min-height:280px;">${esc(waMessage(b, settings, link))}</textarea></div>
+      ${file ? `
+        <button type="button" class="rv-open-btn" id="wa-share" style="width:100%;border:0;cursor:pointer;">Send PDF</button>
+        <div class="hint" style="margin-top:6px;">Hands the invoice to WhatsApp as a document — pick ${esc(b.guestName)} in the share menu. WhatsApp often drops the text when a file is shared, so tap <b>Copy message</b> first and paste it as the caption, or send the message separately with <b>Open chat only</b>.</div>
+      ` : `
+        <button type="button" class="rv-open-btn" id="wa-download-open" style="width:100%;border:0;cursor:pointer;">${blob ? "Download PDF &amp; open chat" : "Open chat"}</button>
+        ${blob ? `<ol class="hint" style="margin:8px 0 0;padding-left:20px;line-height:1.6;">
+          <li><b>Download PDF &amp; open chat</b> saves the invoice and opens WhatsApp with the message ready.</li>
+          <li>In WhatsApp, click the <b>paperclip → Document</b> and pick <b>${esc(name)}</b>, the newest file.</li>
+          <li>Press send.</li>
+        </ol>
+        <div class="hint" style="margin-top:6px;">If you install the WhatsApp desktop app, this becomes a one-tap <b>Send PDF</b> instead.</div>`
+        : `<div class="hint" style="margin-top:6px;">The invoice PDF couldn't be loaded, but the link in the message still lets the guest open it.</div>`}
+      `}
+      <div class="actions" style="justify-content:center;">
+        <button type="button" class="btn-proof" id="wa-copy">Copy message</button>
+        ${file ? `<a class="btn-proof" id="wa-open" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center;">Open chat only</a>` : ""}
+      </div>
+      ${link ? "" : `<div class="hint" style="text-align:center;">Couldn't make an invoice link, so the message has none — attach the PDF.</div>`}`;
+
+    const text = document.getElementById("wa-text");
+    const waUrl = () => `https://wa.me/${phone}?text=${encodeURIComponent(text.value)}`;
+    const open = document.getElementById("wa-open");
+    if(open){
+      const refresh = () => { open.href = waUrl(); };
+      text.addEventListener("input", refresh);
+      refresh();
+    }
+    document.getElementById("wa-copy").onclick = async () => {
+      try{ await navigator.clipboard.writeText(text.value); alert("Message copied — paste it as the caption in WhatsApp."); }
+      catch(_){ prompt("Copy this:", text.value); }
+    };
+    const share = document.getElementById("wa-share");
+    if(share) share.onclick = () => {
+      navigator.share({ files: [waState.file], title: waState.name, text: text.value })
+        .then(() => document.getElementById("wa-overlay").classList.remove("show"))
+        .catch(err => { if(err && err.name !== "AbortError") alert("Could not share: " + (err.message || "unknown error")); });
+    };
+    const dl = document.getElementById("wa-download-open");
+    if(dl) dl.onclick = () => {
+      // Order matters: the file should already be saved when WhatsApp
+      // appears, so it sits at the top of the paperclip's recent list.
+      if(waState.blob){
+        const url = URL.createObjectURL(waState.blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = waState.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      }
+      // A short delay so the download starts before the tab switches —
+      // some browsers drop a download fired in the same tick as window.open.
+      const target = waUrl();
+      setTimeout(() => window.open(target, "_blank", "noopener"), 400);
+    };
+    document.getElementById("wa-overlay").classList.add("show");
   }
 
 
@@ -2751,10 +2986,20 @@
   </div>
 </div>
 
+<div class="reason-modal-overlay" id="wa-overlay">
+  <div class="reason-modal form-modal" style="max-width:520px;">
+    <h3 id="wa-title">Send on WhatsApp</h3>
+    <div id="wa-body"></div>
+    <div class="reason-modal-actions">
+      <button type="button" class="cancel-btn" id="wa-done">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="reason-modal-overlay" id="new-booking-overlay">
   <div class="reason-modal form-modal">
     <h3>New booking</h3>
-    <p>For a guest who booked with you directly — over WhatsApp, on the phone, or in person. Nothing is sent to the guest unless you ask for it at the bottom of this form.</p>
+    <p>For a guest who booked with you directly — over WhatsApp, on the phone, or in person. Nothing is sent to the guest unless you ask for it (by email or WhatsApp) at the bottom of this form.</p>
     <div id="new-booking-body"></div>
     <div class="reason-modal-actions">
       <button type="button" class="cancel-btn" id="new-booking-cancel">Cancel</button>
