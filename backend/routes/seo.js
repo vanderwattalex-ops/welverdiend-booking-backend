@@ -13,11 +13,9 @@ const express = require("express");
 const path = require("path");
 const { getFacts, llmsTxt, SITE } = require("../lib/siteFacts");
 const { cachedContent, galleryUrls } = require("../lib/prerender");
+const { INDEXNOW_KEY } = require("../lib/indexnow");
 
 const router = express.Router();
-
-// Not a secret: IndexNow verifies ownership by fetching this file from the site.
-const INDEXNOW_KEY = "6138a99d3172f4007fcfa3f07dd31b6d";
 
 const PAGES = [
   { path: "/", images: c => [c.heroPhotos && c.heroPhotos.homeTop, c.heroPhotos && c.heroPhotos.homeSecond] },

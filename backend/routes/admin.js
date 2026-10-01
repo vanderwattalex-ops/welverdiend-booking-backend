@@ -26,6 +26,7 @@ const {
 } = require("../lib/siteContent");
 const { getAnalyticsSummary } = require("../lib/analytics");
 const { saveThumbnail, IMMUTABLE } = require("../lib/thumbnails");
+const { notifyIndexNow } = require("../lib/indexnow");
 
 const photoUpload = multer({
   storage: multer.memoryStorage(),
@@ -782,6 +783,20 @@ router.post("/admin/test-email", async (req, res) => {
 // public site pages load them directly and fast, no backend involved
 // per page view.
 // -----------------------------------------------------------------
+
+// After any successful change here, tell Bing the public pages changed
+// (lib/indexnow.js). The reply waits for that ping (at most 4 s) because
+// Cloud Run may pause the instance as soon as the response has gone.
+router.use("/admin/site-content", (req, res, next) => {
+  if (req.method === "GET") return next();
+  const send = res.json.bind(res);
+  res.json = body => {
+    if (!body || body.ok !== true) return send(body);
+    notifyIndexNow().finally(() => send(body));
+    return res;
+  };
+  next();
+});
 
 // POST /api/admin/site-content/about   body: { aboutParagraphs: [string, string] }
 router.post("/admin/site-content/about", async (req, res) => {
