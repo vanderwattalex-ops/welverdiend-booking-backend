@@ -12,6 +12,7 @@ const DEFAULT_EMAIL_TEMPLATES = {
       <p>A <b>50% deposit of {{depositAmount}}</b> secures your booking (the remaining {{balanceAmount}} balance is due before check-in). Your invoice is attached, showing the full amount outstanding.</p>
       <p>Please pay the deposit by EFT to:<br>{{bankDetails}}</p>
       {{paymentInstructions}}
+      <p>Please note: we hold your dates for 24 hours. If we haven't received your proof of payment by <b>{{depositDeadline}}</b>, the dates are released automatically.</p>
       <p>We'll send a final confirmation as soon as we've checked it.</p>
     `
   },

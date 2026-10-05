@@ -40,6 +40,15 @@ async function sendMail({ to, subject, html, attachments }) {
 }
 
 function fmtDate(d) { return new Date(d).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" }); }
+// When an approved request's hold runs out, in SA time — e.g. "Tuesday 6
+// October at 19:38". Mirrors the 24h rule in routes/reminders.js
+// (expire-stale). Approve emails before approvedAt is saved, hence "now".
+function fmtDepositDeadline(booking) {
+  const start = booking.approvedAt ? new Date(booking.approvedAt).getTime() : Date.now();
+  const d = new Date(start + 24 * 60 * 60 * 1000);
+  const tz = { timeZone: "Africa/Johannesburg" };
+  return `${d.toLocaleDateString("en-GB", { ...tz, weekday: "long", day: "numeric", month: "long" })} at ${d.toLocaleTimeString("en-GB", { ...tz, hour: "2-digit", minute: "2-digit" })}`;
+}
 // Negative amounts (a manual booking's discount line) read as "-R500.00",
 // not "R-500.00".
 function rand(n) { const v = Number(n || 0); return `${v < 0 ? "-" : ""}R${Math.abs(v).toFixed(2)}`; }
@@ -98,7 +107,7 @@ async function notifyGuestApproved(booking, unitName, invoiceBuffer) {
   const vars = {
     guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights, depositAmount: rand(booking.depositAmount), balanceAmount: rand(booking.balanceAmount),
-    bankDetails, uploadUrl, paymentInstructions
+    bankDetails, uploadUrl, paymentInstructions, depositDeadline: fmtDepositDeadline(booking)
   };
   const { subject, html } = await resolveEmail("approved", vars);
   return sendMail({
