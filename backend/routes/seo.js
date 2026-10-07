@@ -65,22 +65,36 @@ router.get("/llms.txt", async (req, res) => {
 });
 
 // Icons are made once per instance from the logo, so there are no extra
-// image files to keep in step with it.
+// image files to keep in step with it. The logo is a thin taupe W on a
+// transparent, non-square canvas -- Google pads that with grey/black bars and
+// the strokes vanish at 16-48px -- so the icon is a solid taupe square with a
+// cream, slightly thickened W, sized to survive Google's circle crop.
 const LOGO = path.join(__dirname, "..", "public", "logo-mark.png");
+const TAUPE = { r: 138, g: 126, b: 104 };
+const CREAM = { r: 250, g: 248, b: 243 };
 const iconCache = new Map();
-function icon(size, background) {
+
+async function brandIcon(size) {
+  const sharp = require("sharp");
+  const big = size * 4;                     // draw large, shrink once at the end
+  const mark = Math.round(big * 0.72);
+  const fitted = await sharp(LOGO).trim().ensureAlpha()
+    .resize(mark, mark, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png().toBuffer();
+  const alpha = await sharp(fitted).extractChannel(3)
+    .blur(Math.max(0.3, big / 160)).linear(4, 0)   // thicken the hairline strokes
+    .toBuffer();
+  const w = await sharp({ create: { width: mark, height: mark, channels: 3, background: CREAM } })
+    .joinChannel(alpha).png().toBuffer();
+  const full = await sharp({ create: { width: big, height: big, channels: 3, background: TAUPE } })
+    .composite([{ input: w, gravity: "center" }]).png().toBuffer();
+  return sharp(full).resize(size, size).png().toBuffer();
+}
+
+function icon(size) {
   return async (req, res) => {
     try {
-      if (!iconCache.has(size)) {
-        const sharp = require("sharp");
-        const pad = Math.round(size * 0.12);
-        iconCache.set(size, await sharp(LOGO)
-          .resize(size - pad * 2, size - pad * 2, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
-          .extend({ top: pad, bottom: pad, left: pad, right: pad, background: background || { r: 0, g: 0, b: 0, alpha: 0 } })
-          .flatten(background ? { background } : false)
-          .png()
-          .toBuffer());
-      }
+      if (!iconCache.has(size)) iconCache.set(size, await brandIcon(size));
       res.set("Cache-Control", "public, max-age=604800").type("image/png").send(iconCache.get(size));
     } catch (err) {
       console.error("[seo] icon failed -", err.message);
@@ -89,8 +103,9 @@ function icon(size, background) {
   };
 }
 router.get("/favicon.ico", icon(48));
-// iOS shows transparency as black, so the home-screen icon gets the site's cream.
-router.get("/apple-touch-icon.png", icon(180, { r: 250, g: 248, b: 243 }));
+router.get("/icon-192.png", icon(192));   // the <link rel="icon"> Google search results use
+router.get("/icon-512.png", icon(512));   // logo in the home page's structured data
+router.get("/apple-touch-icon.png", icon(180));
 
 router.get(`/${INDEXNOW_KEY}.txt`, (req, res) => res.type("text/plain").send(INDEXNOW_KEY));
 
