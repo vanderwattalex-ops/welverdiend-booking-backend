@@ -103,7 +103,7 @@ async function saveAboutParagraphs(aboutParagraphs) {
 }
 
 async function savePetCaptions(captions) {
-  const petCaptions = [0, 1, 2].map(i => String((captions && captions[i]) || "").trim().slice(0, 80));
+  const petCaptions = [0, 1, 2].map(i => String((captions && captions[i]) || "").trim().slice(0, 200));
   await settingsCollection.doc(DOC_ID).set({ petCaptions }, { merge: true });
   return petCaptions;
 }

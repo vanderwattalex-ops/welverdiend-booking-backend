@@ -305,7 +305,12 @@ const PAGES = {
     h = preloadImage(h, hero.homeTop);
     h = setImgSrc(h, "hero-top-img", hero.homeTop, 'fetchpriority="high"');
     h = setImgSrc(h, "hero-second-img", hero.homeSecond, 'loading="lazy"');
-    [1, 2, 3].forEach(n => { h = setImgSrc(h, `pet-photo-${n}`, hero[`petPhoto${n}`]); });
+    [1, 2, 3].forEach(n => {
+      if (!hero[`petPhoto${n}`]) return;
+      h = setImgSrc(h, `pet-photo-${n}`, hero[`petPhoto${n}`]);
+      // photo present -> drop the "Your pet here" placeholder that follows its <img>
+      h = h.replace(new RegExp(`(<img\\b[^>]*\\bid="pet-photo-${n}"[^>]*>)<span class="pet-placeholder"[^>]*>.*?</span>`), "$1");
+    });
     return replaceContainer(h, "reviews-preview", reviewsHtml((c.reviews || []).slice(0, 3)));
   },
   "about.html":    (c, h) => {

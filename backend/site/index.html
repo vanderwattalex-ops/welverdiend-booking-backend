@@ -424,7 +424,12 @@
         document.getElementById("hero-second-img").src = data.heroPhotos.homeSecond;
         [1, 2, 3].forEach(n => {
           const url = data.heroPhotos["petPhoto" + n];
-          if(url) document.getElementById("pet-photo-" + n).src = url;
+          if(url){
+            const img = document.getElementById("pet-photo-" + n);
+            img.src = url;
+            const ph = img.parentNode.querySelector(".pet-placeholder");
+            if(ph) ph.remove();
+          }
           const cap = (data.petCaptions || [])[n - 1];
           if(cap) document.getElementById("pet-caption-" + n).textContent = cap;
         });
