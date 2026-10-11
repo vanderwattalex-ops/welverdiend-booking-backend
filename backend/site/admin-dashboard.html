@@ -2046,7 +2046,10 @@
     const heroSlots = [
       { key: "homeTop", label: "Home page — top hero photo (the big banner photo at the very top)" },
       { key: "homeSecond", label: "Home page — second photo (the wide photo further down, of the grounds)" },
-      { key: "aboutPhoto", label: "About page — main photo" }
+      { key: "aboutPhoto", label: "About page — main photo" },
+      { key: "petPhoto1", label: "Home page — guest pets, photo 1 (under Availability)" },
+      { key: "petPhoto2", label: "Home page — guest pets, photo 2 (under Availability)" },
+      { key: "petPhoto3", label: "Home page — guest pets, photo 3 (under Availability)" }
     ];
     const gallerySections = websiteContentState.gallerySections || { unit1: [], unit2: [] };
     const galleryIds = Object.keys(galleryLabels);
@@ -2067,7 +2070,7 @@
           <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--line);">
             <div class="label" style="margin-bottom:8px;font-weight:600;color:var(--ink);">${slot.label}</div>
             <div class="photo-grid" style="grid-template-columns:220px;">
-              <div class="photo-tile"><img src="${heroPhotos[slot.key]||''}" alt="${slot.key}"></div>
+              <div class="photo-tile">${heroPhotos[slot.key] ? `<img src="${heroPhotos[slot.key]}" alt="${slot.key}">` : `<div class="range-source" style="padding:40px 10px;text-align:center;">No photo yet</div>`}</div>
             </div>
             <input type="file" accept="image/*" id="hero-input-${slot.key}" style="display:none">
             <button type="button" class="photo-upload-btn" id="hero-upload-btn-${slot.key}">Replace this photo</button>
