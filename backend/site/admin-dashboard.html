@@ -2080,6 +2080,14 @@
         `).join("")}
       </div>
 
+      <div class="unit-block">
+        <h2>Guest pet captions</h2>
+        <p class="range-source" style="margin-bottom:10px;">The line shown under each guest pet photo on the Home page (e.g. the pet's name). Leave blank to show "Guest's pet".</p>
+        ${[0,1,2].map(i => `<div class="settings-field"><label>Caption for pet photo ${i+1}</label><input type="text" id="pet-caption-${i}" maxlength="80" value="${escAttr((websiteContentState.petCaptions||[])[i]||"")}"></div>`).join("")}
+        <button class="btn-save-settings" id="save-pet-captions-btn">Save pet captions</button>
+        <div class="settings-msg" id="pet-captions-msg"></div>
+      </div>
+
       ${galleryIds.map(galleryId => SECTIONED_GALLERIES.includes(galleryId)
         ? renderSectionedGalleryBlock(galleryId, galleries[galleryId]||[], gallerySections[galleryId]||[])
         : renderFlatGalleryBlock(galleryId, galleries[galleryId]||[])
@@ -2163,6 +2171,7 @@
     `;
 
     document.getElementById("save-about-btn").onclick = saveAboutText;
+    document.getElementById("save-pet-captions-btn").onclick = savePetCaptions;
     galleryIds.forEach(galleryId => {
       const input = document.getElementById(`photo-input-${galleryId}`);
       document.getElementById(`upload-btn-${galleryId}`).onclick = () => input.click();
@@ -2392,6 +2401,28 @@
     }catch(err){
       alert("Could not reach the server.");
     }
+  }
+
+  async function savePetCaptions(){
+    const msg = document.getElementById("pet-captions-msg");
+    const btn = document.getElementById("save-pet-captions-btn");
+    const petCaptions = [0,1,2].map(i => document.getElementById(`pet-caption-${i}`).value);
+    btn.disabled = true; btn.textContent = "Saving…";
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/pet-captions`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ petCaptions })
+      });
+      const data = await res.json();
+      if(data.ok) websiteContentState.petCaptions = data.petCaptions;
+      msg.className = data.ok ? "settings-msg success" : "settings-msg error";
+      msg.textContent = data.ok ? "Saved — live on the Home page immediately." : (data.error || "Could not save.");
+    }catch(err){
+      msg.className = "settings-msg error";
+      msg.textContent = "Could not reach the server — check your internet connection and try again.";
+    }
+    btn.disabled = false; btn.textContent = "Save pet captions";
   }
 
   async function saveAboutText(){

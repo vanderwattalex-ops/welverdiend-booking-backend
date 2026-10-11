@@ -329,15 +329,15 @@
   <div class="pet-grid">
     <figure class="pet-photo">
       <div class="pet-frame"><img id="pet-photo-1" src="" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
-      <figcaption>Guest's pet</figcaption>
+      <figcaption id="pet-caption-1">Guest's pet</figcaption>
     </figure>
     <figure class="pet-photo">
       <div class="pet-frame"><img id="pet-photo-2" src="" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
-      <figcaption>Guest's pet</figcaption>
+      <figcaption id="pet-caption-2">Guest's pet</figcaption>
     </figure>
     <figure class="pet-photo">
       <div class="pet-frame"><img id="pet-photo-3" src="" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
-      <figcaption>Guest's pet</figcaption>
+      <figcaption id="pet-caption-3">Guest's pet</figcaption>
     </figure>
   </div>
 </section>
@@ -425,6 +425,8 @@
         [1, 2, 3].forEach(n => {
           const url = data.heroPhotos["petPhoto" + n];
           if(url) document.getElementById("pet-photo-" + n).src = url;
+          const cap = (data.petCaptions || [])[n - 1];
+          if(cap) document.getElementById("pet-caption-" + n).textContent = cap;
         });
       }
       const wrap = document.getElementById("reviews-preview");

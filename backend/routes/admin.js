@@ -19,7 +19,7 @@ const { invoiceLinkKey } = require("./invoiceLink");
 const { syncUnitAndSave } = require("../lib/availabilitySync");
 const {
   getSiteContent,
-  saveAboutParagraphs, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
+  saveAboutParagraphs, savePetCaptions, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
   addGallerySection, renameGallerySection, removeGallerySection,
   setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation,
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, setPhotoCaption
@@ -808,6 +808,18 @@ router.post("/admin/site-content/about", async (req, res) => {
   } catch (err) {
     console.error("[admin] save about text failed:", err);
     res.status(500).json({ ok: false, error: "Could not save About text" });
+  }
+});
+
+// POST /api/admin/site-content/pet-captions   body: { petCaptions: [c1, c2, c3] }
+router.post("/admin/site-content/pet-captions", async (req, res) => {
+  try {
+    const { petCaptions } = req.body;
+    if (!Array.isArray(petCaptions)) return res.status(400).json({ ok: false, error: "petCaptions must be a list" });
+    res.json({ ok: true, petCaptions: await savePetCaptions(petCaptions) });
+  } catch (err) {
+    console.error("[admin] save pet captions failed:", err);
+    res.status(500).json({ ok: false, error: "Could not save captions" });
   }
 });
 
