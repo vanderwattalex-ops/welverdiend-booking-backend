@@ -89,6 +89,7 @@ async function getSiteContent() {
       petPhoto2: (saved.heroPhotos && saved.heroPhotos.petPhoto2) || defaults.heroPhotos.petPhoto2,
       petPhoto3: (saved.heroPhotos && saved.heroPhotos.petPhoto3) || defaults.heroPhotos.petPhoto3
     },
+    petCaptions: [0, 1, 2].map(i => (saved.petCaptions && saved.petCaptions[i]) || ""),
     reviews: saved.reviews || defaults.reviews,
     faqs: saved.faqs || defaults.faqs,
     recommendations: saved.recommendations || defaults.recommendations,
@@ -99,6 +100,12 @@ async function getSiteContent() {
 
 async function saveAboutParagraphs(aboutParagraphs) {
   await settingsCollection.doc(DOC_ID).set({ aboutParagraphs }, { merge: true });
+}
+
+async function savePetCaptions(captions) {
+  const petCaptions = [0, 1, 2].map(i => String((captions && captions[i]) || "").trim().slice(0, 80));
+  await settingsCollection.doc(DOC_ID).set({ petCaptions }, { merge: true });
+  return petCaptions;
 }
 
 async function setHeroPhoto(slot, url) {
@@ -276,7 +283,7 @@ async function setPhotoCaption(galleryId, photoId, caption) {
 
 module.exports = {
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, MAX_CAPTION, setPhotoCaption,
-  getSiteContent, saveAboutParagraphs, setHeroPhoto,
+  getSiteContent, saveAboutParagraphs, savePetCaptions, setHeroPhoto,
   addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
   addGallerySection, renameGallerySection, removeGallerySection,
   addReview, removeReview,
