@@ -9,7 +9,11 @@ module.exports = {
   heroPhotos: {
     homeTop: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/b4afe026-ecd6-4263-8dcc-e3f25c3c9899/DSC_9863.jpg",
     homeSecond: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/8fdc984d-f829-415a-8dac-45f0aebf2c7e/DSC_9860.jpg",
-    aboutPhoto: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/a1374a13-1761-4349-87eb-dfdf3604836a/DSC_9841.jpg"
+    aboutPhoto: "https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/a1374a13-1761-4349-87eb-dfdf3604836a/DSC_9841.jpg",
+    // Guest pet photos on the Home page — empty until uploaded in the admin Website tab.
+    petPhoto1: "",
+    petPhoto2: "",
+    petPhoto3: ""
   },
   reviews: [
     { id: "seed-1", name: "A recent guest", rating: 5, text: "A truly peaceful stay — beautifully kept, quiet, and close enough to town to be convenient. We'd happily come back." }

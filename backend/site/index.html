@@ -328,15 +328,15 @@
   <p class="lede" style="max-width:560px;margin:14px auto 0;">Our guests send us snapshots of their pets enjoying the grounds. Staying with yours? We'd love to feature them next.</p>
   <div class="pet-grid">
     <figure class="pet-photo">
-      <div class="pet-frame"><img src="/assets/pets/guest-pet-1.jpg" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async" onerror="this.remove()"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
+      <div class="pet-frame"><img id="pet-photo-1" src="" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
       <figcaption>Guest's pet</figcaption>
     </figure>
     <figure class="pet-photo">
-      <div class="pet-frame"><img src="/assets/pets/guest-pet-2.jpg" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async" onerror="this.remove()"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
+      <div class="pet-frame"><img id="pet-photo-2" src="" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
       <figcaption>Guest's pet</figcaption>
     </figure>
     <figure class="pet-photo">
-      <div class="pet-frame"><img src="/assets/pets/guest-pet-3.jpg" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async" onerror="this.remove()"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
+      <div class="pet-frame"><img id="pet-photo-3" src="" alt="A guest's pet enjoying their stay at Welverdiend" loading="lazy" decoding="async"><span class="pet-placeholder" aria-hidden="true">🐾<small>Your pet here</small></span></div>
       <figcaption>Guest's pet</figcaption>
     </figure>
   </div>
@@ -422,6 +422,10 @@
       if(data.heroPhotos){
         document.getElementById("hero-top-img").src = data.heroPhotos.homeTop;
         document.getElementById("hero-second-img").src = data.heroPhotos.homeSecond;
+        [1, 2, 3].forEach(n => {
+          const url = data.heroPhotos["petPhoto" + n];
+          if(url) document.getElementById("pet-photo-" + n).src = url;
+        });
       }
       const wrap = document.getElementById("reviews-preview");
       const reviews = (data.reviews || []).slice(0, 3);

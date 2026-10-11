@@ -84,7 +84,10 @@ async function getSiteContent() {
     heroPhotos: {
       homeTop: (saved.heroPhotos && saved.heroPhotos.homeTop) || defaults.heroPhotos.homeTop,
       homeSecond: (saved.heroPhotos && saved.heroPhotos.homeSecond) || defaults.heroPhotos.homeSecond,
-      aboutPhoto: (saved.heroPhotos && saved.heroPhotos.aboutPhoto) || defaults.heroPhotos.aboutPhoto
+      aboutPhoto: (saved.heroPhotos && saved.heroPhotos.aboutPhoto) || defaults.heroPhotos.aboutPhoto,
+      petPhoto1: (saved.heroPhotos && saved.heroPhotos.petPhoto1) || defaults.heroPhotos.petPhoto1,
+      petPhoto2: (saved.heroPhotos && saved.heroPhotos.petPhoto2) || defaults.heroPhotos.petPhoto2,
+      petPhoto3: (saved.heroPhotos && saved.heroPhotos.petPhoto3) || defaults.heroPhotos.petPhoto3
     },
     reviews: saved.reviews || defaults.reviews,
     faqs: saved.faqs || defaults.faqs,

@@ -946,10 +946,11 @@ router.delete("/admin/site-content/sections", async (req, res) => {
 // POST /api/admin/site-content/hero-photo   multipart/form-data: slot ('homeTop'|'homeSecond'), file "photo"
 // A single-slot replace, not a gallery add — uploading here REPLACES
 // that specific named photo on the Home page.
+const HERO_SLOTS = ["homeTop", "homeSecond", "aboutPhoto", "petPhoto1", "petPhoto2", "petPhoto3"];
 router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async (req, res) => {
   try {
     const { slot } = req.body;
-    if (!["homeTop", "homeSecond", "aboutPhoto"].includes(slot)) return res.status(400).json({ ok: false, error: "slot must be homeTop, homeSecond, or aboutPhoto" });
+    if (!HERO_SLOTS.includes(slot)) return res.status(400).json({ ok: false, error: `slot must be one of: ${HERO_SLOTS.join(", ")}` });
     if (!req.file) return res.status(400).json({ ok: false, error: "No photo attached" });
 
     const objectPath = `hero-photos/${slot}/${uuidv4()}.jpg`;
