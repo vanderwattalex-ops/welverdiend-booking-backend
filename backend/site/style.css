@@ -297,3 +297,13 @@ h3{font-size:20px;}
   font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:4px;
 }
 .quick-facts dd{margin:0;font-size:14.5px;line-height:1.5;color:var(--ink);}
+
+/* Guest pet photos */
+.pet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:36px;}
+.pet-photo{margin:0;}
+.pet-frame{position:relative;aspect-ratio:1/1;border-radius:8px;overflow:hidden;background:var(--surface-deep);border:1px solid var(--line);}
+.pet-frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;}
+.pet-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:40px;color:var(--taupe);}
+.pet-placeholder small{font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-top:8px;}
+.pet-photo figcaption{font-size:13px;color:var(--ink-soft);margin-top:10px;font-style:italic;}
+@media (max-width:700px){.pet-grid{grid-template-columns:1fr;max-width:340px;margin-left:auto;margin-right:auto;}}
