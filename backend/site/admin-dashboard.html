@@ -2083,7 +2083,7 @@
       <div class="unit-block">
         <h2>Guest pet captions</h2>
         <p class="range-source" style="margin-bottom:10px;">The line shown under each guest pet photo on the Home page (e.g. the pet's name). Leave blank to show "Guest's pet".</p>
-        ${[0,1,2].map(i => `<div class="settings-field"><label>Caption for pet photo ${i+1}</label><input type="text" id="pet-caption-${i}" maxlength="80" value="${escAttr((websiteContentState.petCaptions||[])[i]||"")}"></div>`).join("")}
+        ${[0,1,2].map(i => `<div class="settings-field"><label>Caption for pet photo ${i+1}</label><input type="text" id="pet-caption-${i}" maxlength="200" value="${escAttr((websiteContentState.petCaptions||[])[i]||"")}"></div>`).join("")}
         <button class="btn-save-settings" id="save-pet-captions-btn">Save pet captions</button>
         <div class="settings-msg" id="pet-captions-msg"></div>
       </div>
