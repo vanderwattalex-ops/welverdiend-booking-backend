@@ -308,3 +308,33 @@ h3{font-size:20px;}
 .pet-placeholder small{font-size:12px;letter-spacing:.05em;text-transform:uppercase;margin-top:8px;}
 .pet-photo figcaption{font-size:13px;color:var(--ink-soft);margin-top:10px;font-style:italic;}
 @media (max-width:700px){.pet-grid{grid-template-columns:1fr;max-width:340px;margin-left:auto;margin-right:auto;}}
+
+/* Light-only: the colours are designed for a light page. Without this, phones with dark mode
+   auto-invert the site and the logo and Book now button nearly disappear. */
+:root{color-scheme:only light;}
+
+/* Menu button: hidden on desktop, shown on phones (see below). */
+.nav-toggle{
+  display:none;align-items:center;justify-content:center;
+  width:46px;height:46px;padding:0;border:1px solid var(--line);border-radius:6px;
+  background:var(--white);color:var(--ink);cursor:pointer;
+}
+.nav-toggle svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;stroke-linecap:round;fill:none;}
+
+@media (max-width: 760px){
+  .site-header{flex-wrap:wrap;gap:10px 10px;padding:10px 4vw;}
+  .site-header .logo{margin-right:auto;}
+  .site-header .logo img{height:46px;}
+  .nav-toggle{display:inline-flex;order:2;}
+  /* The nav's children become part of the header row, so Book now stays visible beside the menu button. */
+  .site-nav{display:contents;}
+  .site-nav a{display:none;}
+  .site-nav .book-btn{display:flex;order:1;padding:8px 14px;font-size:14px;}
+  .site-nav .book-btn small{font-size:10px;}
+  .site-header.nav-open .site-nav a:not(.book-btn){
+    display:block;order:3;flex-basis:100%;padding:13px 4px;
+    border-top:1px solid var(--line);font-size:14px;
+  }
+  /* Keep the headline clear of the floating pet badge and chat / WhatsApp buttons. */
+  .hero-overlay{justify-content:center;padding-bottom:0;}
+}
