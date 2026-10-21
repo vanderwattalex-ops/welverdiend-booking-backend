@@ -54,4 +54,56 @@ async function saveThumbnail(bucket, objectPath, buffer) {
   });
 }
 
-module.exports = { thumbUrl, thumbPath, makeThumbnail, saveThumbnail, IMMUTABLE };
+// ---------------------------------------------------------------------------
+// HOME / ABOUT PAGE PHOTOS (hero-photos/<slot>/<uuid>.jpg)
+// ---------------------------------------------------------------------------
+// These are the big above-the-fold photos, so phones were downloading the full
+// 1600px JPEG (300-600KB) just to show it ~400px wide. Each upload now also
+// gets two WebP copies next to it, again named by convention:
+//
+//   hero-photos/homeTop/<uuid>-800.webp   phones
+//   hero-photos/homeTop/<uuid>-1600.webp  desktops
+//
+// Pages offer both through srcset and keep the JPEG in data-full; the onerror
+// drops the srcset and falls back to the JPEG if a copy is missing.
+// ---------------------------------------------------------------------------
+
+const HERO_WIDTHS = [800, 1600];
+const HERO_RE = /^https:\/\/storage\.googleapis\.com\/[^/]+\/hero-photos\/.+\.jpg$/i;
+
+function heroVariantPath(objectPath, width) {
+  return objectPath.replace(/\.jpg$/i, `-${width}.webp`);
+}
+
+// The <img> attributes for a hero photo: WebP srcset where we have copies,
+// the plain URL otherwise (e.g. an old default photo on another host).
+function heroImgAttrs(url, sizes) {
+  if (typeof url !== "string" || !HERO_RE.test(url)) return { src: url };
+  return {
+    src: heroVariantPath(url, 1600),
+    srcset: HERO_WIDTHS.map(w => `${heroVariantPath(url, w)} ${w}w`).join(", "),
+    sizes: sizes || "100vw",
+    full: url
+  };
+}
+
+async function saveHeroVariants(bucket, objectPath, buffer) {
+  const sharp = require("sharp");
+  for (const width of HERO_WIDTHS) {
+    const webp = await sharp(buffer)
+      .rotate()
+      .resize({ width, withoutEnlargement: true })
+      .webp({ quality: 74 })
+      .toBuffer();
+    await bucket.file(heroVariantPath(objectPath, width)).save(webp, {
+      contentType: "image/webp",
+      metadata: { cacheControl: IMMUTABLE },
+      resumable: false
+    });
+  }
+}
+
+module.exports = {
+  thumbUrl, thumbPath, makeThumbnail, saveThumbnail, IMMUTABLE,
+  HERO_WIDTHS, heroVariantPath, heroImgAttrs, saveHeroVariants
+};

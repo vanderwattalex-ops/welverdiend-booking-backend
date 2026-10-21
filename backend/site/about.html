@@ -56,7 +56,7 @@
 
 <a href="/" class="back-link" onclick="if(document.referrer){event.preventDefault();history.back();}">← Back</a>
 
-<div class="watermark-strip"><img src="/assets/logo-mark.png" alt=""></div>
+<div class="watermark-strip"><img src="/assets/logo-mark.png" alt="" width="805" height="679"></div>
 
 <section class="section narrow" style="padding-top:20px;">
   <p class="eyebrow">Who we are</p>
@@ -67,7 +67,7 @@
 </section>
 
 <div class="hero">
-  <img id="about-photo-img" src="" alt="Welverdiend Accommodation" style="height:48vh;min-height:300px;">
+  <img id="about-photo-img" src="" width="1600" height="1067" alt="Welverdiend Accommodation" style="height:48vh;min-height:300px;">
 </div>
 
 <div class="cta-band">
@@ -88,6 +88,7 @@
     <a href="https://www.lekkeslaap.co.za/akkommodasie/welverdiend" target="_blank" rel="noopener">LekkeSlaap</a>
     <a href="https://www.booking.com/hotel/za/welverdiend-bloemfontein.html" target="_blank" rel="noopener">Booking.com</a>
   </div>
+  <p style="margin-top:14px;"><a href="https://g.page/r/CVSR9OHKczIqEAI/review" target="_blank" rel="noopener">Stayed with us? Leave us a Google review</a></p>
   <p style="margin-top:14px;">© Welverdiend Accommodation · 4 Kenilworth Road, Groenvlei, Bloemfontein, 9301</p>
 </footer>
 
@@ -99,7 +100,9 @@
     .then(data => {
       if(!data.ok) return;
       if(data.heroPhotos && data.heroPhotos.aboutPhoto){
-        document.getElementById("about-photo-img").src = data.heroPhotos.aboutPhoto;
+        // The server already set it (WebP sizes, JPEG in data-full); only swap if it changed.
+        const img = document.getElementById("about-photo-img"), url = data.heroPhotos.aboutPhoto;
+        if(img.dataset.full !== url && img.getAttribute("src") !== url){ img.removeAttribute("srcset"); img.src = url; }
       }
       const wrap = document.getElementById("about-text");
       wrap.innerHTML = (data.aboutParagraphs || []).map(p =>

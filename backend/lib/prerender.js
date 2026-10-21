@@ -19,7 +19,7 @@
 
 const fs = require("fs").promises;
 const { getSiteContent } = require("./siteContent");
-const { thumbUrl } = require("./thumbnails");
+const { thumbUrl, heroImgAttrs } = require("./thumbnails");
 const { getFacts, factsHtml, SITE } = require("./siteFacts");
 
 const CONTENT_TTL_MS = 60 * 1000;
@@ -89,10 +89,22 @@ function setImgSrc(html, id, url, extra) {
     tag.replace(`src=""`, `src="${esc(url)}"${extra ? " " + extra : ""}`));
 }
 
-// Preload the above-the-fold photo from <head>, ahead of CSS and fonts.
-function preloadImage(html, url) {
+// Same, for the big home/about photos: WebP srcset (phone + desktop size) with
+// the JPEG kept in data-full as the fallback if a copy is missing.
+function setHeroImg(html, id, url, sizes, extra) {
   if (!url) return html;
-  return html.replace("</head>", `<link rel="preload" as="image" href="${esc(url)}" fetchpriority="high">
+  const a = heroImgAttrs(url, sizes);
+  if (!a.srcset) return setImgSrc(html, id, url, extra);
+  const attrs = `srcset="${esc(a.srcset)}" sizes="${esc(a.sizes)}" data-full="${esc(a.full)}" onerror="this.onerror=null;this.removeAttribute('srcset');this.src=this.dataset.full"`;
+  return setImgSrc(html, id, a.src, attrs + (extra ? " " + extra : ""));
+}
+
+// Preload the above-the-fold photo from <head>, ahead of CSS and fonts.
+function preloadImage(html, url, sizes) {
+  if (!url) return html;
+  const a = heroImgAttrs(url, sizes);
+  const set = a.srcset ? ` imagesrcset="${esc(a.srcset)}" imagesizes="${esc(a.sizes)}"` : "";
+  return html.replace("</head>", `<link rel="preload" as="image" href="${esc(a.src)}"${set} fetchpriority="high">
 </head>`);
 }
 
@@ -302,19 +314,19 @@ function applyCommon(page, c, facts, html) {
 const PAGES = {
   "index.html":    (c, h) => {
     const hero = c.heroPhotos || {};
-    h = preloadImage(h, hero.homeTop);
-    h = setImgSrc(h, "hero-top-img", hero.homeTop, 'fetchpriority="high"');
-    h = setImgSrc(h, "hero-second-img", hero.homeSecond, 'loading="lazy"');
+    h = preloadImage(h, hero.homeTop, "100vw");
+    h = setHeroImg(h, "hero-top-img", hero.homeTop, "100vw", 'fetchpriority="high"');
+    h = setHeroImg(h, "hero-second-img", hero.homeSecond, "100vw", 'loading="lazy"');
     [1, 2, 3].forEach(n => {
       if (!hero[`petPhoto${n}`]) return;
-      h = setImgSrc(h, `pet-photo-${n}`, hero[`petPhoto${n}`]);
+      h = setHeroImg(h, `pet-photo-${n}`, hero[`petPhoto${n}`], "(max-width: 700px) 340px, 33vw");
       // photo present -> drop the "Your pet here" placeholder that follows its <img>
       h = h.replace(new RegExp(`(<img\\b[^>]*\\bid="pet-photo-${n}"[^>]*>)<span class="pet-placeholder"[^>]*>.*?</span>`), "$1");
     });
     return replaceContainer(h, "reviews-preview", reviewsHtml((c.reviews || []).slice(0, 3)));
   },
   "about.html":    (c, h) => {
-    h = setImgSrc(h, "about-photo-img", (c.heroPhotos || {}).aboutPhoto);
+    h = setHeroImg(h, "about-photo-img", (c.heroPhotos || {}).aboutPhoto, "100vw");
     return replaceContainer(h, "about-text", aboutHtml(c.aboutParagraphs));
   },
   "faq.html":      (c, h) => replaceContainer(h, "faq-list", faqHtml(c.faqs)),

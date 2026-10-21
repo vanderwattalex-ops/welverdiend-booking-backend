@@ -25,7 +25,7 @@ const {
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, setPhotoCaption
 } = require("../lib/siteContent");
 const { getAnalyticsSummary } = require("../lib/analytics");
-const { saveThumbnail, IMMUTABLE } = require("../lib/thumbnails");
+const { saveThumbnail, saveHeroVariants, IMMUTABLE } = require("../lib/thumbnails");
 const { notifyIndexNow } = require("../lib/indexnow");
 
 const photoUpload = multer({
@@ -968,6 +968,13 @@ router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async
     const objectPath = `hero-photos/${slot}/${uuidv4()}.jpg`;
     const compressed = await compressPhoto(req.file.buffer);
     await siteAssetsBucket.file(objectPath).save(compressed, { contentType: "image/jpeg", metadata: { cacheControl: IMMUTABLE } });
+    // Phone/desktop WebP copies. Best-effort like the gallery thumbnails:
+    // without them the page falls back to the JPEG.
+    try {
+      await saveHeroVariants(siteAssetsBucket, objectPath, compressed);
+    } catch (err) {
+      console.error("[admin] hero variants failed for", objectPath, "-", err.message);
+    }
     const publicUrl = `https://storage.googleapis.com/${siteAssetsBucket.name}/${objectPath}`;
     const heroPhotos = await setHeroPhoto(slot, publicUrl);
     res.json({ ok: true, url: publicUrl, heroPhotos });

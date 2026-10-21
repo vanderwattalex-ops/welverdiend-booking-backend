@@ -1,5 +1,6 @@
 // One-off: create the grid thumbnails for gallery photos uploaded before
-// thumbnails existed, and mark every site photo as long-cacheable.
+// thumbnails existed, the phone/desktop WebP copies of the home/about photos,
+// and mark every site photo as long-cacheable.
 // New uploads get both automatically (routes/admin.js), so this only needs
 // running once after the deploy that introduced lib/thumbnails.js.
 // Safe to re-run: it skips thumbnails that already exist.
@@ -8,7 +9,7 @@
 //   npm install --omit=dev && node scripts/backfill-thumbnails.js
 
 const { siteAssetsBucket } = require("../lib/db");
-const { thumbPath, makeThumbnail, IMMUTABLE } = require("../lib/thumbnails");
+const { thumbPath, makeThumbnail, IMMUTABLE, HERO_WIDTHS, heroVariantPath, saveHeroVariants } = require("../lib/thumbnails");
 
 // Some steps occasionally never returned when run from Cloud Shell, stalling
 // the whole run. Every step now has a time limit and each photo is retried.
@@ -68,6 +69,37 @@ async function main() {
     while (queue.length) await one(queue.shift());
   }));
 
+  // Home/about photos: the phone + desktop WebP copies (lib/thumbnails.js,
+  // added Oct 2026). Same pattern: skip what exists, a few at a time.
+  const heroNames = new Set(heroFiles.map(f => f.name));
+  const heroTodo = heroFiles.filter(f => /\.jpg$/i.test(f.name) &&
+    HERO_WIDTHS.some(w => !heroNames.has(heroVariantPath(f.name, w))));
+  console.log(`\n${heroTodo.length} home/about photos need WebP copies.`);
+  let heroMade = 0, heroFailed = 0;
+  async function oneHero(file) {
+    for (let tries = 1; tries <= 3; tries++) {
+      try {
+        const url = `https://storage.googleapis.com/${siteAssetsBucket.name}/${file.name}`;
+        const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
+        if (!res.ok) throw new Error(`download HTTP ${res.status}`);
+        const buffer = Buffer.from(await withTimeout(res.arrayBuffer(), 30000, "download"));
+        await withTimeout(saveHeroVariants(siteAssetsBucket, file.name, buffer), 60000, "resize+upload");
+        heroMade++;
+        console.log(`hero ${heroMade + heroFailed}/${heroTodo.length}  ${file.name}`);
+        return;
+      } catch (err) {
+        console.error(`  try ${tries} failed (${err.message})  ${file.name}`);
+      }
+    }
+    heroFailed++;
+    console.error("FAILED ", file.name);
+  }
+  const heroQueue = [...heroTodo];
+  await Promise.all(Array.from({ length: 4 }, async () => {
+    while (heroQueue.length) await oneHero(heroQueue.shift());
+  }));
+  failed += heroFailed;
+
   // Photo names are uuids and never reused, so browsers can keep them for a year.
   for (const file of [...originals, ...heroFiles.filter(f => /\.jpg$/i.test(f.name))]) {
     if (file.metadata.cacheControl === IMMUTABLE) continue;
@@ -78,7 +110,8 @@ async function main() {
     }
   }
 
-  console.log(`\nThumbnails: ${made} made, ${skipped} already there, ${failed} failed.`);
+  console.log(`\nThumbnails: ${made} made, ${skipped} already there, ${failed - heroFailed} failed.`);
+  console.log(`Home/about WebP copies: ${heroMade} photos done, ${heroFailed} failed.`);
   console.log(`Cache headers set on ${originals.length} gallery and ${heroFiles.length} hero photos.`);
   // Exit explicitly: a step abandoned by a time-out can keep the process alive.
   process.exit(failed ? 1 : 0);
