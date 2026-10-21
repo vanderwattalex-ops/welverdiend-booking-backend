@@ -27,7 +27,8 @@ const PAGES = [
   { path: "/location.html" },
   { path: "/faq.html" },
   { path: "/reviews.html" },
-  { path: "/contact.html" }
+  { path: "/contact.html" },
+  { path: "/booking-widget.html" }
 ];
 
 function xmlEsc(s) {
