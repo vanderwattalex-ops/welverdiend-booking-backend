@@ -6,21 +6,27 @@
 @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(/assets/fonts/inter-latin.woff2) format('woff2');}
 @font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;font-display:swap;src:url(/assets/fonts/cormorant-garamond-latin.woff2) format('woff2');}
 
+/* Safari lodge palette: espresso, ochre and sand (chosen by the owner in the colour playground, Oct 2026). */
 :root{
-  --taupe:#8A7E68;
-  --taupe-dark:#6B6151;
-  --taupe-deep:#4A4436;
-  --gold:#B5975A;
-  --ink:#2B2A26;
-  --ink-soft:#66604F;
-  --bg:#FFFFFF;
-  --surface:#FAF8F3;
-  --surface-deep:#F1ECDF;
-  --line:#E5E0D2;
+  --taupe:#A88A63;
+  --taupe-dark:#8C6B48;
+  --taupe-deep:#3B2A1E; /* espresso: headings, dark buttons */
+  --gold:#C68B3F; /* ochre: Book now, accents */
+  --gold-hover:#A9742F;
+  --book-text:#1E140D;
+  --ink:#24190F;
+  --ink-soft:#54412F;
+  --bg:#F1E7D6; /* sand page background */
+  --surface:#E6D6BC;
+  --surface-deep:#D8C3A0;
+  --line:#DCCBB0;
+  --dark:#3B2A1E; /* top bar, footer and booking banner */
+  --on-dark:#EDE6D6; /* text on the dark bars */
   --white:#FFFFFF;
 }
 *{box-sizing:border-box;}
 body{
+  overflow-x:hidden;
   margin:0;
   font-family:'Inter',sans-serif;
   color:var(--ink);
@@ -33,27 +39,28 @@ img{max-width:100%;height:auto;display:block;}
 /* Header */
 .site-header{
   display:flex;align-items:center;justify-content:space-between;
-  padding:18px 5vw;border-bottom:1px solid var(--line);
-  flex-wrap:wrap;gap:16px;background:var(--white);
+  padding:18px 5vw;border-bottom:1px solid var(--dark);
+  flex-wrap:wrap;gap:16px;background:var(--dark);
 }
-.site-header .logo img{height:84px;width:auto;}
+/* The logo artwork is dark; on the dark top bar it is shown in white. */
+.site-header .logo img{height:84px;width:auto;filter:brightness(0) invert(1) opacity(.92);}
 .site-nav{display:flex;align-items:center;gap:26px;flex-wrap:wrap;}
 .site-nav a{
   font-size:13px;letter-spacing:.06em;text-transform:uppercase;
-  text-decoration:none;color:var(--ink-soft);
+  text-decoration:none;color:var(--on-dark);
 }
-.site-nav a:hover, .site-nav a.active{color:var(--taupe-deep);}
+.site-nav a:hover, .site-nav a.active{color:var(--gold);}
 /* Book now: the main call to action -- gold, larger, with the direct-booking saving underneath. */
 .site-nav .book-btn{
   display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;
-  background:var(--gold);color:var(--ink);padding:11px 24px;
+  background:var(--gold);color:var(--book-text);padding:11px 24px;
   border-radius:4px;font-weight:700;font-size:15px;letter-spacing:.07em;
-  box-shadow:0 2px 8px rgba(74,68,54,.28);
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
 }
 .site-nav .book-btn small{
   display:block;margin-top:2px;font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:none;
 }
-.site-nav .book-btn:hover{background:#9C8047;color:var(--white);}
+.site-nav .book-btn:hover{background:var(--gold-hover);color:var(--white);}
 /* Eleven menu items: tighten the spacing on laptop-width screens so the menu stays beside the logo. */
 @media (min-width:761px) and (max-width:1400px){
   .site-nav{gap:14px;}
@@ -75,7 +82,7 @@ img{max-width:100%;height:auto;display:block;}
 .hero img{width:100%;height:64vh;min-height:420px;object-fit:cover;opacity:.92;}
 .hero-overlay{
   position:absolute;inset:0;
-  background:linear-gradient(180deg, rgba(43,42,38,.05) 0%, rgba(43,42,38,.15) 45%, rgba(43,42,38,.78) 100%);
+  background:linear-gradient(180deg, rgba(0,0,0,.06) 0%, rgba(0,0,0,.18) 45%, rgba(0,0,0,.84) 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
   text-align:center;padding:0 5vw 56px;
 }
@@ -99,7 +106,7 @@ h3{font-size:20px;}
 .section{padding:64px 5vw;max-width:1100px;margin:0 auto;}
 .section.narrow{max-width:760px;}
 .section.center{text-align:center;}
-.section.tinted{background:var(--surface);}
+.section.tinted{background:var(--surface);box-shadow:0 0 0 100vmax var(--surface);clip-path:inset(0 -100vmax);} /* tint runs edge to edge, not just the centred column */
 
 /* Watermark band — a large faded W between sections */
 .watermark-band{
@@ -226,7 +233,7 @@ h3{font-size:20px;}
 
 /* CTA band */
 .cta-band{
-  background:var(--taupe-deep);color:var(--white);text-align:center;padding:60px 5vw;
+  background:var(--dark);color:var(--white);text-align:center;padding:60px 5vw;
 }
 .cta-band h2{color:var(--white);}
 .cta-band p{color:#D8D2C4;margin:0 0 24px;}
@@ -235,16 +242,16 @@ h3{font-size:20px;}
   padding:14px 32px;border-radius:3px;text-decoration:none;font-weight:600;font-size:14px;
   letter-spacing:.03em;
 }
-.cta-band .book-btn:hover{background:#9C8047;}
+.cta-band .book-btn:hover{background:var(--gold-hover);}
 
 /* Footer */
 .site-footer{
-  border-top:1px solid var(--line);padding:36px 5vw;text-align:center;
-  font-size:13px;color:var(--ink-soft);background:var(--surface);
+  border-top:1px solid var(--dark);padding:36px 5vw;text-align:center;
+  font-size:13px;color:var(--on-dark);background:var(--dark);
 }
 .site-footer .footer-links{display:flex;justify-content:center;gap:22px;flex-wrap:wrap;margin-bottom:10px;}
-.site-footer a{text-decoration:none;}
-.site-footer a:hover{color:var(--taupe-deep);}
+.site-footer a{text-decoration:none;color:var(--on-dark);}
+.site-footer a:hover{color:var(--gold);}
 
 @media (max-width: 760px){
   .features{grid-template-columns:1fr;}
@@ -331,8 +338,8 @@ h3{font-size:20px;}
 /* Menu button: hidden on desktop, shown on phones (see below). */
 .nav-toggle{
   display:none;align-items:center;justify-content:center;
-  width:46px;height:46px;padding:0;border:1px solid var(--line);border-radius:6px;
-  background:var(--white);color:var(--ink);cursor:pointer;
+  width:46px;height:46px;padding:0;border:1px solid rgba(237,230,214,.45);border-radius:6px;
+  background:transparent;color:var(--on-dark);cursor:pointer;
 }
 .nav-toggle svg{width:24px;height:24px;stroke:currentColor;stroke-width:2;stroke-linecap:round;fill:none;}
 
@@ -348,7 +355,7 @@ h3{font-size:20px;}
   .site-nav .book-btn small{font-size:10px;}
   .site-header.nav-open .site-nav a:not(.book-btn){
     display:block;order:3;flex-basis:100%;padding:13px 4px;
-    border-top:1px solid var(--line);font-size:14px;
+    border-top:1px solid rgba(237,230,214,.18);font-size:14px;
   }
   /* Keep the headline clear of the floating pet badge and chat / WhatsApp buttons. */
   .hero-overlay{justify-content:center;padding-bottom:0;}
