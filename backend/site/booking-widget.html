@@ -473,9 +473,19 @@
         });
       }
       if(!state.activeUnitId && state.units.length){
-        const requestedUnit = new URLSearchParams(window.location.search).get("unit");
+        const params = new URLSearchParams(window.location.search);
+        const requestedUnit = params.get("unit");
         const match = state.units.find(u => u.unitId === requestedUnit);
         state.activeUnitId = match ? match.unitId : state.units[0].unitId;
+        // ?checkin=YYYY-MM-DD from the homepage calendar: pre-select that night if it is still open
+        const checkin = params.get("checkin");
+        const now = new Date();
+        if(checkin && /^\d{4}-\d{2}-\d{2}$/.test(checkin) &&
+           checkin >= toISO(now.getFullYear(), now.getMonth(), now.getDate()) && !isBusy(checkin, activeUnit())){
+          state.selectStart = checkin;
+          state.viewYear = +checkin.slice(0, 4);
+          state.viewMonth = +checkin.slice(5, 7) - 1;
+        }
       }
       renderUnitTabs();
       renderSyncNote();
@@ -483,6 +493,7 @@
       renderCalendar();
       renderRate();
       renderUnitDetails();
+      updateSelectionBar();
     }catch(err){
       console.error("[Welverdiend widget] failed to load availability/config:", err);
       if(retryCount < 1){

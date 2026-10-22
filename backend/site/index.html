@@ -233,10 +233,22 @@
 <img id="hero-second-img" class="hero-plain" src="" width="1600" height="1067" alt="Welverdiend Accommodation grounds">
 
 <section class="section center">
-  <p class="eyebrow">Right now</p>
-  <h2>Availability in the next 30 days</h2>
-  <div class="avail-grid" id="availability-cards">
-    <p style="grid-column:1/-1;color:var(--ink-soft);">Loading availability…</p>
+  <p class="eyebrow">Live availability</p>
+  <h2>See which nights are open</h2>
+  <p class="live-cal-intro">Tap an open night to start your booking.</p>
+  <div class="live-cal" id="live-cal">
+    <div class="live-cal-tabs" id="live-cal-tabs" role="group" aria-label="Choose a unit"></div>
+    <div class="live-cal-nav">
+      <button type="button" id="live-cal-prev" aria-label="Previous month">‹</button>
+      <button type="button" id="live-cal-next" aria-label="Next month">›</button>
+    </div>
+    <div class="live-cal-months" id="live-cal-months">
+      <p class="live-cal-msg">Loading availability…</p>
+    </div>
+    <div class="live-cal-legend" aria-hidden="true">
+      <span><i class="lg-open"></i>Open</span>
+      <span><i class="lg-busy"></i>Booked</span>
+    </div>
   </div>
 </section>
 
@@ -335,6 +347,7 @@
     <a href="tel:0791183173">079 118 3173</a>
   </div>
   <div class="ota-list" style="justify-content:center;">
+    <a class="ota-direct" href="/booking-widget.html">Book direct</a>
     <a href="https://www.airbnb.com/rooms/1337503040346302823" target="_blank" rel="noopener">Airbnb</a>
     <a href="https://www.lekkeslaap.co.za/akkommodasie/welverdiend" target="_blank" rel="noopener">LekkeSlaap</a>
     <a href="https://www.booking.com/hotel/za/welverdiend-bloemfontein.html" target="_blank" rel="noopener">Booking.com</a>
@@ -439,48 +452,96 @@
     .catch(() => {
       document.getElementById("weather-grid").innerHTML = `<p style="grid-column:1/-1;color:var(--ink-soft);">Could not load the forecast right now.</p>`;
     });
-  function fmtDate(dateStr){
-    return new Date(dateStr).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-  }
-  function computeAvailability(unit){
-    const today = new Date(); today.setHours(0,0,0,0);
-    const busyRanges = unit.busyRanges || [];
-    let nextAvailable = null, openCount = 0;
-    for(let i=0;i<30;i++){
-      const d = new Date(today); d.setDate(d.getDate()+i);
-      const dateStr = toISO(d);
-      const busy = busyRanges.some(r => dateStr >= r.start && dateStr < r.end);
-      if(!busy){
-        openCount++;
-        if(nextAvailable === null) nextAvailable = dateStr;
-      }
-    }
-    return { nextAvailable, openCount };
+  // Live availability calendar: same data as the booking page. A night is booked when
+  // start <= date < end. Open nights link to the booking page with that check-in chosen.
+  const cal = { units: [], unitId: null, offset: 0 };
+  const calMonths = document.getElementById("live-cal-months");
+  const monthsShown = () => window.matchMedia("(max-width: 760px)").matches ? 1 : 2;
+
+  function calBusy(unit, dateStr){
+    return (unit.busyRanges || []).some(r => dateStr >= r.start && dateStr < r.end);
   }
 
-  fetch(`${API_BASE}/api/availability`)
-    .then(r => r.json())
-    .then(data => {
-      const wrap = document.getElementById("availability-cards");
-      if(!data.ok || !data.units || data.units.length === 0){
-        wrap.innerHTML = `<p style="grid-column:1/-1;color:var(--ink-soft);">Could not load availability right now.</p>`;
-        return;
-      }
-      wrap.innerHTML = data.units.map(unit => {
-        const { nextAvailable, openCount } = computeAvailability(unit);
-        return `
-          <div class="avail-card">
-            <div class="avail-count">${openCount}<span style="font-size:22px;">/30</span></div>
-            <div class="avail-label">Open in the next 30 days — ${unit.unitName}</div>
-            <div class="avail-next">${nextAvailable ? `Next available: ${fmtDate(nextAvailable)}` : "Fully booked this month"}</div>
-            <a class="book-btn" href="/booking-widget.html?unit=${unit.unitId}">Check dates</a>
-          </div>
-        `;
-      }).join("");
-    })
-    .catch(() => {
-      document.getElementById("availability-cards").innerHTML = `<p style="grid-column:1/-1;color:var(--ink-soft);">Could not load availability right now.</p>`;
+  function renderCalTabs(){
+    const tabs = document.getElementById("live-cal-tabs");
+    tabs.innerHTML = "";
+    cal.units.forEach(u => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = u.unitName;
+      b.className = u.unitId === cal.unitId ? "active" : "";
+      b.setAttribute("aria-pressed", u.unitId === cal.unitId ? "true" : "false");
+      b.onclick = () => { cal.unitId = u.unitId; renderCalTabs(); renderCal(); };
+      tabs.appendChild(b);
     });
+  }
+
+  function renderCal(){
+    const unit = cal.units.find(u => u.unitId === cal.unitId);
+    if(!unit) return;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const todayStr = toISO(today);
+    calMonths.innerHTML = "";
+    for(let k = 0; k < monthsShown(); k++){
+      const first = new Date(today.getFullYear(), today.getMonth() + cal.offset + k, 1);
+      const month = document.createElement("div");
+      month.className = "live-cal-month";
+      const title = document.createElement("h3");
+      title.textContent = first.toLocaleDateString("en-ZA", { month: "long", year: "numeric" });
+      month.appendChild(title);
+      const grid = document.createElement("div");
+      grid.className = "live-cal-grid";
+      ["Su","Mo","Tu","We","Th","Fr","Sa"].forEach(d => {
+        const h = document.createElement("span"); h.className = "dow"; h.textContent = d; h.setAttribute("aria-hidden", "true");
+        grid.appendChild(h);
+      });
+      for(let i = 0; i < first.getDay(); i++) grid.appendChild(document.createElement("span"));
+      const days = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
+      for(let d = 1; d <= days; d++){
+        const date = new Date(first.getFullYear(), first.getMonth(), d);
+        const dateStr = toISO(date);
+        const label = date.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "long" });
+        let el;
+        if(dateStr < todayStr){
+          el = document.createElement("span"); el.className = "day past";
+        } else if(calBusy(unit, dateStr)){
+          el = document.createElement("span"); el.className = "day busy"; el.setAttribute("aria-label", label + ", booked");
+        } else {
+          el = document.createElement("a"); el.className = "day open";
+          el.href = `/booking-widget.html?unit=${encodeURIComponent(unit.unitId)}&checkin=${dateStr}`;
+          el.setAttribute("aria-label", label + ", open. Book from this night");
+        }
+        el.textContent = d;
+        grid.appendChild(el);
+      }
+      month.appendChild(grid);
+      calMonths.appendChild(month);
+    }
+    document.getElementById("live-cal-prev").disabled = cal.offset <= 0;
+    document.getElementById("live-cal-next").disabled = cal.offset >= 10;
+  }
+
+  document.getElementById("live-cal-prev").onclick = () => { if(cal.offset > 0){ cal.offset--; renderCal(); } };
+  document.getElementById("live-cal-next").onclick = () => { if(cal.offset < 10){ cal.offset++; renderCal(); } };
+  window.matchMedia("(max-width: 760px)").addEventListener("change", renderCal);
+
+  function loadCal(retry){
+    fetch(`${API_BASE}/api/availability`)
+      .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(data => {
+        if(!data.ok || !data.units || data.units.length === 0) throw new Error("no units");
+        cal.units = data.units;
+        cal.unitId = data.units[0].unitId;
+        renderCalTabs();
+        renderCal();
+      })
+      .catch(() => {
+        // Cloud Run can take a few seconds to wake up; one quiet retry covers that.
+        if(!retry){ setTimeout(() => loadCal(true), 4000); return; }
+        calMonths.innerHTML = `<p class="live-cal-msg">Could not load availability right now. <a href="/booking-widget.html">Open the booking page</a>.</p>`;
+      });
+  }
+  loadCal(false);
 })();
 </script>
 
