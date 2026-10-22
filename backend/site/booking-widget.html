@@ -16,8 +16,12 @@
 <meta property="og:type" content="website">
 <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
+<!-- The site stylesheet supplies the shared top bar and menu; the booking card's own
+     styles below come after it and keep their own colours. -->
+<link rel="stylesheet" href="/style.css?v=20261022e">
+<script src="/assets/mobile-nav.js" defer></script>
 <style>
-  /* Same self-hosted fonts as style.css (this page doesn't load it) */
+  /* Same self-hosted fonts as style.css */
   @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(/assets/fonts/inter-latin.woff2) format('woff2');}
   @font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;font-display:swap;src:url(/assets/fonts/cormorant-garamond-latin.woff2) format('woff2');}
   :root{
@@ -37,6 +41,7 @@
   }
   *{box-sizing:border-box;}
   body{margin:0;background:#F1E7D6;}
+  .wa-page{max-width:780px;margin:0 auto;padding:22px 16px 40px;}
   .wa-wrap{
     font-family:'Inter',sans-serif;
     color:var(--ink);
@@ -48,9 +53,13 @@
     overflow:hidden;
   }
   .wa-header{
-    padding:36px 40px 20px;
+    padding:22px 40px 18px;
     text-align:center;
     border-bottom:1px solid var(--line);
+  }
+  .wa-header .wa-title{
+    font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;letter-spacing:0;
+    text-transform:none;color:var(--taupe-deep);margin:0 0 6px;
   }
   .wa-header img{max-width:280px;width:60%;height:auto;display:block;margin:0 auto 12px;}
   .wa-header p, .wa-header h1{
@@ -142,7 +151,7 @@
     padding-bottom:4px;
   }
   .wa-day{
-    aspect-ratio:1;
+    height:52px; /* was a square cell, about 100px tall on a laptop; the month now fits on screen */
     display:flex;
     align-items:center;
     justify-content:center;
@@ -275,6 +284,8 @@
   /* The booking page keeps only WhatsApp floating (no pet stamp or AI chat)
      so nothing covers the calendar or the reserve button. */
   @media (max-width: 760px){
+    .wa-day{height:44px;}
+    .wa-page{padding:14px 10px 30px;}
     .whatsapp-float{width:52px;height:52px;bottom:16px;right:16px;}
     .whatsapp-float svg{width:26px;height:26px;}
     body{padding-bottom:84px;}
@@ -295,12 +306,30 @@
   }).catch(function(){});
 })();</script>
 
+<header class="site-header">
+  <a class="logo" href="/"><img src="/assets/logo-wordmark-tight.webp" alt="Welverdiend Accommodation" width="1200" height="273"></a>
+  <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+  <nav class="site-nav" id="site-nav">
+    <a href="/">Home</a>
+    <a href="about.html">About</a>
+    <a href="unit2.html">Unit 2</a>
+    <a href="unit1.html">Unit 1</a>
+    <a href="wildlife.html">Wildlife</a>
+    <a href="pets.html">Pet-Friendly Stays</a>
+    <a href="location.html">Location</a>
+    <a href="faq.html">FAQ</a>
+    <a href="reviews.html">Reviews</a>
+    <a href="contact.html">Contact</a>
+  </nav>
+</header>
+
+<div class="wa-page">
 <a href="/" class="wa-back-link" onclick="if(document.referrer){event.preventDefault();history.back();}">← Back</a>
 
 <main id="main" class="wa-wrap">
   <div class="wa-header">
-    <img src="/assets/logo-wordmark-600.webp" alt="Welverdiend Accommodation" width="2497" height="1121">
-    <h1>Check availability and reserve your stay directly — no booking fees</h1>
+    <h1 class="wa-title">Book your stay</h1>
+    <p>Check availability and reserve directly — no booking fees</p>
   </div>
 
   <div class="wa-units" id="wa-units" role="group" aria-label="Choose a unit"></div>
@@ -333,6 +362,7 @@
 
   <div class="wa-footer">Welverdiend Accommodation · 4 Kenilworth Road · 079 118 3173 · bookings@welverdiendaccommodation.com</div>
 </main>
+</div>
 
 <div class="wa-modal-overlay" id="wa-modal-overlay">
   <div class="wa-modal" role="dialog" aria-modal="true" aria-labelledby="wa-modal-title">

@@ -170,6 +170,44 @@ h3{font-size:20px;}
 }
 .gallery-grid img{cursor:zoom-in;}
 
+/* Unit pages: key facts, price and the main Book button */
+.unit-facts{
+  display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:18px auto 0;padding:0;list-style:none;
+}
+.unit-facts li{
+  background:var(--white);border:1px solid var(--line);border-radius:20px;
+  padding:7px 14px;font-size:14px;color:var(--ink);
+}
+.unit-book{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px 22px;margin-top:22px;}
+.unit-price{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;color:var(--taupe-deep);line-height:1;}
+.unit-price small{font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--ink-soft);}
+.btn-primary{
+  display:inline-block;background:var(--gold);color:var(--book-text);text-decoration:none;
+  padding:14px 30px;border-radius:4px;font-weight:700;font-size:15px;letter-spacing:.04em;
+  box-shadow:0 2px 8px rgba(59,42,30,.2);
+}
+.btn-primary:hover{background:var(--gold-hover);color:var(--white);}
+.unit-intro{max-width:720px;margin:0 auto;}
+.unit-intro .lede{text-align:left;}
+
+/* Unit pages: photo highlights (one large + four) with a "See all photos" toggle */
+.gallery-highlights{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:repeat(2,230px);gap:10px;}
+.gallery-highlights img{width:100%;height:100%;object-fit:cover;border-radius:6px;cursor:zoom-in;display:block;}
+.gallery-highlights img:first-child{grid-row:1 / span 2;}
+.gallery-more{text-align:center;margin:22px 0 10px;}
+.gallery-more-btn{
+  font:600 14px 'Inter',sans-serif;padding:12px 26px;border-radius:4px;cursor:pointer;
+  background:var(--white);color:var(--taupe-deep);border:1px solid var(--taupe-deep);
+}
+.gallery-more-btn:hover{background:var(--taupe-deep);color:var(--white);}
+.gallery-all{margin-top:34px;}
+.gallery-all[hidden]{display:none;}
+@media (max-width:760px){
+  .gallery-highlights{grid-template-columns:1fr 1fr;grid-template-rows:240px 140px 140px;}
+  .gallery-highlights img:first-child{grid-column:1 / span 2;grid-row:auto;}
+  .unit-price{font-size:26px;}
+}
+
 /* Sectioned gallery (Unit 1 / Unit 2) */
 .gallery-section{margin-bottom:44px;}
 .gallery-section h2,.gallery-section h3{font-size:22px;margin-bottom:16px;}

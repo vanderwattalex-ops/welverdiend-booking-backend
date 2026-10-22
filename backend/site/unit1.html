@@ -18,7 +18,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/style.css?v=20261022d">
+<link rel="stylesheet" href="/style.css?v=20261022e">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -141,19 +141,30 @@
 
 <div class="watermark-strip"><img src="/assets/logo-wordmark-tight.webp" alt="" width="1200" height="273" loading="lazy"></div>
 
-<section class="section narrow center" style="padding-bottom:20px;padding-top:20px;">
+<section class="section narrow center" style="padding-bottom:10px;padding-top:20px;">
   <p class="eyebrow">Guest suite</p>
   <h1 style="font-size:36px;">Unit 1 <span class="h1-sub">Two-bedroom self-catering suite in Bloemfontein</span></h1>
-  <p class="lede">A peaceful, private guest suite offering comfortable self-catering accommodation in Bloemfontein. Unit 1 features two bedrooms, one bathroom and sleeps up to four guests, making it well suited to families, couples travelling together, business travellers and guests visiting Bloemfontein for school or sporting events.</p>
-  <p class="lede" style="margin-top:14px;">The house has everything you need for a comfortable stay, including a fully equipped kitchen, comfortable living area, private outdoor space and braai facilities. An indoor fireplace adds a cosy touch for cooler evenings, while the peaceful surroundings provide a relaxing place to unwind after a busy day.</p>
-  <p class="lede" style="margin-top:14px;">Unit 1 is also pet-friendly, so you can bring your four-legged companion along. Wildlife regularly visits the property, giving guests the opportunity to enjoy a little nature during their stay, while still being only 2 km from the nearest shops and close to the convenience of Bloemfontein.</p>
-  <p class="lede" style="margin-top:14px;">Whether you are staying for a night on your way through the city, attending an event, visiting for school sport or spending a few days in Bloemfontein, Unit 1 offers a comfortable home away from home.</p>
-  <a class="book-btn" href="/booking-widget.html?unit=unit1" style="display:inline-block;margin-top:10px;text-decoration:none;">Check availability</a>
+  <ul class="unit-facts" id="unit-facts" aria-label="Unit 1 at a glance">
+    <li>Sleeps 4</li><li>2 bedrooms</li><li>3 beds</li><li>1 bathroom</li><li>Pet-friendly</li>
+  </ul>
+  <div class="unit-book">
+    <div class="unit-price" id="unit-price">R1,400 <small>per night, whole unit</small></div>
+    <a class="btn-primary" href="/booking-widget.html?unit=unit1">Check dates &amp; book</a>
+  </div>
 </section>
 
-<section class="section">
+<section class="section" style="padding-top:30px;padding-bottom:30px;">
   <div id="gallery-wrap">
     <p style="text-align:center;color:var(--ink-soft);">Loading photos…</p>
+  </div>
+</section>
+
+<section class="section narrow" style="padding-top:20px;">
+  <div class="unit-intro">
+    <p class="lede" style="margin:0 0 16px;">A peaceful, private guest suite offering comfortable self-catering accommodation in Bloemfontein. Unit 1 features two bedrooms, one bathroom and sleeps up to four guests, making it well suited to families, couples travelling together, business travellers and guests visiting Bloemfontein for school or sporting events.</p>
+    <p class="lede" style="margin:0 0 16px;">The house has everything you need for a comfortable stay, including a fully equipped kitchen, comfortable living area, private outdoor space and braai facilities. An indoor fireplace adds a cosy touch for cooler evenings, while the peaceful surroundings provide a relaxing place to unwind after a busy day.</p>
+    <p class="lede" style="margin:0 0 16px;">Unit 1 is also pet-friendly, so you can bring your four-legged companion along. Wildlife regularly visits the property, giving guests the opportunity to enjoy a little nature during their stay, while still being only 2 km from the nearest shops and close to the convenience of Bloemfontein.</p>
+    <p class="lede" style="margin:0 0 16px;">Whether you are staying for a night on your way through the city, attending an event, visiting for school sport or spending a few days in Bloemfontein, Unit 1 offers a comfortable home away from home.</p>
   </div>
 </section>
 
@@ -224,20 +235,42 @@
         .filter(g => g.photos.length > 0);
 
       allPhotoUrls = groups.flatMap(g => g.photos.map(p => p.url));
-      let globalIndex = 0;
 
-      wrap.innerHTML = groups.map(g => `
-        <div class="gallery-section">
-          <h2 style="font-size:22px;margin-bottom:16px;">${g.name}</h2>
-          <div class="gallery-grid">
-            ${g.photos.map(p => {
-              const html = galleryImg(p.url, `Unit 1 — ${g.name}`, globalIndex);
-              globalIndex++;
-              return html;
-            }).join("")}
-          </div>
+      // Highlights: the first photo of each section (the owner picks these with "First" in the
+      // dashboard), topped up with the next photos in order, five in all. Mirrors lib/prerender.js.
+      const indexOf = new Map(allPhotoUrls.map((u, i) => [u, i]));
+      const picks = groups.map(g => g.photos[0]);
+      allPhotoUrls.forEach(u => { if(picks.length < 5 && !picks.some(p => p.url === u)) picks.push(photos.find(p => p.url === u)); });
+      const highlights = picks.slice(0, 5);
+
+      let globalIndex = 0;
+      wrap.innerHTML = `
+        <div class="gallery-highlights">
+          ${highlights.map(p => galleryImg(p.url, `Unit 1 — ${p.section}`, indexOf.get(p.url))).join("")}
         </div>
-      `).join("");
+        ${allPhotoUrls.length > highlights.length ? `
+        <div class="gallery-more">
+          <button type="button" class="gallery-more-btn" aria-expanded="false" aria-controls="gallery-all">See all ${allPhotoUrls.length} photos</button>
+        </div>` : ""}
+        <div class="gallery-all" id="gallery-all" ${allPhotoUrls.length > highlights.length ? "hidden" : ""}>
+          ${groups.map(g => `
+          <div class="gallery-section">
+            <h2 style="font-size:22px;margin-bottom:16px;">${g.name}</h2>
+            <div class="gallery-grid">
+              ${g.photos.map(p => galleryImg(p.url, `Unit 1 — ${g.name}`, globalIndex++)).join("")}
+            </div>
+          </div>`).join("")}
+        </div>`;
+
+      const moreBtn = wrap.querySelector(".gallery-more-btn");
+      if(moreBtn) moreBtn.onclick = () => {
+        const all = document.getElementById("gallery-all");
+        const open = all.hidden;
+        all.hidden = !open;
+        moreBtn.setAttribute("aria-expanded", open ? "true" : "false");
+        moreBtn.textContent = open ? "Show fewer photos" : `See all ${allPhotoUrls.length} photos`;
+        if(!open) wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+      };
 
       wrap.querySelectorAll("img[data-index]").forEach(img => {
         img.onclick = () => openLightbox(allPhotoUrls, Number(img.dataset.index));
@@ -246,6 +279,31 @@
     .catch(() => {
       document.getElementById("gallery-wrap").innerHTML = `<p style="text-align:center;color:var(--ink-soft);">Could not load photos right now — please refresh.</p>`;
     });
+
+  // Key facts and nightly rate come from the booking system, so they always match the booking page.
+  fetch(`${API_BASE}/api/config`)
+    .then(r => r.json())
+    .then(cfg => {
+      const u = cfg.ok && (cfg.units || []).find(x => x.id === "unit1");
+      if(!u) return;
+      const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
+      const items = [];
+      if(u.sleeps) items.push(`Sleeps ${u.sleeps}`);
+      if(u.bedrooms) items.push(plural(u.bedrooms, "bedroom"));
+      if(u.beds) items.push(plural(u.beds, "bed"));
+      if(u.bathrooms) items.push(plural(u.bathrooms, "bathroom"));
+      if((u.amenities || []).some(a => /pet/i.test(a))) items.push("Pet-friendly");
+      if(items.length){
+        const ul = document.getElementById("unit-facts");
+        ul.innerHTML = "";
+        items.forEach(t => { const li = document.createElement("li"); li.textContent = t; ul.appendChild(li); });
+      }
+      if(u.pricePerNight){
+        document.getElementById("unit-price").innerHTML =
+          `R${Number(u.pricePerNight).toLocaleString("en-ZA").replace(/\s/g, ",")} <small>per night, whole unit</small>`;
+      }
+    })
+    .catch(() => {});
 
   let lightboxIndex = 0;
   window.openLightbox = function(photos, index){

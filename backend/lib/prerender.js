@@ -193,15 +193,33 @@ function galleryHtml(content, unitId, label) {
     .filter(g => g.photos.length > 0);
   if (groups.length === 0) return null;
 
+  // Five highlight photos (the first of each section, topped up in order) above a folded
+  // "See all" gallery. Mirrors the unit pages' script; the full gallery stays in the HTML.
+  const ordered = groups.flatMap(g => g.photos);
+  const indexOf = new Map(ordered.map((p, i) => [p.url, i]));
+  const picks = groups.map(g => g.photos[0]);
+  ordered.forEach(p => { if (picks.length < 5 && !picks.includes(p)) picks.push(p); });
+  const highlights = picks.slice(0, 5);
+  const folded = ordered.length > highlights.length;
+
   let index = 0;
-  return groups.map(g => `
-        <div class="gallery-section">
-          <h2 style="font-size:22px;margin-bottom:16px;">${esc(g.name)}</h2>
-          <div class="gallery-grid">
-            ${g.photos.map(p => galleryImg(p.url, `${label} — ${g.name}`, index++)).join("")}
-          </div>
+  return `
+        <div class="gallery-highlights">
+          ${highlights.map(p => galleryImg(p.url, `${label} — ${p.section}`, indexOf.get(p.url))).join("")}
         </div>
-      `).join("");
+        ${folded ? `
+        <div class="gallery-more">
+          <button type="button" class="gallery-more-btn" aria-expanded="false" aria-controls="gallery-all">See all ${ordered.length} photos</button>
+        </div>` : ""}
+        <div class="gallery-all" id="gallery-all" ${folded ? "hidden" : ""}>
+          ${groups.map(g => `
+          <div class="gallery-section">
+            <h2 style="font-size:22px;margin-bottom:16px;">${esc(g.name)}</h2>
+            <div class="gallery-grid">
+              ${g.photos.map(p => galleryImg(p.url, `${label} — ${g.name}`, index++)).join("")}
+            </div>
+          </div>`).join("")}
+        </div>`;
 }
 
 // ---------------------------------------------------------------------------
