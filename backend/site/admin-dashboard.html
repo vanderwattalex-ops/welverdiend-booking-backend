@@ -2314,12 +2314,25 @@
         websiteContentState.heroFocus = data.heroFocus;
         msg.className = "settings-msg success"; msg.textContent = "Saved. The website now keeps this part of the photo in view.";
       } else {
-        msg.className = "settings-msg error"; msg.textContent = data.error || "Could not save the photo position.";
+        // Redraw first (puts the dot back on the saved point), then show why, so the message is not wiped.
         renderWebsiteContent();
+        showHeroMsg(slot, "error", res.status === 401 ? saveRefusedText() : (data.error || "Could not save the photo position."));
       }
     }catch(err){
-      msg.className = "settings-msg error"; msg.textContent = "Could not reach the server, so the position was not saved.";
+      showHeroMsg(slot, "error", "Could not reach the server, so the position was not saved.");
     }
+  }
+
+  function showHeroMsg(slot, kind, text){
+    const m = document.getElementById(`hero-msg-${slot}`);
+    if(!m) return;
+    m.className = "settings-msg " + kind; m.textContent = text;
+    m.scrollIntoView({ block: "nearest" });
+  }
+
+  // The Website tab can show the photos with any token typed in, but saving needs the right one.
+  function saveRefusedText(){
+    return "Not saved: the admin token at the top of the page is not correct. Type it again, click Load bookings, then try again.";
   }
 
   async function uploadHeroPhoto(slot, file){
@@ -2699,7 +2712,7 @@
       if(data.ok){
         websiteContentState.galleries[galleryId] = data.gallery;
       } else {
-        alert(data.error || "Could not save the new photo order.");
+        alert(res.status === 401 ? saveRefusedText() : (data.error || "Could not save the new photo order."));
       }
     }catch(err){
       alert("Could not reach the server, so the new order was not saved.");
