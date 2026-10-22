@@ -130,10 +130,17 @@ h3{font-size:20px;}
 
 /* Lighter version — just the mark, no content, for pages where a full
    watermark band would disrupt the existing layout */
-.watermark-strip{position:relative;height:90px;overflow:hidden;background:var(--surface);}
+/* Inner pages: the full Welverdiend wordmark between thin ochre rules (was a 6% faded W). */
+.watermark-strip{
+  display:flex;align-items:center;justify-content:center;gap:26px;
+  padding:30px 5vw;background:var(--surface);
+}
+.watermark-strip::before,.watermark-strip::after{
+  content:"";flex:0 1 140px;height:1px;background:var(--gold);opacity:.7;
+}
 .watermark-strip img{
-  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-  width:220px;opacity:.06;pointer-events:none;
+  width:min(320px,62vw);height:auto;pointer-events:none;
+  filter:brightness(0) opacity(.8); /* the artwork is light; shown dark espresso-brown on the sand */
 }
 
 /* At-a-glance feature cards */
