@@ -53,6 +53,7 @@
   }
   .pet-friendly-stamp:hover{transform:rotate(-6deg) scale(1.07);}
 </style>
+<script src="/assets/meta-pixel.js" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -100,7 +101,8 @@
           note: `The remaining ${rand(data.balanceAmount)} balance is due before check-in — we'll email you separately for that closer to your stay.`,
           bankDetails,
           uploadUrl: `${API_BASE}/api/bookings/${bookingId}/proof`,
-          data
+          data,
+          isDeposit: true
         });
       } else if(data.status === "submitted"){
         content.innerHTML = `<p class="state-note">Thanks — your deposit proof of payment has already been received. We'll be in touch with final confirmation shortly.</p>`;
@@ -126,7 +128,7 @@
     }
   }
 
-  function renderPaymentStep({ heading, amountLabel, amount, note, bankDetails, uploadUrl, data }){
+  function renderPaymentStep({ heading, amountLabel, amount, note, bankDetails, uploadUrl, data, isDeposit }){
     document.querySelector("h1").textContent = heading;
     content.innerHTML = `
       <div class="summary">
@@ -169,6 +171,8 @@
         const res = await fetch(uploadUrl, { method: "POST", body: fd });
         const result = await res.json();
         if(result.ok){
+          // Count the booking once, at the deposit, valued at the full stay (deposit + balance).
+          if(isDeposit && window.wdPixel) wdPixel("Purchase", { content_type: "hotel", value: Number(data.depositAmount || 0) + Number(data.balanceAmount || 0), currency: "ZAR" });
           msg.className = "msg success";
           msg.textContent = result.message;
           btn.style.display = "none";
