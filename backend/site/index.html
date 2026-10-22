@@ -298,7 +298,7 @@
 <section class="section tinted center">
   <p class="eyebrow">Stay in touch</p>
   <h2>Follow us on Facebook</h2>
-  <div style="display:flex;justify-content:center;margin-top:20px;max-width:100%;overflow-x:auto;padding:0 12px;min-height:500px;">
+  <div style="display:flex;justify-content:center;margin-top:20px;max-width:100%;overflow-x:auto;padding:0 12px;">
     <div class="fb-page"
       data-href="https://www.facebook.com/welverdiendaccommodation"
       data-tabs="timeline"
@@ -332,9 +332,11 @@
     })();
   </script>
   <style>
+    /* Keep the plugin centred and no wider than the screen. No reserved height: Facebook often
+       shows only the page header (no posts) when a browser blocks its cookies, and a fixed
+       500px box then left a large empty gap. */
     .fb-page, .fb_iframe_widget, .fb_iframe_widget span, .fb_iframe_widget iframe {
       max-width: 100% !important;
-      width: 100% !important;
     }
   </style>
 </section>
