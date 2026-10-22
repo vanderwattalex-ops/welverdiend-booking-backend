@@ -272,8 +272,14 @@ h3{font-size:20px;}
   transition:transform .2s ease;
 }
 .pet-friendly-stamp:hover{transform:rotate(-6deg) scale(1.07);}
+/* Phones: three floating widgets covered the copy and the booking button.
+   The stamp stops floating and sits once at the top right of the page,
+   the AI chat stays desktop-only (WhatsApp remains), and the footer gets
+   room so its last line scrolls clear of the WhatsApp button. */
 @media (max-width: 760px){
-  .pet-friendly-stamp{width:72px;bottom:16px;left:16px;}
+  .pet-friendly-stamp{position:absolute;top:84px;bottom:auto;left:auto;right:14px;width:64px;z-index:5;}
+  .wa-chat-btn,.wa-chat-panel{display:none !important;}
+  .site-footer{padding-bottom:96px;}
 }
 
 /* Skip link — hidden until a keyboard user tabs to it */
