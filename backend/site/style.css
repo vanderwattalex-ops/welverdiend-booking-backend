@@ -365,23 +365,25 @@ h3{font-size:20px;}
   .whatsapp-float svg{width:26px;height:26px;}
 }
 
-/* Floating pet-friendly stamp */
-.pet-friendly-stamp{
-  position:fixed;bottom:22px;left:22px;z-index:499;
-  width:100px;height:auto;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.28));
-  transform:rotate(-6deg);
-  transition:transform .2s ease;
-}
-.pet-friendly-stamp:hover{transform:rotate(-6deg) scale(1.07);}
-/* Phones: three floating widgets covered the copy and the booking button.
-   The stamp stops floating and sits once at the top right of the page,
-   the AI chat stays desktop-only (WhatsApp remains), and the footer gets
+/* Pet-friendly seal (Vlooi): part of the page, not floating. It sits in the
+   wordmark band on inner pages, above the FAQ heading and above the pets
+   section on the homepage, and links to the pets page. */
+.pet-seal{display:block;width:130px;margin:0 auto 18px;transition:transform .2s ease;}
+.pet-seal:hover{transform:scale(1.05);}
+.pet-seal img{display:block;width:100%;height:auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.18));}
+.watermark-strip .pet-seal{width:96px;margin:0;flex:none;}
+.watermark-strip .pet-seal img{pointer-events:auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.18));}
+.watermark-content .pet-seal{margin:0 auto 14px;width:110px;}
+/* Phones: the AI chat stays desktop-only (WhatsApp remains), and the footer gets
    room so its last line scrolls clear of the WhatsApp button. */
 @media (max-width: 760px){
-  .pet-friendly-stamp{position:absolute;top:84px;bottom:auto;left:auto;right:14px;width:64px;z-index:5;}
   .wa-chat-btn,.wa-chat-panel{display:none !important;}
   .site-footer{padding-bottom:96px;}
+  .watermark-strip{gap:14px;}
+  .watermark-strip > img{width:min(320px,50vw);}
+  .watermark-strip .pet-seal{width:62px;}
+  .pet-seal{width:110px;}
+  .watermark-content .pet-seal{width:84px;}
 }
 
 /* Skip link — hidden until a keyboard user tabs to it */
