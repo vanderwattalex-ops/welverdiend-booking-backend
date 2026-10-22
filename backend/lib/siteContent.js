@@ -89,6 +89,9 @@ async function getSiteContent() {
       petPhoto2: (saved.heroPhotos && saved.heroPhotos.petPhoto2) || defaults.heroPhotos.petPhoto2,
       petPhoto3: (saved.heroPhotos && saved.heroPhotos.petPhoto3) || defaults.heroPhotos.petPhoto3
     },
+    // Which part of each named photo stays in view when the site crops it, as "x% y%"
+    // (CSS object-position). Missing means centred.
+    heroFocus: saved.heroFocus || {},
     petCaptions: [0, 1, 2].map(i => (saved.petCaptions && saved.petCaptions[i]) || ""),
     reviews: saved.reviews || defaults.reviews,
     faqs: saved.faqs || defaults.faqs,
@@ -113,8 +116,20 @@ async function savePetCaptions(captions) {
 async function setHeroPhoto(slot, url) {
   const current = await getSiteContent();
   const heroPhotos = { ...current.heroPhotos, [slot]: url };
-  await settingsCollection.doc(DOC_ID).set({ heroPhotos }, { merge: true });
+  // A new photo starts centred again; the old photo's focus point would not fit it.
+  // ("" means centred; a merge write cannot remove a key, so it is blanked instead.)
+  const heroFocus = { ...current.heroFocus, [slot]: "" };
+  await settingsCollection.doc(DOC_ID).set({ heroPhotos, heroFocus }, { merge: true });
   return heroPhotos;
+}
+
+/** Sets which point of a named photo stays in view when cropped; x and y are 0-100 (%). */
+async function setHeroFocus(slot, x, y) {
+  const current = await getSiteContent();
+  const clamp = n => Math.max(0, Math.min(100, Math.round(Number(n))));
+  const heroFocus = { ...current.heroFocus, [slot]: `${clamp(x)}% ${clamp(y)}%` };
+  await settingsCollection.doc(DOC_ID).set({ heroFocus }, { merge: true });
+  return heroFocus;
 }
 
 async function addGalleryPhoto(unitId, url, section) {
@@ -318,7 +333,7 @@ async function setPhotoCaption(galleryId, photoId, caption) {
 module.exports = {
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, MAX_CAPTION, setPhotoCaption,
   getSiteContent, saveAboutParagraphs, savePetCaptions, setHeroPhoto,
-  addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery,
+  addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
   addGallerySection, renameGallerySection, removeGallerySection,
   addReview, removeReview,
   addFaq, removeFaq, addRecommendation, removeRecommendation

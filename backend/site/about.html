@@ -105,6 +105,7 @@
         // The server already set it (WebP sizes, JPEG in data-full); only swap if it changed.
         const img = document.getElementById("about-photo-img"), url = data.heroPhotos.aboutPhoto;
         if(img.dataset.full !== url && img.getAttribute("src") !== url){ img.removeAttribute("srcset"); img.src = url; }
+        if(data.heroFocus && data.heroFocus.aboutPhoto) img.style.objectPosition = data.heroFocus.aboutPhoto;
       }
       const wrap = document.getElementById("about-text");
       wrap.innerHTML = (data.aboutParagraphs || []).map(p =>

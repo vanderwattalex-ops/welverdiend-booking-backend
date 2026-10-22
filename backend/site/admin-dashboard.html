@@ -188,6 +188,22 @@
   .photo-item:active{cursor:grabbing;}
   .photo-ghost{opacity:.35;}
   .photo-item img{-webkit-user-drag:none;user-select:none;}
+  /* Named photos: pick which part stays in view when the site crops the photo */
+  .focus-editor{display:grid;grid-template-columns:minmax(220px,360px) 1fr;gap:18px;align-items:start;}
+  .focus-pick{position:relative;cursor:crosshair;border-radius:5px;overflow:hidden;border:1px solid var(--line);}
+  .focus-pick img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none;}
+  .focus-dot{
+    position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;pointer-events:none;
+    border:3px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.55),0 2px 8px rgba(0,0,0,.4);background:rgba(198,139,63,.55);
+  }
+  .focus-hint{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  .focus-previews{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;}
+  .focus-previews > div{flex:1 1 220px;max-width:420px;}
+  .focus-previews > div:last-child{flex:0 1 130px;}
+  .focus-prev{border-radius:5px;overflow:hidden;border:1px solid var(--line);background:#222;}
+  .focus-prev img{width:100%;height:100%;object-fit:cover;display:block;}
+  .focus-previews small{display:block;font-size:11.5px;color:var(--ink-soft);margin-top:4px;}
+  @media (max-width:700px){ .focus-editor{grid-template-columns:1fr;} }
   .photo-chosen .photo-tile{outline:2px solid var(--taupe-deep);outline-offset:1px;}
   .photo-sortable{min-height:60px;}
   .photo-drag-hint{font-size:12.5px;color:var(--ink-soft);margin:4px 0 0;}
@@ -2063,14 +2079,16 @@
     const reviews = websiteContentState.reviews || [];
     const faqs = websiteContentState.faqs || [];
     const recommendations = websiteContentState.recommendations || [];
+    // desk/phone: the width:height shape the website crops each photo to on a computer and a phone.
     const heroSlots = [
-      { key: "homeTop", label: "Home page — top hero photo (the big banner photo at the very top)" },
-      { key: "homeSecond", label: "Home page — second photo (the wide photo further down, of the grounds)" },
-      { key: "aboutPhoto", label: "About page — main photo" },
-      { key: "petPhoto1", label: "Home page — guest pets, photo 1 (under Availability)" },
-      { key: "petPhoto2", label: "Home page — guest pets, photo 2 (under Availability)" },
-      { key: "petPhoto3", label: "Home page — guest pets, photo 3 (under Availability)" }
+      { key: "homeTop", label: "Home page — top hero photo (the big banner photo at the very top)", desk: "2.8 / 1", phone: "0.9 / 1" },
+      { key: "homeSecond", label: "Home page — second photo (the wide photo further down, of the grounds)", desk: "4 / 1", phone: "1.34 / 1" },
+      { key: "aboutPhoto", label: "About page — main photo", desk: "3.7 / 1", phone: "1.25 / 1" },
+      { key: "petPhoto1", label: "Home page — guest pets, photo 1 (under Availability)", desk: "1 / 1", phone: "1 / 1" },
+      { key: "petPhoto2", label: "Home page — guest pets, photo 2 (under Availability)", desk: "1 / 1", phone: "1 / 1" },
+      { key: "petPhoto3", label: "Home page — guest pets, photo 3 (under Availability)", desk: "1 / 1", phone: "1 / 1" }
     ];
+    const heroFocus = websiteContentState.heroFocus || {};
     const gallerySections = websiteContentState.gallerySections || { unit1: [], unit2: [] };
     const galleryIds = Object.keys(galleryLabels);
 
@@ -2089,9 +2107,25 @@
         ${heroSlots.map(slot => `
           <div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--line);">
             <div class="label" style="margin-bottom:8px;font-weight:600;color:var(--ink);">${slot.label}</div>
-            <div class="photo-grid" style="grid-template-columns:220px;">
-              <div class="photo-tile">${heroPhotos[slot.key] ? `<img src="${heroPhotos[slot.key]}" alt="${slot.key}">` : `<div class="range-source" style="padding:40px 10px;text-align:center;">No photo yet</div>`}</div>
+            ${heroPhotos[slot.key] ? (() => {
+              const pos = heroFocus[slot.key] || "50% 50%";
+              const [fx, fy] = pos.split(" ");
+              return `
+            <div class="focus-editor" data-slot="${slot.key}">
+              <div>
+                <div class="focus-pick" title="Click the part of the photo that must always stay in view">
+                  <img src="${heroPhotos[slot.key]}" alt="${slot.key}">
+                  <span class="focus-dot" style="left:${fx};top:${fy};"></span>
+                </div>
+                <div class="focus-hint">Click the most important part of the photo (for example the dam). The website keeps that part in view when it crops the photo.</div>
+              </div>
+              <div class="focus-previews">
+                <div><div class="focus-prev" style="aspect-ratio:${slot.desk};"><img src="${heroPhotos[slot.key]}" alt="" style="object-position:${pos};"></div><small>On a computer</small></div>
+                <div><div class="focus-prev focus-prev-phone" style="aspect-ratio:${slot.phone};"><img src="${heroPhotos[slot.key]}" alt="" style="object-position:${pos};"></div><small>On a phone</small></div>
+              </div>
             </div>
+            <button type="button" class="photo-move-btn focus-reset-btn" data-slot="${slot.key}" style="margin-top:8px;">Centre again</button>`;
+            })() : `<div class="photo-grid" style="grid-template-columns:220px;"><div class="photo-tile"><div class="range-source" style="padding:40px 10px;text-align:center;">No photo yet</div></div></div>`}
             <input type="file" accept="image/*" id="hero-input-${slot.key}" style="display:none">
             <button type="button" class="photo-upload-btn" id="hero-upload-btn-${slot.key}">Replace this photo</button>
             <div class="range-source" style="margin-top:4px;">JPG, PNG, or WebP — any size, they'll be automatically resized.</div>
@@ -2228,6 +2262,17 @@
       const btn = document.getElementById(`add-section-btn-${galleryId}`);
       if(btn) btn.onclick = () => addSectionAction(galleryId);
     });
+    content.querySelectorAll(".focus-pick").forEach(pick => {
+      pick.onclick = (e) => {
+        const r = pick.getBoundingClientRect();
+        const x = Math.round(((e.clientX - r.left) / r.width) * 100);
+        const y = Math.round(((e.clientY - r.top) / r.height) * 100);
+        setHeroFocusAction(pick.closest(".focus-editor").dataset.slot, x, y);
+      };
+    });
+    content.querySelectorAll(".focus-reset-btn").forEach(btn => {
+      btn.onclick = () => setHeroFocusAction(btn.dataset.slot, 50, 50);
+    });
     heroSlots.forEach(slot => {
       const input = document.getElementById(`hero-input-${slot.key}`);
       document.getElementById(`hero-upload-btn-${slot.key}`).onclick = () => input.click();
@@ -2247,6 +2292,36 @@
     });
   }
 
+  // Shows the new crop straight away, then saves it; on failure the editor goes back to the saved point.
+  async function setHeroFocusAction(slot, x, y){
+    const editor = document.querySelector(`.focus-editor[data-slot="${slot}"]`);
+    const msg = document.getElementById(`hero-msg-${slot}`);
+    const pos = `${Math.max(0, Math.min(100, x))}% ${Math.max(0, Math.min(100, y))}%`;
+    if(editor){
+      const dot = editor.querySelector(".focus-dot");
+      dot.style.left = pos.split(" ")[0]; dot.style.top = pos.split(" ")[1];
+      editor.querySelectorAll(".focus-prev img").forEach(img => { img.style.objectPosition = pos; });
+    }
+    msg.className = "settings-msg"; msg.textContent = "Saving…";
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/hero-focus`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ slot, x, y })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.heroFocus = data.heroFocus;
+        msg.className = "settings-msg success"; msg.textContent = "Saved. The website now keeps this part of the photo in view.";
+      } else {
+        msg.className = "settings-msg error"; msg.textContent = data.error || "Could not save the photo position.";
+        renderWebsiteContent();
+      }
+    }catch(err){
+      msg.className = "settings-msg error"; msg.textContent = "Could not reach the server, so the position was not saved.";
+    }
+  }
+
   async function uploadHeroPhoto(slot, file){
     const msg = document.getElementById(`hero-msg-${slot}`);
     const btn = document.getElementById(`hero-upload-btn-${slot}`);
@@ -2264,6 +2339,8 @@
       const data = await res.json();
       if(data.ok){
         websiteContentState.heroPhotos = data.heroPhotos;
+        // the server starts a new photo centred again
+        websiteContentState.heroFocus = { ...(websiteContentState.heroFocus || {}), [slot]: "" };
         renderWebsiteContent();
       } else {
         msg.className = "settings-msg error";

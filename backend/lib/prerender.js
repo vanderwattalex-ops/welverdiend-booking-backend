@@ -99,6 +99,20 @@ function setHeroImg(html, id, url, sizes, extra) {
   return setImgSrc(html, id, a.src, attrs + (extra ? " " + extra : ""));
 }
 
+// The owner's chosen focus point for each named photo (what stays in view when the
+// photo is cropped), as a small <style> block so it applies before any script runs.
+const FOCUS_IDS = {
+  homeTop: "hero-top-img", homeSecond: "hero-second-img", aboutPhoto: "about-photo-img",
+  petPhoto1: "pet-photo-1", petPhoto2: "pet-photo-2", petPhoto3: "pet-photo-3"
+};
+function addFocusStyle(html, content, slots) {
+  const focus = content.heroFocus || {};
+  const rules = slots
+    .filter(s => /^\d{1,3}% \d{1,3}%$/.test(focus[s] || ""))
+    .map(s => `#${FOCUS_IDS[s]}{object-position:${focus[s]};}`);
+  return rules.length ? html.replace("</head>", `<style id="photo-focus">${rules.join("")}</style>\n</head>`) : html;
+}
+
 // Preload the above-the-fold photo from <head>, ahead of CSS and fonts.
 function preloadImage(html, url, sizes) {
   if (!url) return html;
@@ -347,6 +361,7 @@ function applyCommon(page, c, facts, html) {
 const PAGES = {
   "index.html":    (c, h) => {
     const hero = c.heroPhotos || {};
+    h = addFocusStyle(h, c, ["homeTop", "homeSecond", "petPhoto1", "petPhoto2", "petPhoto3"]);
     h = preloadImage(h, hero.homeTop, "100vw");
     h = setHeroImg(h, "hero-top-img", hero.homeTop, "100vw", 'fetchpriority="high"');
     h = setHeroImg(h, "hero-second-img", hero.homeSecond, "100vw", 'loading="lazy"');
@@ -359,6 +374,7 @@ const PAGES = {
     return replaceContainer(h, "reviews-preview", reviewsHtml((c.reviews || []).slice(0, 3)));
   },
   "about.html":    (c, h) => {
+    h = addFocusStyle(h, c, ["aboutPhoto"]);
     h = setHeroImg(h, "about-photo-img", (c.heroPhotos || {}).aboutPhoto, "100vw");
     return replaceContainer(h, "about-text", aboutHtml(c.aboutParagraphs));
   },

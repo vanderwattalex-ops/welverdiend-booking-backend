@@ -19,7 +19,7 @@ const { invoiceLinkKey } = require("./invoiceLink");
 const { syncUnitAndSave } = require("../lib/availabilitySync");
 const {
   getSiteContent,
-  saveAboutParagraphs, savePetCaptions, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery,
+  saveAboutParagraphs, savePetCaptions, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
   addGallerySection, renameGallerySection, removeGallerySection,
   setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation,
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, setPhotoCaption
@@ -996,6 +996,21 @@ router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async
   } catch (err) {
     console.error("[admin] hero photo upload failed:", err);
     res.status(500).json({ ok: false, error: "Could not upload photo" });
+  }
+});
+
+// POST /api/admin/site-content/hero-focus   body: { slot, x, y }   x/y in % (0-100)
+// Which part of a named photo stays in view when the website crops it.
+router.post("/admin/site-content/hero-focus", async (req, res) => {
+  try {
+    const { slot, x, y } = req.body;
+    if (!HERO_SLOTS.includes(slot)) return res.status(400).json({ ok: false, error: `slot must be one of: ${HERO_SLOTS.join(", ")}` });
+    if (!Number.isFinite(Number(x)) || !Number.isFinite(Number(y))) return res.status(400).json({ ok: false, error: "x and y must be numbers" });
+    const heroFocus = await setHeroFocus(slot, x, y);
+    res.json({ ok: true, heroFocus });
+  } catch (err) {
+    console.error("[admin] hero focus failed:", err);
+    res.status(500).json({ ok: false, error: "Could not save the photo position" });
   }
 });
 

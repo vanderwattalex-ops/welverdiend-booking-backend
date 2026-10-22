@@ -380,6 +380,10 @@
         img.removeAttribute("srcset");
         img.src = url;
       }
+      // The owner's chosen focus point for each photo (what stays in view when cropped).
+      const focus = data.heroFocus || {};
+      [["homeTop", "hero-top-img"], ["homeSecond", "hero-second-img"], ["petPhoto1", "pet-photo-1"], ["petPhoto2", "pet-photo-2"], ["petPhoto3", "pet-photo-3"]]
+        .forEach(([slot, id]) => { if(focus[slot]) document.getElementById(id).style.objectPosition = focus[slot]; });
       if(data.heroPhotos){
         setPhoto(document.getElementById("hero-top-img"), data.heroPhotos.homeTop);
         setPhoto(document.getElementById("hero-second-img"), data.heroPhotos.homeSecond);
