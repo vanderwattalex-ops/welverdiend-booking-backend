@@ -27,7 +27,7 @@ const FIXED = {
   email: "bookings@welverdiendaccommodation.com",
   checkIn: "14:00",
   checkOut: "10:00",
-  pets: "Welcome at no extra charge",
+  pets: "Any well-behaved pet welcome at no extra charge, no set limit on number or size; dogs on a lead or supervised around the wildlife",
   included: "Free Wi-Fi, free secure parking, fully equipped kitchen, smart TV, dedicated work area and braai facilities",
   wildlife: "Springbok, ostriches and ducks roam freely on the property",
   booking: "Book direct on the website with no booking fees; a 50% deposit secures the dates",
