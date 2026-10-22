@@ -59,6 +59,7 @@ function summariseUnits(units) {
     bathrooms: same("bathrooms"),
     units: [...units].sort((a, b) => String(a.name).localeCompare(String(b.name))).map(u => ({
       id: u.id, name: u.name, rate: u.pricePerNight ? rand(u.pricePerNight) : null,
+      price: Number(u.pricePerNight) || null, // plain number for JSON-LD offers
       sleeps: u.sleeps, bedrooms: u.bedrooms, bathrooms: u.bathrooms
     }))
   };

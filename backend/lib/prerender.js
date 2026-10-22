@@ -259,14 +259,27 @@ function pageLdHtml(page, html) {
   });
 }
 
-// Add the unit's own photos to its Accommodation JSON-LD block.
-function addUnitImages(html, urls) {
-  if (!urls.length) return html;
+// Add the unit's own photos, and its live nightly rate from admin Settings,
+// to its Accommodation JSON-LD block.
+function addUnitSchema(html, urls, price) {
+  if (!urls.length && !price) return html;
   return html.replace(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/, (whole, json) => {
     try {
       const data = JSON.parse(json);
       if (data["@type"] !== "Accommodation") return whole;
-      data.image = urls;
+      if (urls.length) data.image = urls;
+      if (price) {
+        data.offers = {
+          "@type": "Offer",
+          url: `${SITE}/booking-widget.html?unit=${data.url.match(/(unit\d)\.html/)[1]}`,
+          priceSpecification: {
+            "@type": "UnitPriceSpecification",
+            price,
+            priceCurrency: "ZAR",
+            unitText: "night"
+          }
+        };
+      }
       return jsonLd(data);
     } catch (err) {
       return whole;
@@ -305,7 +318,9 @@ function applyCommon(page, c, facts, html) {
   if (ld) html = html.replace("</head>", ld + "\n</head>");
   html = setShareImage(html, shareImageFor(page, c));
   if (page === "unit1.html" || page === "unit2.html") {
-    html = addUnitImages(html, galleryUrls(c, page.replace(".html", ""), 8));
+    const id = page.replace(".html", "");
+    const unit = facts && (facts.units || []).find(u => u.id === id);
+    html = addUnitSchema(html, galleryUrls(c, id, 8), unit && unit.price);
   }
   return html;
 }

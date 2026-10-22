@@ -14,14 +14,28 @@ app.use(express.json());
 // it can compress what they serve.
 app.use(compression());
 
-// Baseline security headers. HSTS only on the custom domain: the run.app URL
-// is Google's and not ours to pin. No frame restrictions -- the booking
-// widget may still be embedded on other sites.
+// Baseline security headers. HSTS only on the custom domain (and www, which
+// redirects to it): the run.app URL is Google's and not ours to pin. Every
+// page refuses to be framed by other sites except the booking widget, which
+// may still be embedded elsewhere. Location access is left to the Google
+// Maps embeds on the location page; camera, mic, payment and USB are off.
+// Private pages (admin, deposit upload, invoice links) are kept out of
+// search results with X-Robots-Tag (and a robots meta tag). They are not
+// listed in robots.txt: a crawler blocked there never sees the noindex, and
+// the list would only advertise the paths.
+const NOINDEX_PATHS = /^\/(admin-dashboard\.html|upload-proof\.html|i\/)/;
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  if ((req.headers.host || "").toLowerCase() === "welverdiendaccommodation.com") {
-    res.setHeader("Strict-Transport-Security", "max-age=31536000");
+  res.setHeader("Permissions-Policy", 'camera=(), microphone=(), payment=(), usb=(), geolocation=(self "https://www.google.com")');
+  if (req.path !== "/booking-widget.html") {
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("Content-Security-Policy", "frame-ancestors 'self'");
+  }
+  if (NOINDEX_PATHS.test(req.path)) res.setHeader("X-Robots-Tag", "noindex, nofollow");
+  const host = (req.headers.host || "").toLowerCase();
+  if (host === "welverdiendaccommodation.com" || host === "www.welverdiendaccommodation.com") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   }
   next();
 });
@@ -77,7 +91,9 @@ app.get("/i/:id/:key", require("./routes/invoiceLink").invoicePage);
 // browsing session, short enough that a deploy shows up the same day.
 // HTML is left at the default (always revalidated via ETag).
 function cacheFor(res, filePath) {
-  if (/\.(png|jpe?g|webp|svg|ico)$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=604800");
+  // Font files are never edited in place (a new font gets a new name), so they can be cached for a year
+  if (/\.woff2$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
+  else if (/\.(png|jpe?g|webp|svg|ico)$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=604800");
   else if (/\.(css|js)$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=3600");
 }
 app.use("/assets", express.static(path.join(__dirname, "public"), { setHeaders: cacheFor })); // unit photos

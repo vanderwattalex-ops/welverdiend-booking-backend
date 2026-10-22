@@ -94,7 +94,9 @@ async function getSiteContent() {
     faqs: saved.faqs || defaults.faqs,
     recommendations: saved.recommendations || defaults.recommendations,
     galleries,
-    gallerySections
+    gallerySections,
+    // When the content was last saved from the admin dashboard (sitemap lastmod)
+    updatedAt: doc.exists && doc.updateTime ? doc.updateTime.toDate() : null
   };
 }
 

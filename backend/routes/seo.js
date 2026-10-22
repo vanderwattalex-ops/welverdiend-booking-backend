@@ -10,6 +10,7 @@
 // ---------------------------------------------------------------------------
 
 const express = require("express");
+const fs = require("fs");
 const path = require("path");
 const { getFacts, llmsTxt, SITE } = require("../lib/siteFacts");
 const { cachedContent, galleryUrls } = require("../lib/prerender");
@@ -17,19 +18,39 @@ const { INDEXNOW_KEY } = require("../lib/indexnow");
 
 const router = express.Router();
 
+// cms: the page shows text or photos edited in the admin dashboard, so its
+// lastmod also moves when that content is saved.
 const PAGES = [
-  { path: "/", images: c => [c.heroPhotos && c.heroPhotos.homeTop, c.heroPhotos && c.heroPhotos.homeSecond] },
-  { path: "/about.html", images: c => [c.heroPhotos && c.heroPhotos.aboutPhoto] },
-  { path: "/unit1.html", images: c => galleryUrls(c, "unit1", 1000) },
-  { path: "/unit2.html", images: c => galleryUrls(c, "unit2", 1000) },
-  { path: "/wildlife.html", images: c => galleryUrls(c, "wildlife", 1000) },
-  { path: "/pets.html", images: c => galleryUrls(c, "pets", 1000) },
-  { path: "/location.html" },
-  { path: "/faq.html" },
-  { path: "/reviews.html" },
+  { path: "/", file: "index.html", cms: true, images: c => [c.heroPhotos && c.heroPhotos.homeTop, c.heroPhotos && c.heroPhotos.homeSecond] },
+  { path: "/about.html", cms: true, images: c => [c.heroPhotos && c.heroPhotos.aboutPhoto] },
+  { path: "/unit1.html", cms: true, images: c => galleryUrls(c, "unit1", 1000) },
+  { path: "/unit2.html", cms: true, images: c => galleryUrls(c, "unit2", 1000) },
+  { path: "/wildlife.html", cms: true, images: c => galleryUrls(c, "wildlife", 1000) },
+  { path: "/pets.html", cms: true, images: c => galleryUrls(c, "pets", 1000) },
+  { path: "/location.html", cms: true },
+  { path: "/faq.html", cms: true },
+  { path: "/reviews.html", cms: true },
   { path: "/contact.html" },
   { path: "/booking-widget.html" }
 ];
+
+// lastmod = the later of the page file's modified time (when a deploy
+// changed it) and, for cms pages, the last admin save.
+const fileTimes = new Map();
+function fileTime(p) {
+  const file = p.file || p.path.slice(1);
+  if (!fileTimes.has(file)) {
+    let t = null;
+    try { t = fs.statSync(path.join(__dirname, "..", "site", file)).mtime; } catch (e) { /* no date */ }
+    fileTimes.set(file, t);
+  }
+  return fileTimes.get(file);
+}
+function lastmod(p, c) {
+  const times = [fileTime(p), p.cms ? c.updatedAt : null].filter(Boolean);
+  if (!times.length) return null;
+  return new Date(Math.max(...times.map(t => t.getTime()))).toISOString().slice(0, 10);
+}
 
 function xmlEsc(s) {
   return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -40,7 +61,9 @@ router.get("/sitemap.xml", async (req, res, next) => {
     const c = await cachedContent();
     const urls = PAGES.map(p => {
       const imgs = (p.images ? p.images(c) : []).filter(Boolean);
+      const mod = lastmod(p, c);
       return `  <url>\n    <loc>${SITE}${p.path}</loc>\n` +
+        (mod ? `    <lastmod>${mod}</lastmod>\n` : "") +
         imgs.map(u => `    <image:image><image:loc>${xmlEsc(u)}</image:loc></image:image>\n`).join("") +
         `  </url>`;
     });

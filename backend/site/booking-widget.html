@@ -14,9 +14,12 @@
 <meta property="og:description" content="Check live availability and reserve your stay directly — no booking fees.">
 <meta property="og:image" content="https://images.squarespace-cdn.com/content/v1/67c992b09ae33240e3015c2d/b4afe026-ecd6-4263-8dcc-e3f25c3c9899/DSC_9863.jpg">
 <meta property="og:type" content="website">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Same self-hosted fonts as style.css (this page doesn't load it) */
+  @font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;src:url(/assets/fonts/inter-latin.woff2) format('woff2');}
+  @font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;font-display:swap;src:url(/assets/fonts/cormorant-garamond-latin.woff2) format('woff2');}
   :root{
     --taupe:#8A7E68;
     --taupe-dark:#6B6151;
@@ -294,7 +297,7 @@
 
 <main id="main" class="wa-wrap">
   <div class="wa-header">
-    <img src="/assets/logo-wordmark.png" alt="Welverdiend Accommodation" width="2497" height="1121">
+    <img src="/assets/logo-wordmark-600.webp" alt="Welverdiend Accommodation" width="2497" height="1121">
     <h1>Check availability and reserve your stay directly — no booking fees</h1>
   </div>
 
