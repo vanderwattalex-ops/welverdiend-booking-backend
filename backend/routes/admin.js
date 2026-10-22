@@ -19,7 +19,7 @@ const { invoiceLinkKey } = require("./invoiceLink");
 const { syncUnitAndSave } = require("../lib/availabilitySync");
 const {
   getSiteContent,
-  saveAboutParagraphs, savePetCaptions, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
+  saveAboutParagraphs, savePetCaptions, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery,
   addGallerySection, renameGallerySection, removeGallerySection,
   setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation,
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, setPhotoCaption
@@ -892,6 +892,21 @@ router.post("/admin/site-content/photos/move", async (req, res) => {
   } catch (err) {
     console.error("[admin] photo move failed:", err);
     res.status(500).json({ ok: false, error: "Could not reorder photo" });
+  }
+});
+
+// POST /api/admin/site-content/photos/reorder   body: { gallery, order: [{ key, section? }] }
+// Drag-and-drop in the dashboard sends the whole new order of one gallery at once.
+router.post("/admin/site-content/photos/reorder", async (req, res) => {
+  try {
+    const { gallery, order } = req.body;
+    if (!GALLERY_IDS.includes(gallery)) return res.status(400).json({ ok: false, error: `gallery must be one of: ${GALLERY_IDS.join(", ")}` });
+    if (!Array.isArray(order)) return res.status(400).json({ ok: false, error: "order must be a list" });
+    const updated = await reorderGallery(gallery, order);
+    res.json({ ok: true, gallery: updated });
+  } catch (err) {
+    console.error("[admin] photo reorder failed:", err);
+    res.status(err.userMessage ? 400 : 500).json({ ok: false, error: err.userMessage || "Could not save the new photo order" });
   }
 });
 

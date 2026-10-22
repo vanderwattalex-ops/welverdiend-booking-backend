@@ -183,6 +183,15 @@
   .photo-upload-btn:disabled{background:var(--busy);cursor:not-allowed;}
   .photo-move-btn{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:3px 7px;cursor:pointer;color:var(--ink);}
   .photo-move-btn:disabled{opacity:.35;cursor:not-allowed;}
+  /* Drag-and-drop reordering (SortableJS) */
+  .photo-item{cursor:grab;touch-action:manipulation;}
+  .photo-item:active{cursor:grabbing;}
+  .photo-ghost{opacity:.35;}
+  .photo-item img{-webkit-user-drag:none;user-select:none;}
+  .photo-chosen .photo-tile{outline:2px solid var(--taupe-deep);outline-offset:1px;}
+  .photo-sortable{min-height:60px;}
+  .photo-drag-hint{font-size:12.5px;color:var(--ink-soft);margin:4px 0 0;}
+  .photo-saving{opacity:.6;pointer-events:none;}
   /* Reviews tab */
   .rv-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px;}
   .rv-stats .unit-block{margin-bottom:0;padding:14px 16px;}
@@ -206,6 +215,8 @@
   .big-stat{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:600;color:var(--taupe-deep);line-height:1;}
   .big-stat-label{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-top:6px;}
 </style>
+<!-- Drag-and-drop for reordering website photos (works with mouse and touch) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js" integrity="sha384-BSxuMLxX+FCbTdYec3TbXlnMGEEM2QXTFdtDaveen71o+jswm2J36+xFqp8k4VHM" crossorigin="anonymous" defer></script>
 </head>
 <body>
 
@@ -1947,7 +1958,8 @@
     return `
       <div class="unit-block">
         <h2>${galleryLabels[galleryId]}</h2>
-        <div class="photo-grid" id="photo-grid-${galleryId}">
+        ${photos.length > 1 ? `<p class="photo-drag-hint">Drag a photo to change its place on the website, or use ⇤ First. The order saves straight away.</p>` : ""}
+        <div class="photo-grid photo-sortable" id="photo-grid-${galleryId}" data-gallery="${galleryId}">
           ${photos.map(p => {
             // Most galleries are plain URL strings; the pet photos are {id, url, caption}.
             const url = typeof p === "string" ? p : p.url;
@@ -1957,10 +1969,15 @@
               <input type="text" class="photo-caption-input" maxlength="120" value="${esc(caption)}" placeholder="Caption, e.g. Bella (sent by the Smith family)">
               <button type="button" class="save-caption-btn" data-gallery="${galleryId}" data-photo-id="${esc(id)}">Save caption</button>` : "";
             return `
-            <div class="photo-tile">
-              <img src="${url}" alt="${galleryId}">
-              ${captionBox}
-              <button type="button" data-gallery="${galleryId}" data-identifier="${esc(id)}" class="remove-photo-btn">Remove</button>
+            <div class="photo-item" data-key="${esc(id)}">
+              <div class="photo-tile">
+                <img src="${url}" alt="${galleryId}">
+                ${captionBox}
+                <button type="button" data-gallery="${galleryId}" data-identifier="${esc(id)}" class="remove-photo-btn">Remove</button>
+              </div>
+              <div style="margin-top:6px;font-size:11px;">
+                <button type="button" class="photo-move-btn photo-first-btn" data-gallery="${galleryId}" data-key="${esc(id)}">⇤ First</button>
+              </div>
             </div>`;
           }).join("") || `<p class="no-ranges">No photos yet.</p>`}
         </div>
@@ -2000,17 +2017,19 @@
           <button type="button" class="btn-unblock" data-gallery="${galleryId}" id="add-section-btn-${galleryId}">+ Add section</button>
         </div>
 
+        <p class="photo-drag-hint">Drag a photo to change its place, or drag it into another section. ⇤ First puts it at the front of its section. The order saves straight away.</p>
         ${grouped.map(group => `
           <div style="margin-bottom:18px;">
             <div class="label" style="margin-bottom:8px;">${esc(group.name)}</div>
-            <div class="photo-grid" id="photo-grid-${galleryId}-${esc(group.name)}">
+            <div class="photo-grid photo-sortable" id="photo-grid-${galleryId}-${esc(group.name)}" data-gallery="${galleryId}" data-section="${esc(group.name)}">
               ${group.photos.map((p, i) => `
-                <div>
+                <div class="photo-item" data-key="${p.id}">
                   <div class="photo-tile">
                     <img src="${p.url}" alt="${galleryId}">
                     <button type="button" data-gallery="${galleryId}" data-identifier="${p.id}" class="remove-photo-btn">Remove</button>
                   </div>
                   <div style="display:flex;gap:4px;align-items:center;margin-top:6px;font-size:11px;flex-wrap:wrap;">
+                    <button type="button" class="photo-move-btn photo-first-btn" data-gallery="${galleryId}" data-key="${p.id}" ${i===0?"disabled":""}>⇤ First</button>
                     <button type="button" class="photo-move-btn" data-gallery="${galleryId}" data-photo-id="${p.id}" data-direction="up" ${i===0?"disabled":""}>◀ Earlier</button>
                     <button type="button" class="photo-move-btn" data-gallery="${galleryId}" data-photo-id="${p.id}" data-direction="down" ${i===group.photos.length-1?"disabled":""}>Later ▶</button>
                     <select class="photo-section-select" data-gallery="${galleryId}" data-photo-id="${p.id}" style="font-size:11px;padding:2px;">
@@ -2018,7 +2037,7 @@
                     </select>
                   </div>
                 </div>
-              `).join("") || `<p class="no-ranges">No photos in this section yet.</p>`}
+              `).join("") || `<p class="no-ranges">No photos in this section yet. Drag one here.</p>`}
             </div>
           </div>
         `).join("")}
@@ -2189,9 +2208,13 @@
     content.querySelectorAll(".save-caption-btn").forEach(btn => {
       btn.onclick = () => saveCaptionAction(btn.dataset.gallery, btn.dataset.photoId, btn);
     });
-    content.querySelectorAll(".photo-move-btn").forEach(btn => {
+    content.querySelectorAll(".photo-move-btn:not(.photo-first-btn)").forEach(btn => {
       btn.onclick = () => movePhotoAction(btn.dataset.gallery, btn.dataset.photoId, btn.dataset.direction);
     });
+    content.querySelectorAll(".photo-first-btn").forEach(btn => {
+      btn.onclick = () => movePhotoToFirst(btn);
+    });
+    initPhotoSorting();
     content.querySelectorAll(".photo-section-select").forEach(sel => {
       sel.onchange = () => setPhotoSectionAction(sel.dataset.gallery, sel.dataset.photoId, sel.value);
     });
@@ -2538,6 +2561,73 @@
     }catch(err){
       alert("Could not reach the server.");
     }
+  }
+
+  // Drag-and-drop: every grid of one gallery shares a Sortable group, so in the unit
+  // galleries a photo can also be dragged into another section. After a drop the whole
+  // gallery's order is read from the page and saved in one request.
+  function initPhotoSorting(){
+    if(!window.Sortable){
+      // The library loads with `defer`; if it is not ready yet, try once more shortly.
+      if(!initPhotoSorting.retried){ initPhotoSorting.retried = true; setTimeout(initPhotoSorting, 600); }
+      return;
+    }
+    document.querySelectorAll(".photo-sortable").forEach(grid => {
+      Sortable.create(grid, {
+        group: "gallery-" + grid.dataset.gallery,
+        draggable: ".photo-item",
+        filter: "input, textarea, select, button",
+        preventOnFilter: false,
+        animation: 150,
+        delay: 180,              // on phones a short press starts the drag, so normal scrolling still works
+        delayOnTouchOnly: true,
+        ghostClass: "photo-ghost",
+        chosenClass: "photo-chosen",
+        onEnd: (evt) => {
+          if(evt.from === evt.to && evt.oldIndex === evt.newIndex) return;
+          savePhotoOrder(grid.dataset.gallery);
+        }
+      });
+    });
+  }
+
+  function movePhotoToFirst(btn){
+    const item = btn.closest(".photo-item");
+    const grid = item && item.parentNode;
+    if(!grid) return;
+    const first = grid.querySelector(".photo-item");
+    if(first === item) return;
+    grid.insertBefore(item, first);
+    savePhotoOrder(btn.dataset.gallery);
+  }
+
+  async function savePhotoOrder(galleryId){
+    const grids = [...document.querySelectorAll(`.photo-sortable[data-gallery="${galleryId}"]`)];
+    const order = [];
+    grids.forEach(grid => {
+      grid.querySelectorAll(".photo-item").forEach(item => {
+        order.push(grid.dataset.section !== undefined
+          ? { key: item.dataset.key, section: grid.dataset.section }
+          : { key: item.dataset.key });
+      });
+    });
+    grids.forEach(g => g.classList.add("photo-saving"));
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/site-content/photos/reorder`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ gallery: galleryId, order })
+      });
+      const data = await res.json();
+      if(data.ok){
+        websiteContentState.galleries[galleryId] = data.gallery;
+      } else {
+        alert(data.error || "Could not save the new photo order.");
+      }
+    }catch(err){
+      alert("Could not reach the server, so the new order was not saved.");
+    }
+    renderWebsiteContent(); // redraw from what the server holds, so the page never shows an unsaved order
   }
 
   async function movePhotoAction(galleryId, photoId, direction){

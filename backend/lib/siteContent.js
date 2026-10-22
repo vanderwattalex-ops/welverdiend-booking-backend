@@ -181,6 +181,38 @@ async function movePhoto(unitId, photoId, direction) {
   return photos;
 }
 
+/**
+ * Saves a whole new photo order from the dashboard's drag-and-drop.
+ * `order` lists every photo once: [{ key, section? }], where key is the photo id
+ * (or the url for wildlife's plain strings). For unit galleries a section may be
+ * given too, so a photo dragged into another section moves there. Anything that
+ * is not exactly the current set of photos is refused, so a stale page can never
+ * drop or duplicate photos.
+ */
+async function reorderGallery(galleryId, order) {
+  const current = await getSiteContent();
+  const photos = current.galleries[galleryId] || [];
+  const keyOf = p => (typeof p === "string" ? p : p.id);
+  const byKey = new Map(photos.map(p => [keyOf(p), p]));
+  const keys = (order || []).map(o => o && o.key);
+  if (keys.length !== photos.length || new Set(keys).size !== keys.length || !keys.every(k => byKey.has(k))) {
+    const err = new Error("photo list changed");
+    err.userMessage = "The photo list has changed since this page loaded. Refresh the dashboard and try again.";
+    throw err;
+  }
+  const sections = current.gallerySections[galleryId] || [];
+  const reordered = order.map(o => {
+    const p = byKey.get(o.key);
+    if (SECTIONED_GALLERY_IDS.includes(galleryId) && o.section !== undefined) {
+      return { ...p, section: sections.includes(o.section) ? o.section : DEFAULT_SECTION };
+    }
+    return p;
+  });
+  const galleries = { ...current.galleries, [galleryId]: reordered };
+  await settingsCollection.doc(DOC_ID).set({ galleries }, { merge: true });
+  return reordered;
+}
+
 async function setPhotoSection(unitId, photoId, section) {
   const current = await getSiteContent();
   const validSection = (current.gallerySections[unitId] || []).includes(section) ? section : DEFAULT_SECTION;
@@ -286,7 +318,7 @@ async function setPhotoCaption(galleryId, photoId, caption) {
 module.exports = {
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, MAX_CAPTION, setPhotoCaption,
   getSiteContent, saveAboutParagraphs, savePetCaptions, setHeroPhoto,
-  addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection,
+  addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery,
   addGallerySection, renameGallerySection, removeGallerySection,
   addReview, removeReview,
   addFaq, removeFaq, addRecommendation, removeRecommendation
