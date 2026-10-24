@@ -13,7 +13,7 @@ const INDEXNOW_KEY = "6138a99d3172f4007fcfa3f07dd31b6d";
 
 const PUBLIC_PATHS = [
   "/", "/about.html", "/unit1.html", "/unit2.html", "/wildlife.html", "/pets.html",
-  "/location.html", "/faq.html", "/reviews.html", "/contact.html", "/booking-widget.html"
+  "/location.html", "/faq.html", "/reviews.html", "/contact.html", "/policies.html", "/booking-widget.html"
 ];
 
 async function notifyIndexNow() {
