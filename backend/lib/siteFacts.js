@@ -31,7 +31,7 @@ const FIXED = {
   pets: "Any well-behaved pet welcome at no extra charge, no set limit on number or size; dogs on a lead or supervised around the wildlife; no pets in the pool area",
   included: "Bed linen and towels, fully equipped kitchen with dishwasher, 100 Mbps uncapped Wi-Fi, smart TV (Netflix), indoor fireplace, covered braai, shared pool, 2 covered parking bays",
   minStay: "1 night",
-  cancellation: "Full refund if you cancel at least 5 days before check-in; after that the deposit isn't refundable; free date changes if the new dates are open",
+  cancellation: "Full refund if you cancel 5 days or more before check-in; no refund after that or for a no-show; free date changes if the new dates are open",
   arrival: "Self check-in with a lockbox; instructions and a pin drop are sent before your stay",
   wildlife: "Springbok, ducks and chickens roam freely on the property; the ostriches live in their own closed camp",
   booking: "Book direct on the website with no booking fees; a 50% deposit by EFT within 24 hours secures the dates, the balance is due before check-in",

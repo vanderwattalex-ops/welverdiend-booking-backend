@@ -44,9 +44,10 @@ const SECTIONS = [
     "Direct bookings may get a long-stay discount or a running special. A stay gets one discount: whichever saves you more. Discounts never apply to extras such as cleaning, laundry or firewood."
   ]],
   ["Cancellations and date changes", [
-    "Cancel 5 days or more before check-in: you get a full refund.",
-    "Cancel less than 5 days before check-in, or don't arrive: the deposit isn't refundable. Anything you paid above the deposit is refunded.",
-    "If you can't come because of a death or hospitalisation of the person who booked or the person the booking is for, no cancellation penalty applies.",
+    "5 days or more before check-in: cancel and you get a full refund of everything you've paid.",
+    "Less than 5 days before check-in: no refund.",
+    "No-show: if you don't arrive, there's no refund.",
+    "Death or hospitalisation: if you can't come because the person who booked, or the person the booking is for, has died or is in hospital, you get a full refund.",
     "Prefer different dates? We move your booking free of charge if the new dates are open.",
     "If we ever have to cancel, you get a full refund and we'll do our best to help you find somewhere else."
   ]],
@@ -131,7 +132,7 @@ const AT_A_GLANCE = [
   ["Fire", "Never leave the braai or fireplace unattended"],
   ["Power", "Solar backup; the geyser may be off in a long power cut"],
   ["Damage", "Tell us straight away about anything broken"],
-  ["Cancellation", "Full refund 5+ days before check-in; after that the deposit isn't refundable"]
+  ["Cancellation", "Full refund 5 or more days before check-in; no refund after that or for a no-show"]
 ];
 
 function fmtDate(d) { return new Date(d).toLocaleDateString("en-ZA", { day: "numeric", month: "long", year: "numeric" }); }
@@ -178,20 +179,33 @@ function generateTerms(booking, unitName) {
     doc.moveDown(1.6);
 
     // ---- numbered sections
+    // Every bullet is measured first and moved to the next page whole, and a
+    // heading always stays with its first bullet, so nothing is split or orphaned.
+    const textW = W - 44;
+    const itemH = t => doc.font(F.body).fontSize(9.6).heightOfString(t, { width: textW, lineGap: 2.2 });
+    const bottom = () => doc.page.height - doc.page.margins.bottom;
+    const ITEM_GAP = 5, HEAD_GAP = 7, SECTION_GAP = 14;
     SECTIONS.forEach(([title, items], i) => {
-      // keep a heading with at least its first lines
-      if (doc.y > doc.page.height - 150) doc.addPage();
+      const headH = doc.font(F.display).fontSize(15).heightOfString(title, { width: W - 30 });
+      // a whole section moves to the next page if it would otherwise be split
+      // (unless it's longer than a page, then just keep the heading with its first point)
+      const sectionH = headH + HEAD_GAP + items.reduce((t, x) => t + itemH(x) + ITEM_GAP, 0);
+      const pageRoom = bottom() - doc.page.margins.top;
+      if (doc.y + sectionH > bottom() && sectionH <= pageRoom) doc.addPage();
+      else if (doc.y + headH + HEAD_GAP + itemH(items[0]) > bottom()) doc.addPage();
       const hy = doc.y;
       doc.font(F.display).fontSize(15).fillColor(C.ochre).text(String(i + 1).padStart(2, "0"), M, hy, { width: 28, lineBreak: false });
       doc.font(F.display).fontSize(15).fillColor(C.espresso).text(title, M + 30, hy, { width: W - 30 });
-      doc.moveDown(0.35);
+      doc.y = hy + headH + HEAD_GAP;
       items.forEach(t => {
+        const h = itemH(t);
+        if (doc.y + h > bottom()) doc.addPage();
         const iy = doc.y;
         doc.save().rotate(45, { origin: [M + 34.7, iy + 5.9] }).rect(M + 33, iy + 4.2, 3.4, 3.4).fill(C.ochre).restore();
-        doc.font(F.body).fontSize(9.6).fillColor(C.ink).text(t, M + 44, iy, { width: W - 44, lineGap: 2.2 });
-        doc.moveDown(0.32);
+        doc.font(F.body).fontSize(9.6).fillColor(C.ink).text(t, M + 44, iy, { width: textW, lineGap: 2.2 });
+        doc.y = iy + h + ITEM_GAP;
       });
-      doc.moveDown(0.7);
+      doc.y += SECTION_GAP;
     });
 
     // ---- house rules at a glance (own page, sand panel sized to its content)

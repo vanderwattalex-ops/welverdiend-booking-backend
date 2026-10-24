@@ -14,7 +14,7 @@ const DEFAULT_EMAIL_TEMPLATES = {
       {{paymentInstructions}}
       <p>Please note: we hold your dates for 24 hours. If we haven't received your proof of payment by <b>{{depositDeadline}}</b>, the dates are released automatically.</p>
       <p>We'll send a final confirmation as soon as we've checked it.</p>
-      <p>By paying the deposit you agree to our house rules &amp; policies, including the cancellation policy (a full refund up to 5 days before check-in; after that the deposit isn't refundable): <a href="https://welverdiendaccommodation.com/policies.html">welverdiendaccommodation.com/policies.html</a></p>
+      <p>By paying the deposit you agree to our house rules &amp; policies, including the cancellation policy (a full refund up to 5 days before check-in; no refund after that or if you don't arrive): <a href="https://welverdiendaccommodation.com/policies.html">welverdiendaccommodation.com/policies.html</a></p>
     `
   },
   manualBooking: {
