@@ -370,7 +370,11 @@ function shareImageFor(page, c) {
 }
 
 function applyCommon(page, c, facts, html) {
-  if (facts) html = html.replace('<footer class="site-footer">', factsHtml(facts) + '\n<footer class="site-footer">');
+  // "Welverdiend at a glance" goes just before the footer, or where a page marks it
+  // with <!-- quick-facts --> (the homepage keeps the weather forecast below it).
+  if (facts) html = html.includes("<!-- quick-facts -->")
+    ? html.replace("<!-- quick-facts -->", factsHtml(facts))
+    : html.replace('<footer class="site-footer">', factsHtml(facts) + '\n<footer class="site-footer">');
   const ld = pageLdHtml(page, html);
   if (ld) html = html.replace("</head>", ld + "\n</head>");
   html = setShareImage(html, shareImageFor(page, c));
