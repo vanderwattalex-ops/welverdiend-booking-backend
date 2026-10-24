@@ -142,7 +142,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/style.css?v=20261022g">
+<link rel="stylesheet" href="/style.css?v=20261024a">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -284,11 +284,24 @@
   </div>
 </section>
 
-<section class="section tinted center">
-  <p class="eyebrow">Plan your stay</p>
-  <h2>Bloemfontein 7-day forecast</h2>
-  <div class="weather-grid" id="weather-grid">
-    <p style="grid-column:1/-1;color:var(--ink-soft);">Loading forecast…</p>
+<!-- Featured photos (e.g. the pool), managed under Website > Named photos in the admin
+     dashboard. Hidden until at least one photo has been uploaded. -->
+<section class="section center feature-section" id="feature-section" hidden>
+  <p class="eyebrow">Around the property</p>
+  <h2 id="feature-heading">Featured at Welverdiend</h2>
+  <div class="feature-photos" id="feature-photos" data-count="0">
+    <figure class="feature-photo" id="feature-1" hidden>
+      <div class="feature-frame"><img id="feature-photo-1" src="" width="1200" height="800" alt="" loading="lazy" decoding="async"></div>
+      <figcaption id="feature-caption-1"></figcaption>
+    </figure>
+    <figure class="feature-photo" id="feature-2" hidden>
+      <div class="feature-frame"><img id="feature-photo-2" src="" width="1200" height="800" alt="" loading="lazy" decoding="async"></div>
+      <figcaption id="feature-caption-2"></figcaption>
+    </figure>
+    <figure class="feature-photo" id="feature-3" hidden>
+      <div class="feature-frame"><img id="feature-photo-3" src="" width="1200" height="800" alt="" loading="lazy" decoding="async"></div>
+      <figcaption id="feature-caption-3"></figcaption>
+    </figure>
   </div>
 </section>
 
@@ -353,6 +366,14 @@
   </style>
 </section>
 
+<section class="section center">
+  <p class="eyebrow">Plan your stay</p>
+  <h2>Bloemfontein 7-day forecast</h2>
+  <div class="weather-grid" id="weather-grid">
+    <p style="grid-column:1/-1;color:var(--ink-soft);">Loading forecast…</p>
+  </div>
+</section>
+
 </main>
 
 <footer class="site-footer">
@@ -410,6 +431,24 @@
           const cap = (data.petCaptions || [])[n - 1];
           if(cap) document.getElementById("pet-caption-" + n).textContent = cap;
         });
+        // Featured photos: show only the spots that have a photo, hide the section if none do.
+        let shown = 0;
+        [1, 2, 3].forEach(n => {
+          const url = data.heroPhotos["featurePhoto" + n];
+          const fig = document.getElementById("feature-" + n);
+          fig.hidden = !url;
+          if(!url) return;
+          shown++;
+          const img = document.getElementById("feature-photo-" + n);
+          setPhoto(img, url);
+          if(focus["featurePhoto" + n]) img.style.objectPosition = focus["featurePhoto" + n];
+          const cap = (data.featureCaptions || [])[n - 1] || "";
+          document.getElementById("feature-caption-" + n).textContent = cap;
+          img.alt = cap || "Welverdiend Accommodation";
+        });
+        document.getElementById("feature-photos").dataset.count = shown;
+        document.getElementById("feature-section").hidden = shown === 0;
+        if(data.featureHeading) document.getElementById("feature-heading").textContent = data.featureHeading;
       }
       const wrap = document.getElementById("reviews-preview");
       const reviews = (data.reviews || []).slice(0, 3);

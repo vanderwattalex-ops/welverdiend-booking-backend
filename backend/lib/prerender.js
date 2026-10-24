@@ -103,7 +103,8 @@ function setHeroImg(html, id, url, sizes, extra) {
 // photo is cropped), as a small <style> block so it applies before any script runs.
 const FOCUS_IDS = {
   homeTop: "hero-top-img", homeSecond: "hero-second-img", aboutPhoto: "about-photo-img",
-  petPhoto1: "pet-photo-1", petPhoto2: "pet-photo-2", petPhoto3: "pet-photo-3"
+  petPhoto1: "pet-photo-1", petPhoto2: "pet-photo-2", petPhoto3: "pet-photo-3",
+  featurePhoto1: "feature-photo-1", featurePhoto2: "feature-photo-2", featurePhoto3: "feature-photo-3"
 };
 function addFocusStyle(html, content, slots) {
   const focus = content.heroFocus || {};
@@ -111,6 +112,30 @@ function addFocusStyle(html, content, slots) {
     .filter(s => /^\d{1,3}% \d{1,3}%$/.test(focus[s] || ""))
     .map(s => `#${FOCUS_IDS[s]}{object-position:${focus[s]};}`);
   return rules.length ? html.replace("</head>", `<style id="photo-focus">${rules.join("")}</style>\n</head>`) : html;
+}
+
+// Featured photos on the Home page: show the spots that have a photo, with their
+// captions, and the section itself only when at least one photo exists.
+function featureHtml(html, content) {
+  const hero = content.heroPhotos || {};
+  const caps = content.featureCaptions || [];
+  let shown = 0;
+  [1, 2, 3].forEach(n => {
+    const url = hero[`featurePhoto${n}`];
+    if (!url) return;
+    shown++;
+    const cap = caps[n - 1] || "";
+    html = html.replace(`<figure class="feature-photo" id="feature-${n}" hidden>`, `<figure class="feature-photo" id="feature-${n}">`);
+    html = html.replace(`id="feature-photo-${n}" src="" width="1200" height="800" alt=""`,
+      `id="feature-photo-${n}" src="" width="1200" height="800" alt="${esc(cap || "Welverdiend Accommodation")}"`);
+    html = setHeroImg(html, `feature-photo-${n}`, url, "(max-width: 760px) 92vw, 50vw");
+    html = html.replace(`<figcaption id="feature-caption-${n}"></figcaption>`, `<figcaption id="feature-caption-${n}">${esc(cap)}</figcaption>`);
+  });
+  if (!shown) return html;
+  html = html.replace('id="feature-section" hidden>', 'id="feature-section">');
+  html = html.replace('id="feature-photos" data-count="0"', `id="feature-photos" data-count="${shown}"`);
+  if (content.featureHeading) html = html.replace('<h2 id="feature-heading">Featured at Welverdiend</h2>', `<h2 id="feature-heading">${esc(content.featureHeading)}</h2>`);
+  return html;
 }
 
 // Preload the above-the-fold photo from <head>, ahead of CSS and fonts.
@@ -361,7 +386,7 @@ function applyCommon(page, c, facts, html) {
 const PAGES = {
   "index.html":    (c, h) => {
     const hero = c.heroPhotos || {};
-    h = addFocusStyle(h, c, ["homeTop", "homeSecond", "petPhoto1", "petPhoto2", "petPhoto3"]);
+    h = addFocusStyle(h, c, ["homeTop", "homeSecond", "petPhoto1", "petPhoto2", "petPhoto3", "featurePhoto1", "featurePhoto2", "featurePhoto3"]);
     h = preloadImage(h, hero.homeTop, "100vw");
     h = setHeroImg(h, "hero-top-img", hero.homeTop, "100vw", 'fetchpriority="high"');
     h = setHeroImg(h, "hero-second-img", hero.homeSecond, "100vw", 'loading="lazy"');
@@ -371,6 +396,7 @@ const PAGES = {
       // photo present -> drop the "Your pet here" placeholder that follows its <img>
       h = h.replace(new RegExp(`(<img\\b[^>]*\\bid="pet-photo-${n}"[^>]*>)<span class="pet-placeholder"[^>]*>.*?</span>`), "$1");
     });
+    h = featureHtml(h, c);
     return replaceContainer(h, "reviews-preview", reviewsHtml((c.reviews || []).slice(0, 3)));
   },
   "about.html":    (c, h) => {

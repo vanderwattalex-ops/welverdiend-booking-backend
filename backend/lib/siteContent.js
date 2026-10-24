@@ -87,12 +87,18 @@ async function getSiteContent() {
       aboutPhoto: (saved.heroPhotos && saved.heroPhotos.aboutPhoto) || defaults.heroPhotos.aboutPhoto,
       petPhoto1: (saved.heroPhotos && saved.heroPhotos.petPhoto1) || defaults.heroPhotos.petPhoto1,
       petPhoto2: (saved.heroPhotos && saved.heroPhotos.petPhoto2) || defaults.heroPhotos.petPhoto2,
-      petPhoto3: (saved.heroPhotos && saved.heroPhotos.petPhoto3) || defaults.heroPhotos.petPhoto3
+      petPhoto3: (saved.heroPhotos && saved.heroPhotos.petPhoto3) || defaults.heroPhotos.petPhoto3,
+      // Optional "featured" photos on the Home page (e.g. the pool); "" means that spot is empty.
+      featurePhoto1: (saved.heroPhotos && saved.heroPhotos.featurePhoto1) || "",
+      featurePhoto2: (saved.heroPhotos && saved.heroPhotos.featurePhoto2) || "",
+      featurePhoto3: (saved.heroPhotos && saved.heroPhotos.featurePhoto3) || ""
     },
     // Which part of each named photo stays in view when the site crops it, as "x% y%"
     // (CSS object-position). Missing means centred.
     heroFocus: saved.heroFocus || {},
     petCaptions: [0, 1, 2].map(i => (saved.petCaptions && saved.petCaptions[i]) || ""),
+    featureHeading: saved.featureHeading || DEFAULT_FEATURE_HEADING,
+    featureCaptions: [0, 1, 2].map(i => (saved.featureCaptions && saved.featureCaptions[i]) || ""),
     reviews: saved.reviews || defaults.reviews,
     faqs: saved.faqs || defaults.faqs,
     recommendations: saved.recommendations || defaults.recommendations,
@@ -111,6 +117,15 @@ async function savePetCaptions(captions) {
   const petCaptions = [0, 1, 2].map(i => String((captions && captions[i]) || "").trim().slice(0, 200));
   await settingsCollection.doc(DOC_ID).set({ petCaptions }, { merge: true });
   return petCaptions;
+}
+
+const DEFAULT_FEATURE_HEADING = "Featured at Welverdiend";
+
+async function saveFeatureText(heading, captions) {
+  const featureHeading = String(heading || "").trim().slice(0, 120) || DEFAULT_FEATURE_HEADING;
+  const featureCaptions = [0, 1, 2].map(i => String((captions && captions[i]) || "").trim().slice(0, 200));
+  await settingsCollection.doc(DOC_ID).set({ featureHeading, featureCaptions }, { merge: true });
+  return { featureHeading, featureCaptions };
 }
 
 async function setHeroPhoto(slot, url) {
@@ -332,7 +347,7 @@ async function setPhotoCaption(galleryId, photoId, caption) {
 
 module.exports = {
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, MAX_CAPTION, setPhotoCaption,
-  getSiteContent, saveAboutParagraphs, savePetCaptions, setHeroPhoto,
+  getSiteContent, saveAboutParagraphs, savePetCaptions, saveFeatureText, setHeroPhoto,
   addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
   addGallerySection, renameGallerySection, removeGallerySection,
   addReview, removeReview,

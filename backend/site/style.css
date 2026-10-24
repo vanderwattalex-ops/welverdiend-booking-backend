@@ -309,6 +309,20 @@ h3{font-size:20px;}
 }
 
 
+/* Featured photos (homepage) — one photo shows large and centred, two or three sit side by side */
+.feature-photos{display:grid;gap:24px;margin-top:34px;grid-template-columns:repeat(3,1fr);}
+.feature-photos[data-count="2"]{grid-template-columns:repeat(2,1fr);}
+.feature-photos[data-count="1"]{grid-template-columns:1fr;max-width:900px;margin-left:auto;margin-right:auto;}
+.feature-photo{margin:0;}
+.feature-photo[hidden]{display:none;}
+.feature-frame{aspect-ratio:3/2;overflow:hidden;border-radius:10px;background:var(--surface);}
+.feature-frame img{width:100%;height:100%;object-fit:cover;}
+.feature-photo figcaption{margin-top:12px;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--taupe-deep);}
+.feature-photo figcaption:empty{display:none;}
+@media (max-width:760px){
+  .feature-photos,.feature-photos[data-count="2"]{grid-template-columns:1fr;}
+}
+
 /* Weather forecast */
 .weather-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:30px;max-width:900px;margin-left:auto;margin-right:auto;}
 .weather-card{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:14px 8px;text-align:center;}

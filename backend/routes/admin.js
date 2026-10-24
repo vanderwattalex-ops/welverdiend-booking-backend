@@ -19,7 +19,7 @@ const { invoiceLinkKey } = require("./invoiceLink");
 const { syncUnitAndSave } = require("../lib/availabilitySync");
 const {
   getSiteContent,
-  saveAboutParagraphs, savePetCaptions, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
+  saveAboutParagraphs, savePetCaptions, saveFeatureText, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
   addGallerySection, renameGallerySection, removeGallerySection,
   setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation,
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, setPhotoCaption
@@ -957,6 +957,18 @@ router.put("/admin/site-content/sections", async (req, res) => {
 });
 
 // DELETE /api/admin/site-content/sections   body: { unitId, name }
+// POST /api/admin/site-content/feature-text   body: { featureHeading, featureCaptions: [c1, c2, c3] }
+router.post("/admin/site-content/feature-text", async (req, res) => {
+  try {
+    const { featureHeading, featureCaptions } = req.body;
+    if (!Array.isArray(featureCaptions)) return res.status(400).json({ ok: false, error: "featureCaptions must be a list" });
+    res.json({ ok: true, ...(await saveFeatureText(featureHeading, featureCaptions)) });
+  } catch (err) {
+    console.error("[admin] save feature text failed:", err);
+    res.status(500).json({ ok: false, error: "Could not save the featured photo text" });
+  }
+});
+
 router.delete("/admin/site-content/sections", async (req, res) => {
   try {
     const { unitId, name } = req.body;
@@ -973,7 +985,8 @@ router.delete("/admin/site-content/sections", async (req, res) => {
 // POST /api/admin/site-content/hero-photo   multipart/form-data: slot ('homeTop'|'homeSecond'), file "photo"
 // A single-slot replace, not a gallery add — uploading here REPLACES
 // that specific named photo on the Home page.
-const HERO_SLOTS = ["homeTop", "homeSecond", "aboutPhoto", "petPhoto1", "petPhoto2", "petPhoto3"];
+const FEATURE_SLOTS = ["featurePhoto1", "featurePhoto2", "featurePhoto3"];
+const HERO_SLOTS = ["homeTop", "homeSecond", "aboutPhoto", "petPhoto1", "petPhoto2", "petPhoto3", ...FEATURE_SLOTS];
 router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async (req, res) => {
   try {
     const { slot } = req.body;
@@ -996,6 +1009,20 @@ router.post("/admin/site-content/hero-photo", photoUpload.single("photo"), async
   } catch (err) {
     console.error("[admin] hero photo upload failed:", err);
     res.status(500).json({ ok: false, error: "Could not upload photo" });
+  }
+});
+
+// DELETE /api/admin/site-content/hero-photo   body: { slot }
+// Empties a featured-photo spot (the other named photos can only be replaced, never left empty).
+router.delete("/admin/site-content/hero-photo", async (req, res) => {
+  try {
+    const { slot } = req.body;
+    if (!FEATURE_SLOTS.includes(slot)) return res.status(400).json({ ok: false, error: `Only these photos can be removed: ${FEATURE_SLOTS.join(", ")}` });
+    const heroPhotos = await setHeroPhoto(slot, "");
+    res.json({ ok: true, heroPhotos });
+  } catch (err) {
+    console.error("[admin] remove feature photo failed:", err);
+    res.status(500).json({ ok: false, error: "Could not remove the photo" });
   }
 });
 
