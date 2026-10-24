@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const { generateTerms } = require("./termsPdf");
 const { getSettings } = require("./settings");
 const { DEFAULT_EMAIL_TEMPLATES } = require("./emailTemplates");
 const { rands } = require("./rentInvoicePdf");
@@ -198,10 +199,16 @@ async function notifyGuestConfirmed(booking, unitName, invoiceBuffer) {
     nights: booking.nights, balanceAmount: rand(booking.balanceAmount)
   };
   const { subject, html } = await resolveEmail("confirmed", vars);
-  return sendMail({
-    to: booking.email, subject, html,
-    attachments: invoiceBuffer ? [{ filename: `invoice-${booking.id.slice(0, 8)}.pdf`, content: invoiceBuffer }] : undefined
-  });
+  const attachments = [];
+  if (invoiceBuffer) attachments.push({ filename: `invoice-${booking.id.slice(0, 8)}.pdf`, content: invoiceBuffer });
+  // Terms & conditions and house rules go with the deposit confirmation.
+  // Best-effort: a PDF problem must never stop the confirmation email.
+  try {
+    attachments.push({ filename: "Welverdiend-terms-and-house-rules.pdf", content: await generateTerms(booking, unitName) });
+  } catch (err) {
+    console.error("[email] terms PDF failed -", err.message);
+  }
+  return sendMail({ to: booking.email, subject, html, attachments: attachments.length ? attachments : undefined });
 }
 
 async function notifyGuestDeclined(booking, unitName, reason) {

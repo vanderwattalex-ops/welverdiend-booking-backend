@@ -14,6 +14,7 @@ const DEFAULT_EMAIL_TEMPLATES = {
       {{paymentInstructions}}
       <p>Please note: we hold your dates for 24 hours. If we haven't received your proof of payment by <b>{{depositDeadline}}</b>, the dates are released automatically.</p>
       <p>We'll send a final confirmation as soon as we've checked it.</p>
+      <p>By paying the deposit you agree to our house rules &amp; policies, including the cancellation policy (a full refund up to 5 days before check-in; after that the deposit isn't refundable): <a href="https://welverdiendaccommodation.com/policies.html">welverdiendaccommodation.com/policies.html</a></p>
     `
   },
   manualBooking: {
@@ -44,7 +45,7 @@ const DEFAULT_EMAIL_TEMPLATES = {
       <p>Hi {{guestName}},</p>
       <p>Your booking is confirmed: <b>{{unitName}}, {{checkIn}} → {{checkOut}}</b>.</p>
       <p>Your deposit has been received. The remaining balance of <b>{{balanceAmount}}</b> is due before check-in — we'll be in touch closer to your stay with a link to pay it.</p>
-      <p>Your invoice is attached for your records.</p>
+      <p>Your invoice is attached for your records, together with our terms &amp; conditions and house rules. Please have a quick read before you arrive; the last page is a one-page summary of the house rules.</p>
       <p>We look forward to hosting you. If you have any questions before your stay, just reply to this email.</p>
     `
   },
