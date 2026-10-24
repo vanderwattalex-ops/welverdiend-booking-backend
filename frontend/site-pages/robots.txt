@@ -1,6 +1,0 @@
-User-agent: *
-Allow: /
-Disallow: /admin-dashboard.html
-Disallow: /upload-proof.html
-
-Sitemap: https://welverdiendaccommodation.com/sitemap.xml

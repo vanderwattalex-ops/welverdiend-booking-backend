@@ -84,7 +84,7 @@ module.exports = {
   // how to pay before uploading proof of payment.
   bankDetails: "Account: Welverdiend Accommodation | Bank: [your bank] | Acc no: [your account] | Ref: your name + check-in date",
 
-  // The web address where you've hosted frontend/upload-proof.html (e.g.
+  // The web address where you've hosted upload-proof.html (backend/site/) (e.g.
   // your Firebase Hosting URL). Required for the "upload proof of
   // payment" link in approval emails to work — leave blank while you're
   // still testing locally, but you must set this before going live.

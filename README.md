@@ -125,17 +125,17 @@ Lekkeslaap .ics ─┘                                              │
 
 ## Part 2 — Your three pages, live at your Cloud Run URL
 
-There are three guest/admin-facing pages in `frontend/`, and they now
-deploy **together with the backend** — no separate hosting step needed.
-Before each deploy, copy the current versions into `backend/site/` (this
-is what actually ships):
+Every page — the booking page, payment page, admin dashboard and the whole
+marketing site — lives in **`backend/site/`** (images and scripts in
+`backend/public/`, served at `/assets/`). That folder is the only copy:
+edit the pages there, and they deploy **together with the backend**.
 
-```
-copy the contents of frontend/booking-widget.html, frontend/admin-dashboard.html
-and frontend/upload-proof.html into the matching files in backend/site/
-```
+*(There used to be a separate `frontend/` folder that was copied into
+`backend/site/` before each deploy. It was retired in October 2026 after
+it had fallen a month behind; it is still in the git history if ever needed.)*
 
-Once deployed, all three are live at your Cloud Run URL:
+Once deployed, these are live at your Cloud Run URL (and at
+welverdiendaccommodation.com):
 
 - **`https://YOUR-CLOUD-RUN-URL/booking-widget.html`** — the public
   booking calendar. This is a real, shareable web page — post this exact
@@ -161,14 +161,11 @@ Cloud Run URL, so approval emails link to the right place, then redeploy.
         title="Welverdiend Accommodation booking calendar"></iframe>
 ```
 
-*(If you'd rather keep the frontend on a separate address instead —
-e.g. a nicer-looking URL via Firebase Hosting — that still works fine
-too, just point `API_BASE` and `frontendBaseUrl` at your Cloud Run URL
-as the backend either way.)*
 
 ## Part 3 — Using your admin dashboard day to day
 
-Open `admin-dashboard.html`, paste in your admin token, and you'll see
+Open https://welverdiendaccommodation.com/admin-dashboard.html (the
+"Welverdiend Admin" shortcut on the desktop), paste in your admin token, and you'll see
 every booking as a card with guest details, extras, and total. The
 buttons shown change depending on where a booking is in the flow:
 
@@ -300,7 +297,7 @@ Alongside the booking system, there's now a full marketing site —
 Home, About, Unit 1, Unit 2, Contact — built to match your existing
 Squarespace site's content and branding, served the same way as
 everything else (`backend/site/`, so it deploys and lives at the same
-Cloud Run URL). Source files are in `frontend/site-pages/`.
+Cloud Run URL). Edit the pages directly in `backend/site/`.
 
 **Important — this doesn't touch your live Squarespace site or domain.**
 Your actual `welverdiendaccommodation.com` keeps working exactly as
@@ -748,4 +745,4 @@ only a few dollars a month at most.
 
 - `ownerNotificationEmail`, `bankDetails`, `frontendBaseUrl` in `backend/config/units.js` (set `frontendBaseUrl` to your Cloud Run URL)
 - `EMAIL_USER` / `EMAIL_APP_PASSWORD` at deploy time
-- `API_BASE` in all three frontend files, set to your Cloud Run URL, copied into `backend/site/` before each deploy
+- `API_BASE` in the pages in `backend/site/`, set to your Cloud Run URL
