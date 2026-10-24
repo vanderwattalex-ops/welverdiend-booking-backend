@@ -66,7 +66,7 @@ const SECTIONS = [
   ["Pets", [
     "Any well-behaved pet is welcome at no extra charge. Please tell us what you're bringing when you book.",
     "Each unit has a private, fully fenced garden, and pet bowls are supplied.",
-    "Springbok, ostriches, ducks and chickens roam the property. Keep dogs on a lead or under close supervision outside the garden, and never let them chase or frighten the animals.",
+    "Springbok, ducks and chickens roam the property. Keep dogs on a lead or under close supervision outside the garden, never let them chase or frighten the animals, and keep them away from the ostrich camp.",
     "No pets in the pool area.",
     "Please look after your pet during your stay and clean up after them. Owners are responsible for any damage, extra cleaning or loss caused by their pets."
   ]],
@@ -79,7 +79,7 @@ const SECTIONS = [
   ["Wildlife and outdoor areas", [
     "Walks around the property to see the wildlife are welcome, at your own risk.",
     "Keep a respectful distance from the animals. Don't feed, chase or corner them, and please don't feed the resident cat.",
-    "Ostriches startle easily and see poorly in low light, so take extra care around them after dark.",
+    "Ostriches are dangerous. They live in their own closed camp: never go into it, keep children and pets away from it, and make sure its gates stay closed.",
     "Supervise children outdoors and around the animals at all times."
   ]],
   ["Braai, fireplace and power", [
@@ -125,7 +125,8 @@ const AT_A_GLANCE = [
   ["Smoking", "Outside only, cigarette ends disposed of safely"],
   ["Gate", "Close it behind you, every time"],
   ["Pets", "Welcome; not in the pool area; clean up after them"],
-  ["Wildlife", "Look, don't feed or chase; care around ostriches at night"],
+  ["Wildlife", "Look, don't feed or chase the animals"],
+  ["Ostriches", "Dangerous: stay out of their camp and keep its gates closed"],
   ["Pool and dam", "Children supervised at all times; swim at your own risk"],
   ["Fire", "Never leave the braai or fireplace unattended"],
   ["Power", "Solar backup; the geyser may be off in a long power cut"],

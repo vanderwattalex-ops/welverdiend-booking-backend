@@ -33,7 +33,7 @@ const FIXED = {
   minStay: "1 night",
   cancellation: "Full refund if you cancel at least 5 days before check-in; after that the deposit isn't refundable; free date changes if the new dates are open",
   arrival: "Self check-in with a lockbox; instructions and a pin drop are sent before your stay",
-  wildlife: "Springbok, ostriches and ducks roam freely on the property",
+  wildlife: "Springbok, ducks and chickens roam freely on the property; the ostriches live in their own closed camp",
   booking: "Book direct on the website with no booking fees; a 50% deposit by EFT within 24 hours secures the dates, the balance is due before check-in",
   alsoOn: [
     ["Airbnb (Unit 1)", "https://www.airbnb.co.za/rooms/1543967224420154478"],
