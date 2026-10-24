@@ -2221,7 +2221,10 @@
                 <div class="range-dates">${esc(r.name)}${r.category ? ` <span style="color:var(--taupe-dark);font-weight:400;">— ${esc(r.category)}</span>` : ""}${r.distance ? ` <span style="color:var(--ink-soft);font-weight:400;">(${esc(r.distance)})</span>` : ""}</div>
                 <div class="range-source">${esc(r.description)}</div>
               </div>
-              <button class="btn-reblock" data-rec-id="${r.id}">Remove</button>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-reblock" data-edit-rec-id="${r.id}">Edit</button>
+                <button class="btn-reblock" data-rec-id="${r.id}">Remove</button>
+              </div>
             </div>
           `).join("")}
         </div>
@@ -2304,7 +2307,11 @@
     content.querySelectorAll("[data-faq-id]").forEach(btn => {
       btn.onclick = () => removeFaqById(btn.dataset.faqId);
     });
+    editingRecId = null;
     document.getElementById("add-rec-btn").onclick = addRecommendationFromForm;
+    content.querySelectorAll("[data-edit-rec-id]").forEach(btn => {
+      btn.onclick = () => startEditRecommendation(btn.dataset.editRecId);
+    });
     content.querySelectorAll("[data-rec-id]").forEach(btn => {
       btn.onclick = () => removeRecommendationById(btn.dataset.recId);
     });
@@ -2531,6 +2538,24 @@
     }
   }
 
+  // Set while the add form is being used to change an existing recommendation.
+  let editingRecId = null;
+
+  function startEditRecommendation(id){
+    const r = (websiteContentState.recommendations || []).find(x => x.id === id);
+    if(!r) return;
+    editingRecId = id;
+    document.getElementById("new-rec-name").value = r.name || "";
+    document.getElementById("new-rec-category").value = r.category || "";
+    document.getElementById("new-rec-description").value = r.description || "";
+    document.getElementById("new-rec-maplink").value = r.mapLink || "";
+    document.getElementById("new-rec-distance").value = r.distance || "";
+    document.getElementById("add-rec-btn").textContent = "Save changes";
+    const msg = document.getElementById("rec-msg");
+    msg.className = "settings-msg"; msg.textContent = `Editing "${r.name}". Change the fields above and click Save changes.`;
+    document.getElementById("new-rec-name").scrollIntoView({ block: "center" });
+  }
+
   async function addRecommendationFromForm(){
     const msg = document.getElementById("rec-msg");
     const name = document.getElementById("new-rec-name").value.trim();
@@ -2545,17 +2570,22 @@
     }
     try{
       const res = await fetch(`${API_BASE}/api/admin/site-content/recommendations`, {
-        method: "POST",
+        method: editingRecId ? "PUT" : "POST",
         headers: { "x-admin-token": token(), "Content-Type": "application/json" },
-        body: JSON.stringify({ name, category, description, mapLink, distance })
+        body: JSON.stringify({ id: editingRecId || undefined, name, category, description, mapLink, distance })
       });
       const data = await res.json();
       if(data.ok){
+        const wasEditing = !!editingRecId;
         websiteContentState.recommendations = data.recommendations;
         renderWebsiteContent();
+        if(wasEditing){
+          const m = document.getElementById("rec-msg");
+          m.className = "settings-msg success"; m.textContent = "Saved.";
+        }
       } else {
         msg.className = "settings-msg error";
-        msg.textContent = data.error || "Could not add recommendation.";
+        msg.textContent = res.status === 401 ? saveRefusedText() : (data.error || "Could not save the recommendation.");
       }
     }catch(err){
       msg.className = "settings-msg error";

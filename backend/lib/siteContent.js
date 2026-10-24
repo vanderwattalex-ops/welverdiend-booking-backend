@@ -322,6 +322,21 @@ async function addRecommendation({ name, category, description, mapLink, distanc
   return recommendations;
 }
 
+/** Changes a recommendation in place (keeps its position in the list). */
+async function updateRecommendation(id, { name, category, description, mapLink, distance }) {
+  const current = await getSiteContent();
+  if (!current.recommendations.some(r => r.id === id)) {
+    const err = new Error("Recommendation not found");
+    err.userMessage = "That recommendation no longer exists. Refresh the page and try again.";
+    throw err;
+  }
+  const recommendations = current.recommendations.map(r => r.id !== id ? r : {
+    ...r, name, category: category || "", description: description || "", mapLink: mapLink || "", distance: distance || ""
+  });
+  await settingsCollection.doc(DOC_ID).set({ recommendations }, { merge: true });
+  return recommendations;
+}
+
 async function removeRecommendation(id) {
   const current = await getSiteContent();
   const recommendations = current.recommendations.filter(r => r.id !== id);
@@ -351,5 +366,5 @@ module.exports = {
   addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
   addGallerySection, renameGallerySection, removeGallerySection,
   addReview, removeReview,
-  addFaq, removeFaq, addRecommendation, removeRecommendation
+  addFaq, removeFaq, addRecommendation, updateRecommendation, removeRecommendation
 };

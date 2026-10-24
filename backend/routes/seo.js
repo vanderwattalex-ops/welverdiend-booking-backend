@@ -13,43 +13,68 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const { getFacts, llmsTxt, SITE } = require("../lib/siteFacts");
-const { cachedContent, galleryUrls } = require("../lib/prerender");
+const crypto = require("crypto");
+const { cachedContent, galleryUrls, prerender, handles } = require("../lib/prerender");
+const { settingsCollection } = require("../lib/db");
 const { INDEXNOW_KEY } = require("../lib/indexnow");
 
 const router = express.Router();
 
-// cms: the page shows text or photos edited in the admin dashboard, so its
-// lastmod also moves when that content is saved.
 const PAGES = [
-  { path: "/", file: "index.html", cms: true, images: c => [c.heroPhotos && c.heroPhotos.homeTop, c.heroPhotos && c.heroPhotos.homeSecond] },
-  { path: "/about.html", cms: true, images: c => [c.heroPhotos && c.heroPhotos.aboutPhoto] },
-  { path: "/unit1.html", cms: true, images: c => galleryUrls(c, "unit1", 1000) },
-  { path: "/unit2.html", cms: true, images: c => galleryUrls(c, "unit2", 1000) },
-  { path: "/wildlife.html", cms: true, images: c => galleryUrls(c, "wildlife", 1000) },
-  { path: "/pets.html", cms: true, images: c => galleryUrls(c, "pets", 1000) },
-  { path: "/location.html", cms: true },
-  { path: "/faq.html", cms: true },
-  { path: "/reviews.html", cms: true },
+  { path: "/", file: "index.html", images: c => [c.heroPhotos && c.heroPhotos.homeTop, c.heroPhotos && c.heroPhotos.homeSecond] },
+  { path: "/about.html", images: c => [c.heroPhotos && c.heroPhotos.aboutPhoto] },
+  { path: "/unit1.html", images: c => galleryUrls(c, "unit1", 1000) },
+  { path: "/unit2.html", images: c => galleryUrls(c, "unit2", 1000) },
+  { path: "/wildlife.html", images: c => galleryUrls(c, "wildlife", 1000) },
+  { path: "/pets.html", images: c => galleryUrls(c, "pets", 1000) },
+  { path: "/location.html" },
+  { path: "/faq.html" },
+  { path: "/reviews.html" },
   { path: "/contact.html" },
   { path: "/booking-widget.html" }
 ];
 
-// lastmod = the later of the page file's modified time (when a deploy
-// changed it) and, for cms pages, the last admin save.
-const fileTimes = new Map();
-function fileTime(p) {
+// lastmod = the day the page's content last really changed. Each page (as
+// served, including dashboard content) is fingerprinted; the date only moves
+// when the fingerprint does. A redeploy, a stylesheet version bump or a save
+// that touches another page leaves it alone, so Google can trust the dates.
+// Fingerprints live in Firestore settings/sitemapDates; SEED holds each page's
+// last real change from the git history for the first run.
+const SEED = {
+  "/": "2026-10-24", "/about.html": "2026-10-22", "/unit1.html": "2026-10-22", "/unit2.html": "2026-10-22",
+  "/wildlife.html": "2026-10-22", "/pets.html": "2026-10-22", "/location.html": "2026-10-22",
+  "/faq.html": "2026-10-22", "/reviews.html": "2026-10-22", "/contact.html": "2026-10-22",
+  "/booking-widget.html": "2026-10-22"
+};
+const DATES_DOC = settingsCollection.doc("sitemapDates");
+
+async function pageFingerprint(p) {
   const file = p.file || p.path.slice(1);
-  if (!fileTimes.has(file)) {
-    let t = null;
-    try { t = fs.statSync(path.join(__dirname, "..", "site", file)).mtime; } catch (e) { /* no date */ }
-    fileTimes.set(file, t);
-  }
-  return fileTimes.get(file);
+  const filePath = path.join(__dirname, "..", "site", file);
+  const html = (handles(file) && await prerender(filePath, file)) || await fs.promises.readFile(filePath, "utf8");
+  // ignore cache-busting version tags (?v=20261024b) -- they change look, not content
+  return crypto.createHash("sha1").update(html.replace(/\?v=[0-9a-z]+/g, "")).digest("hex");
 }
-function lastmod(p, c) {
-  const times = [fileTime(p), p.cms ? c.updatedAt : null].filter(Boolean);
-  if (!times.length) return null;
-  return new Date(Math.max(...times.map(t => t.getTime()))).toISOString().slice(0, 10);
+
+let datesCache = { at: 0, value: null };
+async function pageDates() {
+  if (datesCache.value && Date.now() - datesCache.at < 10 * 60 * 1000) return datesCache.value;
+  const snap = await DATES_DOC.get();
+  const saved = (snap.exists && snap.data().pages) || {};
+  const today = new Date().toISOString().slice(0, 10);
+  const pages = {};
+  let changed = false;
+  for (const p of PAGES) {
+    const hash = await pageFingerprint(p);
+    const prev = saved[p.path];
+    if (prev && prev.hash === hash) { pages[p.path] = prev; continue; }
+    // first time we see this page: use its seed date; afterwards a new fingerprint means it changed today
+    pages[p.path] = { hash, date: prev ? today : (SEED[p.path] || today) };
+    changed = true;
+  }
+  if (changed) await DATES_DOC.set({ pages }, { merge: true });
+  datesCache = { at: Date.now(), value: pages };
+  return pages;
 }
 
 function xmlEsc(s) {
@@ -59,9 +84,11 @@ function xmlEsc(s) {
 router.get("/sitemap.xml", async (req, res, next) => {
   try {
     const c = await cachedContent();
+    let dates = {};
+    try { dates = await pageDates(); } catch (err) { console.error("[seo] sitemap dates unavailable -", err.message); }
     const urls = PAGES.map(p => {
       const imgs = (p.images ? p.images(c) : []).filter(Boolean);
-      const mod = lastmod(p, c);
+      const mod = dates[p.path] && dates[p.path].date;
       return `  <url>\n    <loc>${SITE}${p.path}</loc>\n` +
         (mod ? `    <lastmod>${mod}</lastmod>\n` : "") +
         imgs.map(u => `    <image:image><image:loc>${xmlEsc(u)}</image:loc></image:image>\n`).join("") +

@@ -172,6 +172,9 @@ h3{font-size:20px;}
 .feature-card h3{margin-bottom:8px;}
 .feature-card h3{font-size:23px;}
 .feature-card p{color:var(--ink);font-size:16px;line-height:1.65;margin:0;}
+.feature-card .feature-links{margin-top:14px;font-size:15px;font-weight:600;}
+.feature-links a{color:var(--gold-hover);text-decoration:none;border-bottom:1px solid currentColor;}
+.feature-links a:hover{color:var(--taupe-deep);}
 
 /* Gallery */
 .gallery-grid{
@@ -262,6 +265,20 @@ h3{font-size:20px;}
 .review-stars{color:var(--gold);font-size:16px;letter-spacing:2px;margin-bottom:12px;text-align:left;}
 .review-text{font-size:16.5px;line-height:1.7;color:var(--ink);margin:0 0 14px;font-style:italic;text-align:left;}
 .review-name{font-size:13px;text-align:left;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-soft);}
+
+/* Ratings from the booking sites (homepage + Reviews page) */
+.rating-strip{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin:22px 0 6px;}
+.rating-chip{
+  display:flex;flex-direction:column;align-items:center;gap:2px;min-width:160px;padding:14px 16px;
+  background:var(--bg);border:1px solid var(--line);border-radius:10px;text-decoration:none;color:var(--ink);
+  transition:border-color .15s ease;
+}
+.rating-chip:hover{border-color:var(--gold);}
+.rating-score{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--taupe-deep);}
+.rating-src{font-size:14px;font-weight:600;color:var(--ink);}
+.rating-count{font-size:13.5px;color:var(--ink-soft);}
+.rating-badge{margin-top:4px;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-hover);}
+.rating-note{margin:6px 0 0;font-size:12.5px;color:var(--ink-soft);text-align:center;}
 
 /* Live availability calendar (homepage) */
 .live-cal-intro{color:var(--ink-soft);margin:0 0 6px;}

@@ -21,7 +21,7 @@ const {
   getSiteContent,
   saveAboutParagraphs, savePetCaptions, saveFeatureText, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
   addGallerySection, renameGallerySection, removeGallerySection,
-  setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, removeRecommendation,
+  setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, updateRecommendation, removeRecommendation,
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, setPhotoCaption
 } = require("../lib/siteContent");
 const { getAnalyticsSummary } = require("../lib/analytics");
@@ -1103,6 +1103,20 @@ router.post("/admin/site-content/recommendations", async (req, res) => {
   } catch (err) {
     console.error("[admin] add recommendation failed:", err);
     res.status(500).json({ ok: false, error: "Could not add recommendation" });
+  }
+});
+
+// PUT /api/admin/site-content/recommendations   body: { id, name, category, description, mapLink, distance }
+router.put("/admin/site-content/recommendations", async (req, res) => {
+  try {
+    const { id, name, category, description, mapLink, distance } = req.body;
+    if (!id) return res.status(400).json({ ok: false, error: "id is required" });
+    if (!name) return res.status(400).json({ ok: false, error: "A name is required" });
+    const recommendations = await updateRecommendation(id, { name, category, description, mapLink, distance });
+    res.json({ ok: true, recommendations });
+  } catch (err) {
+    console.error("[admin] update recommendation failed:", err);
+    res.status(err.userMessage ? 404 : 500).json({ ok: false, error: err.userMessage || "Could not save the recommendation" });
   }
 });
 

@@ -142,7 +142,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/style.css?v=20261024b">
+<link rel="stylesheet" href="/style.css?v=20261024c">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -227,16 +227,19 @@
       <div class="icon-ring">I</div>
       <h3>Modern comfort</h3>
       <p>A fully equipped home with all the modern amenities, set in a tranquil environment where nature thrives.</p>
+      <p class="feature-links"><a href="unit2.html">See Unit 2</a> · <a href="unit1.html">See Unit 1</a></p>
     </div>
     <div class="feature-card">
       <div class="icon-ring">II</div>
       <h3>Where comfort meets the wild</h3>
       <p>Enjoy a stylish and cozy stay with the unique experience of wildlife roaming freely around the property.</p>
+      <p class="feature-links"><a href="wildlife.html">Meet the wildlife</a></p>
     </div>
     <div class="feature-card">
       <div class="icon-ring">III</div>
       <h3>Spacious, serene, and pet-friendly</h3>
       <p>With two comfortable bedrooms, a large living space, and a pet-friendly policy, our home is designed for ultimate relaxation.</p>
+      <p class="feature-links"><a href="pets.html">Read our pet policy</a></p>
     </div>
   </div>
 </section>
@@ -308,6 +311,20 @@
 <section class="section tinted center">
   <p class="eyebrow">What guests say</p>
   <h2>Guest reviews</h2>
+  <!-- Ratings on the booking sites, copied by hand (not star markup: Google ignores
+     ratings a business publishes about itself). Re-check the numbers now and then. -->
+  <div class="rating-strip">
+    <a class="rating-chip" href="https://www.airbnb.com/rooms/1337503040346302823" target="_blank" rel="noopener">
+      <span class="rating-score">★ 4.96</span><span class="rating-src">Airbnb · Unit 2</span><span class="rating-count">78 reviews</span><span class="rating-badge">Guest favourite</span>
+    </a>
+    <a class="rating-chip" href="https://www.airbnb.co.za/rooms/1543967224420154478" target="_blank" rel="noopener">
+      <span class="rating-score">★ 5.0</span><span class="rating-src">Airbnb · Unit 1</span><span class="rating-count">8 reviews</span>
+    </a>
+    <a class="rating-chip" href="https://www.lekkeslaap.co.za/accommodation/welverdiend" target="_blank" rel="noopener">
+      <span class="rating-score">★ 5.0</span><span class="rating-src">LekkeSlaap · Unit 2</span><span class="rating-count">23 reviews</span>
+    </a>
+  </div>
+  <p class="rating-note">Ratings as shown on each site, checked October 2026.</p>
   <div class="review-grid" id="reviews-preview">
     <p style="color:var(--ink-soft);">Loading reviews…</p>
   </div>
