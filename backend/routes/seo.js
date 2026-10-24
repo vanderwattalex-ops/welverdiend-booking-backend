@@ -31,6 +31,7 @@ const PAGES = [
   { path: "/faq.html" },
   { path: "/reviews.html" },
   { path: "/contact.html" },
+  { path: "/policies.html" },
   { path: "/booking-widget.html" }
 ];
 
@@ -43,7 +44,7 @@ const PAGES = [
 const SEED = {
   "/": "2026-10-24", "/about.html": "2026-10-22", "/unit1.html": "2026-10-22", "/unit2.html": "2026-10-22",
   "/wildlife.html": "2026-10-22", "/pets.html": "2026-10-22", "/location.html": "2026-10-22",
-  "/faq.html": "2026-10-22", "/reviews.html": "2026-10-22", "/contact.html": "2026-10-22",
+  "/faq.html": "2026-10-22", "/reviews.html": "2026-10-22", "/contact.html": "2026-10-22", "/policies.html": "2026-10-24",
   "/booking-widget.html": "2026-10-22"
 };
 const DATES_DOC = settingsCollection.doc("sitemapDates");

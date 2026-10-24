@@ -37,6 +37,9 @@ function nightsBetween(checkIn, checkOut) {
  *                    item on the invoice so the guest sees the reduction
  *   depositAmount  — an agreed deposit other than 50% (e.g. a guest
  *                    paying in full up front, or a smaller holding fee)
+ *   promo          — the automatic long-stay/special discount for a guest
+ *                    request ({ label, amount } from lib/promotions.js),
+ *                    shown as its own line; off the nights only
  */
 function calculateTotal(unit, nights, selectedExtras, extrasCatalog, options = {}) {
   // A blank rate means "not specified" and falls back to the unit's
@@ -68,20 +71,26 @@ function calculateTotal(unit, nights, selectedExtras, extrasCatalog, options = {
     }
   }
 
+  const promo = options.promo && options.promo.amount > 0
+    ? { label: String(options.promo.label || "Discount"), amount: Math.min(round2(options.promo.amount), base) }
+    : null;
+  if (promo) lineItems.push({ label: promo.label, amount: -promo.amount });
+  const promoAmount = promo ? promo.amount : 0;
+
   // Capped at the running subtotal so a mistyped discount can never
   // produce a negative total (which would then flow into the deposit
   // split, the invoice, and the income figures).
-  const discount = Math.min(Math.max(0, round2(options.discount)), base + extrasTotal);
+  const discount = Math.min(Math.max(0, round2(options.discount)), base + extrasTotal - promoAmount);
   if (discount > 0) lineItems.push({ label: "Discount", amount: -discount });
 
-  const total = round2(base + extrasTotal - discount);
+  const total = round2(base + extrasTotal - promoAmount - discount);
 
   const depositAmount = Number.isFinite(Number(options.depositAmount))
     ? Math.min(Math.max(0, round2(options.depositAmount)), total)
     : round2(total / 2);
   const balanceAmount = round2(total - depositAmount);
 
-  return { total, lineItems, depositAmount, balanceAmount, ratePerNight: rate, discount };
+  return { total, lineItems, depositAmount, balanceAmount, ratePerNight: rate, discount, promo };
 }
 
 module.exports = { round2, nightsBetween, calculateTotal };

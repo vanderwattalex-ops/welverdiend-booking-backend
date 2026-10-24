@@ -21,7 +21,7 @@ const {
   getSiteContent,
   saveAboutParagraphs, savePetCaptions, saveFeatureText, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
   addGallerySection, renameGallerySection, removeGallerySection,
-  setHeroPhoto, addReview, removeReview, addFaq, removeFaq, addRecommendation, updateRecommendation, removeRecommendation,
+  setHeroPhoto, addReview, removeReview, addFaq, updateFaq, removeFaq, addRecommendation, updateRecommendation, removeRecommendation,
   GALLERY_IDS, SECTIONED_GALLERY_IDS, CAPTIONED_GALLERY_IDS, setPhotoCaption
 } = require("../lib/siteContent");
 const { getAnalyticsSummary } = require("../lib/analytics");
@@ -760,6 +760,21 @@ router.post("/admin/settings", async (req, res) => {
   }
 });
 
+// POST /api/admin/promotions   body: { promotions: { longStay: {enabled, tiers:[{nights, percent}]}, specials: [...] } }
+// Saved on its own so it can't touch the rest of the settings.
+router.post("/admin/promotions", async (req, res) => {
+  try {
+    const { promotions } = req.body;
+    if (!promotions || typeof promotions !== "object") return res.status(400).json({ ok: false, error: "promotions is required" });
+    await saveSettings({ promotions });
+    const { promotions: saved } = await getSettings();
+    res.json({ ok: true, promotions: saved });
+  } catch (err) {
+    console.error("[admin] save promotions failed:", err);
+    res.status(500).json({ ok: false, error: "Could not save discounts and specials" });
+  }
+});
+
 // POST /api/admin/test-email   body: { to? } — defaults to the current
 // ownerNotificationEmail. Use this to verify email delivery directly,
 // without needing to submit a real booking.
@@ -1077,6 +1092,20 @@ router.post("/admin/site-content/faqs", async (req, res) => {
   } catch (err) {
     console.error("[admin] add faq failed:", err);
     res.status(500).json({ ok: false, error: "Could not add FAQ" });
+  }
+});
+
+// PUT /api/admin/site-content/faqs   body: { id, question, answer }
+router.put("/admin/site-content/faqs", async (req, res) => {
+  try {
+    const { id, question, answer } = req.body;
+    if (!id) return res.status(400).json({ ok: false, error: "id is required" });
+    if (!question || !answer) return res.status(400).json({ ok: false, error: "Both question and answer are required" });
+    const faqs = await updateFaq(id, { question, answer });
+    res.json({ ok: true, faqs });
+  } catch (err) {
+    console.error("[admin] update faq failed:", err);
+    res.status(err.userMessage ? 404 : 500).json({ ok: false, error: err.userMessage || "Could not save the FAQ" });
   }
 });
 

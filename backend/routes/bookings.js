@@ -6,6 +6,7 @@ const { bookingsCollection, bucket, availabilityCollection } = require("../lib/d
 const { getSettings } = require("../lib/settings");
 const { rangesOverlap } = require("../lib/rangeUtils");
 const { nightsBetween, calculateTotal } = require("../lib/pricing");
+const { bestDiscount } = require("../lib/promotions");
 const { notifyOwnerNewRequest, notifyOwnerProofUploaded, notifyOwnerBalanceProofUploaded } = require("../lib/email");
 
 const upload = multer({
@@ -54,7 +55,7 @@ router.post("/bookings", express.json(), async (req, res) => {
       adults, children, childrenAges, hasPets, petDetails, arrivalTime, notes, extras: extrasBody
     } = req.body;
 
-    const { units, extras } = await getSettings();
+    const { units, extras, promotions } = await getSettings();
     const unit = units.find(u => u.id === unitId);
     if (!unit) return res.status(400).json({ ok: false, error: "Unknown unit" });
     if (!checkIn || !checkOut || checkIn >= checkOut) {
@@ -71,7 +72,9 @@ router.post("/bookings", express.json(), async (req, res) => {
 
     const selectedExtras = Array.isArray(extrasBody) ? extrasBody : [];
     const nights = nightsBetween(checkIn, checkOut);
-    const { total, lineItems, depositAmount, balanceAmount } = calculateTotal(unit, nights, selectedExtras, extras);
+    // Long-stay discount or running special, worked out here (never trusted from the page)
+    const promo = bestDiscount({ unitId, checkIn, nights, rate: unit.pricePerNight, promotions });
+    const { total, lineItems, depositAmount, balanceAmount } = calculateTotal(unit, nights, selectedExtras, extras, { promo });
 
     const bookingId = uuidv4();
     const booking = {

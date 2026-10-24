@@ -1748,6 +1748,13 @@
     `).join("");
 
     content.innerHTML = `
+      <div class="unit-block" id="promo-block">
+        <h2>Discounts &amp; specials</h2>
+        <p class="range-source" style="margin-bottom:12px;">Applied automatically to bookings made on the website (off the nightly rate only, never the extras). A stay gets one discount: whichever saves the guest more. Bookings you add by hand keep their own discount field.</p>
+        <div id="promo-editor"></div>
+        <button class="btn-save-settings" id="save-promo-btn">Save discounts &amp; specials</button>
+        <div class="settings-msg" id="promo-msg"></div>
+      </div>
       ${unitBlocks}
       <div class="unit-block">
         <h2>Extras</h2>
@@ -1771,6 +1778,8 @@
     `;
 
     document.getElementById("test-email-btn").onclick = sendTestEmail;
+    renderPromotions(s.promotions || { longStay: { enabled: false, tiers: [] }, specials: [] });
+    document.getElementById("save-promo-btn").onclick = savePromotions;
     renderExtrasList(s.extras);
     renderEmailTemplatesList(s.emailTemplates || {}, s.defaultEmailTemplates || {});
     document.getElementById("add-extra-btn").onclick = () => {
@@ -1779,6 +1788,112 @@
       renderExtrasList(settingsState.extras);
     };
     document.getElementById("save-settings-btn").onclick = saveSettingsForm;
+  }
+
+  // ---- Discounts & specials (lib/promotions.js on the server)
+  function renderPromotions(p){
+    const units = (settingsState && settingsState.units) || [];
+    const tiers = [...(p.longStay.tiers || [])];
+    while(tiers.length < 6) tiers.push({ nights: "", percent: "" });
+    const ed = document.getElementById("promo-editor");
+    ed.innerHTML = `
+      <div style="margin-bottom:18px;">
+        <label style="display:flex;gap:8px;align-items:center;font-weight:600;"><input type="checkbox" id="ls-enabled" ${p.longStay.enabled ? "checked" : ""}> Long-stay discount on</label>
+        <div class="range-source" style="margin:6px 0 8px;">A stay gets the highest step it reaches. Leave a row empty to skip it.</div>
+        ${tiers.map((t, i) => `
+          <div class="settings-row" style="align-items:center;gap:8px;margin-bottom:6px;">
+            <span>Stays of</span><input type="number" min="2" id="ls-n-${i}" value="${t.nights}" style="width:80px;">
+            <span>nights or more:</span><input type="number" min="0" max="50" step="0.5" id="ls-p-${i}" value="${t.percent}" style="width:80px;"><span>% off</span>
+          </div>`).join("")}
+      </div>
+      <div id="specials-list">
+        ${(p.specials || []).map((sp, i) => `
+          <div class="special-card" data-i="${i}" style="border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px;">
+            <label style="display:flex;gap:8px;align-items:center;font-weight:600;margin-bottom:8px;"><input type="checkbox" class="sp-active" ${sp.active ? "checked" : ""}> Special is running</label>
+            <div class="settings-row">
+              <div class="settings-field"><label>Name guests see</label><input type="text" class="sp-name" maxlength="60" value="${escAttr(sp.name)}"></div>
+              <div class="settings-field"><label>% off the nightly rate</label><input type="number" class="sp-percent" min="0" max="50" step="0.5" value="${sp.percent}"></div>
+              <div class="settings-field"><label>Minimum nights</label><input type="number" class="sp-min" min="1" value="${sp.minNights}"></div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-field"><label>For nights from</label><input type="date" class="sp-from" value="${sp.stayFrom}"></div>
+              <div class="settings-field"><label>until (last night)</label><input type="date" class="sp-to" value="${sp.stayTo}"></div>
+              <div class="settings-field"><label>Book by (optional)</label><input type="date" class="sp-bookby" value="${sp.bookBy}"></div>
+            </div>
+            <div class="settings-field"><label>Units</label>
+              <div style="display:flex;gap:16px;">${units.map(u => `<label style="display:flex;gap:6px;align-items:center;"><input type="checkbox" class="sp-unit" value="${u.id}" ${(sp.units || []).includes(u.id) ? "checked" : ""}> ${esc(u.name)}</label>`).join("")}</div>
+            </div>
+            <div class="settings-field"><label>Reason (one sentence for guests)</label><input type="text" class="sp-reason" maxlength="240" value="${escAttr(sp.reason)}"></div>
+            <input type="hidden" class="sp-id" value="${escAttr(sp.id)}">
+            <button type="button" class="btn-reblock sp-remove">Remove this special</button>
+          </div>`).join("")}
+      </div>
+      <button type="button" class="btn-add-extra" id="add-special-btn">+ Add a special</button>
+    `;
+    document.getElementById("add-special-btn").onclick = () => {
+      const cur = readPromotionsFromForm();
+      cur.specials.push({ id: "special-" + Date.now(), name: "", percent: 10, minNights: 2, units: units.map(u => u.id), stayFrom: new Date().toISOString().slice(0,10), stayTo: "", bookBy: "", active: true, reason: "" });
+      renderPromotions(cur);
+    };
+    ed.querySelectorAll(".sp-remove").forEach(btn => {
+      btn.onclick = () => {
+        const cur = readPromotionsFromForm();
+        cur.specials.splice(Number(btn.closest(".special-card").dataset.i), 1);
+        renderPromotions(cur);
+      };
+    });
+  }
+
+  function readPromotionsFromForm(){
+    const tiers = [];
+    for(let i = 0; i < 6; i++){
+      const n = document.getElementById(`ls-n-${i}`).value, pc = document.getElementById(`ls-p-${i}`).value;
+      if(n && pc) tiers.push({ nights: Number(n), percent: Number(pc) });
+    }
+    const specials = [...document.querySelectorAll("#specials-list .special-card")].map(c => ({
+      id: c.querySelector(".sp-id").value,
+      name: c.querySelector(".sp-name").value.trim(),
+      percent: Number(c.querySelector(".sp-percent").value),
+      minNights: Number(c.querySelector(".sp-min").value) || 1,
+      units: [...c.querySelectorAll(".sp-unit:checked")].map(x => x.value),
+      stayFrom: c.querySelector(".sp-from").value,
+      stayTo: c.querySelector(".sp-to").value,
+      bookBy: c.querySelector(".sp-bookby").value,
+      active: c.querySelector(".sp-active").checked,
+      reason: c.querySelector(".sp-reason").value.trim()
+    }));
+    return { longStay: { enabled: document.getElementById("ls-enabled").checked, tiers }, specials };
+  }
+
+  async function savePromotions(){
+    const msg = document.getElementById("promo-msg");
+    const promotions = readPromotionsFromForm();
+    const bad = promotions.specials.find(sp => !sp.name || !(sp.percent > 0) || !sp.units.length);
+    if(bad){
+      msg.className = "settings-msg error";
+      msg.textContent = "Each special needs a name, a % above 0 and at least one unit.";
+      return;
+    }
+    msg.className = "settings-msg"; msg.textContent = "Saving…";
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/promotions`, {
+        method: "POST",
+        headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+        body: JSON.stringify({ promotions })
+      });
+      const data = await res.json();
+      if(data.ok){
+        settingsState.promotions = data.promotions;
+        renderPromotions(data.promotions);
+        const m = document.getElementById("promo-msg");
+        m.className = "settings-msg success"; m.textContent = "Saved. The website uses these straight away.";
+      } else {
+        msg.className = "settings-msg error";
+        msg.textContent = res.status === 401 ? saveRefusedText() : (data.error || "Could not save.");
+      }
+    }catch(err){
+      msg.className = "settings-msg error"; msg.textContent = "Could not reach the server, so nothing was saved.";
+    }
   }
 
   function renderExtrasList(extrasList){
@@ -2199,7 +2314,10 @@
                 <div class="range-dates">${esc(f.question)}</div>
                 <div class="range-source">${esc(f.answer)}</div>
               </div>
-              <button class="btn-reblock" data-faq-id="${f.id}">Remove</button>
+              <div style="display:flex;gap:6px;">
+                <button class="btn-reblock" data-edit-faq-id="${f.id}">Edit</button>
+                <button class="btn-reblock" data-faq-id="${f.id}">Remove</button>
+              </div>
             </div>
           `).join("")}
         </div>
@@ -2303,7 +2421,11 @@
     content.querySelectorAll("[data-review-id]").forEach(btn => {
       btn.onclick = () => removeReviewById(btn.dataset.reviewId);
     });
+    editingFaqId = null;
     document.getElementById("add-faq-btn").onclick = addFaqFromForm;
+    content.querySelectorAll("[data-edit-faq-id]").forEach(btn => {
+      btn.onclick = () => startEditFaq(btn.dataset.editFaqId);
+    });
     content.querySelectorAll("[data-faq-id]").forEach(btn => {
       btn.onclick = () => removeFaqById(btn.dataset.faqId);
     });
@@ -2489,6 +2611,21 @@
     }
   }
 
+  // Set while the add form is being used to change an existing FAQ.
+  let editingFaqId = null;
+
+  function startEditFaq(id){
+    const f = (websiteContentState.faqs || []).find(x => x.id === id);
+    if(!f) return;
+    editingFaqId = id;
+    document.getElementById("new-faq-question").value = f.question || "";
+    document.getElementById("new-faq-answer").value = f.answer || "";
+    document.getElementById("add-faq-btn").textContent = "Save changes";
+    const msg = document.getElementById("faq-msg");
+    msg.className = "settings-msg"; msg.textContent = "Editing this question. Change the fields above and click Save changes.";
+    document.getElementById("new-faq-question").scrollIntoView({ block: "center" });
+  }
+
   async function addFaqFromForm(){
     const msg = document.getElementById("faq-msg");
     const question = document.getElementById("new-faq-question").value.trim();
@@ -2500,17 +2637,22 @@
     }
     try{
       const res = await fetch(`${API_BASE}/api/admin/site-content/faqs`, {
-        method: "POST",
+        method: editingFaqId ? "PUT" : "POST",
         headers: { "x-admin-token": token(), "Content-Type": "application/json" },
-        body: JSON.stringify({ question, answer })
+        body: JSON.stringify({ id: editingFaqId || undefined, question, answer })
       });
       const data = await res.json();
       if(data.ok){
+        const wasEditing = !!editingFaqId;
         websiteContentState.faqs = data.faqs;
         renderWebsiteContent();
+        if(wasEditing){
+          const m = document.getElementById("faq-msg");
+          m.className = "settings-msg success"; m.textContent = "Saved.";
+        }
       } else {
         msg.className = "settings-msg error";
-        msg.textContent = data.error || "Could not add FAQ.";
+        msg.textContent = res.status === 401 ? saveRefusedText() : (data.error || "Could not save the FAQ.");
       }
     }catch(err){
       msg.className = "settings-msg error";

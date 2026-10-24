@@ -18,7 +18,7 @@
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
 <!-- The site stylesheet supplies the shared top bar and menu; the booking card's own
      styles below come after it and keep their own colours. -->
-<link rel="stylesheet" href="/style.css?v=20261024c">
+<link rel="stylesheet" href="/style.css?v=20261024d">
 <script src="/assets/mobile-nav.js" defer></script>
 <style>
   /* Same self-hosted fonts as style.css */
@@ -190,6 +190,12 @@
   .wa-btn:disabled{background:var(--busy);cursor:not-allowed;}
   .wa-howto{max-width:620px;margin:16px auto 0;padding:0 24px;text-align:center;font-size:14px;line-height:1.6;color:var(--ink-soft);}
   .wa-sync-note{margin-top:10px;font-size:11px;color:var(--ink-soft);}
+  .wa-promos{margin-top:14px;display:grid;gap:8px;}
+  .wa-promo{border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:10px 12px;font-size:13.5px;line-height:1.5;background:var(--surface);}
+  .wa-promo b{color:var(--taupe-deep);}
+  .wa-promo .wa-promo-why{display:block;color:var(--ink-soft);font-size:12.5px;margin-top:2px;}
+  .wa-summary-line.wa-discount{color:#3F6B3A;font-weight:600;}
+  .wa-promo-hit{display:block;margin-top:4px;font-size:12.5px;font-weight:600;color:#3F6B3A;}
   .wa-footer{
     padding:16px 40px 26px;text-align:center;font-size:11px;letter-spacing:.05em;
     color:var(--ink-soft);border-top:1px solid var(--line);text-transform:uppercase;
@@ -251,6 +257,10 @@
     padding-top:10px;margin-top:6px;border-top:1px solid var(--line);color:var(--ink);
   }
   .wa-eft-note{font-size:11.5px;color:var(--ink-soft);margin-top:8px;line-height:1.5;}
+  .wa-terms{max-width:620px;margin:18px auto 0;padding:14px 18px 14px 34px;border:1px solid var(--line);border-radius:6px;background:var(--surface);display:grid;gap:6px;font-size:13.5px;line-height:1.5;color:var(--ink);text-align:left;}
+  .wa-terms b{color:var(--taupe-deep);}
+  .wa-terms-link{text-align:center;margin:8px 0 0;font-size:13.5px;}
+  .wa-terms-link a{color:var(--taupe-deep);font-weight:600;}
 
   .wa-file-drop{
     border:1.5px dashed var(--line);border-radius:4px;padding:16px;text-align:center;
@@ -352,10 +362,19 @@
       <span><i style="background:var(--taupe-deep);"></i>Selected</span>
     </div>
 
+    <div class="wa-promos" id="wa-promos" hidden></div>
+
     <div class="wa-selection-bar">
       <span id="wa-selection-text" aria-live="polite">Select your check-in and check-out dates above.</span>
       <button class="wa-btn" id="wa-open-modal" aria-describedby="wa-selection-text" disabled>Reserve these dates</button>
     </div>
+    <ul class="wa-terms" aria-label="Key booking terms">
+      <li><b>Free cancellation</b> up to 5 days before check-in (50% back after that), and free date changes if the new dates are open.</li>
+      <li><b>50% deposit</b> by EFT within 24 hours secures your dates; the balance is due before check-in.</li>
+      <li><b>Self check-in</b> from 14:00 with a lockbox · check-out by 10:00 · 1-night minimum.</li>
+      <li>Quiet hours 22:00–06:00 · no parties or day visitors · smoking outside only · pets welcome (not in the pool area).</li>
+    </ul>
+    <p class="wa-terms-link"><a href="/policies.html">Read all house rules &amp; policies</a></p>
     <p class="wa-sync-note" id="wa-sync-note">Availability syncs automatically from Airbnb, Booking.com and Lekkeslaap every 5 minutes.</p>
     <p class="wa-howto">Choose Unit 1 or Unit 2, then tap your check-in and check-out dates on the calendar. Grey dates are already booked. We confirm your request, and a 50% deposit within 24 hours secures your stay. Both units are self-catering and pet-friendly, at 4 Kenilworth Road, Groenvlei, Bloemfontein.</p>
   </div>
@@ -425,6 +444,7 @@
       <div id="wa-extras-list"></div>
 
       <div class="wa-summary" id="wa-summary"></div>
+      <p class="wa-eft-note">By sending a request you agree to our <a href="/policies.html" target="_blank" rel="noopener">house rules &amp; policies</a>, including the cancellation policy: a full refund up to 5 days before check-in, 50% after that.</p>
 
       <div class="wa-modal-actions">
         <button type="button" class="wa-cancel" id="wa-cancel">Cancel</button>
@@ -457,6 +477,7 @@
   const pad = n => String(n).padStart(2,"0");
   const toISO = (y,m,d) => `${y}-${pad(m+1)}-${pad(d)}`;
   const rand = n => `R${Number(n).toFixed(2)}`;
+  const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]);
 
   function isBusy(dateStr, unit){
     if(!unit) return false;
@@ -487,6 +508,7 @@
       if(availRes.ok) state.units = availRes.units;
       if(configRes.ok){
         state.extrasCatalog = configRes.extras;
+        state.promotions = configRes.promotions || null;
         // fold pricePerNight into the units we already have
         state.units.forEach(u => {
           const cfg = configRes.units.find(c => c.id === u.unitId);
@@ -522,7 +544,7 @@
       $("wa-grid").classList.remove("loading");
       renderCalendar();
       renderRate();
-      renderUnitDetails();
+      renderUnitDetails(); renderPromos();
       updateSelectionBar();
     }catch(err){
       console.error("[Welverdiend widget] failed to load availability/config:", err);
@@ -592,7 +614,7 @@
       tab.onclick = () => {
         state.activeUnitId = u.unitId;
         state.selectStart = null; state.selectEnd = null;
-        renderUnitTabs(); renderSyncNote(); renderCalendar(); renderRate(); renderUnitDetails(); updateSelectionBar();
+        renderUnitTabs(); renderSyncNote(); renderCalendar(); renderRate(); renderUnitDetails(); renderPromos(); updateSelectionBar();
       };
       wrap.appendChild(tab);
     });
@@ -695,6 +717,7 @@
     if(state.selectStart && state.selectEnd){
       text.textContent = `${state.selectStart} → ${state.selectEnd}`;
       btn.disabled = false;
+      fetchQuote();
     } else if(state.selectStart){
       text.textContent = `Check-in: ${state.selectStart} — now pick your check-out date.`;
       btn.disabled = true;
@@ -706,6 +729,46 @@
 
   $("wa-prev").onclick = () => { state.viewMonth--; if(state.viewMonth<0){state.viewMonth=11; state.viewYear--;} renderCalendar(); };
   $("wa-next").onclick = () => { state.viewMonth++; if(state.viewMonth>11){state.viewMonth=0; state.viewYear++;} renderCalendar(); };
+
+  // The long-stay steps and any special running for the selected unit.
+  function fmtDate(d){ return new Date(d + "T00:00:00").toLocaleDateString("en-ZA", { day: "numeric", month: "long" }); }
+  function renderPromos(){
+    const box = $("wa-promos");
+    const p = state.promotions;
+    if(!box || !p){ return; }
+    const parts = [];
+    (p.specials || []).filter(sp => sp.units.includes(state.activeUnitId)).forEach(sp => {
+      const until = sp.stayTo ? ` until ${fmtDate(sp.stayTo)}` : "";
+      parts.push(`<div class="wa-promo"><b>${esc(sp.name)}: ${sp.percent}% off</b> for stays of ${sp.minNights}+ nights${until}, when you book direct.${sp.reason ? `<span class="wa-promo-why">${esc(sp.reason)}</span>` : ""}</div>`);
+    });
+    if(p.longStay && p.longStay.enabled && p.longStay.tiers.length){
+      parts.push(`<div class="wa-promo"><b>Stay longer, save more:</b> ${p.longStay.tiers.map(t => `${t.nights}+ nights ${t.percent}% off`).join(" · ")}. Applied automatically to the nightly rate.</div>`);
+    }
+    if(parts.length && (p.specials || []).some(sp => sp.units.includes(state.activeUnitId)) && p.longStay && p.longStay.enabled){
+      parts.push(`<div class="wa-promo-why" style="font-size:12px;color:var(--ink-soft);">One discount per stay: you automatically get whichever saves you more.</div>`);
+    }
+    box.innerHTML = parts.join("");
+    box.hidden = !parts.length;
+  }
+
+  // Asks the server which discount these dates get (the same code that prices the booking).
+  let quoteSeq = 0;
+  async function fetchQuote(){
+    state.promo = null;
+    const seq = ++quoteSeq;
+    const unitId = state.activeUnitId, ci = state.selectStart, co = state.selectEnd;
+    try{
+      const r = await fetch(`${API_BASE}/api/quote?unit=${encodeURIComponent(unitId)}&checkIn=${ci}&checkOut=${co}`);
+      const q = await r.json();
+      if(seq !== quoteSeq || !q.ok) return;
+      state.promo = q.discount || null;
+      if(state.promo){
+        const text = $("wa-selection-text");
+        text.innerHTML = `${esc(ci)} → ${esc(co)}<span class="wa-promo-hit">${esc(state.promo.label)}: you save ${rand(state.promo.amount)}</span>`;
+      }
+      if($("wa-modal-overlay").classList.contains("show")) renderSummary();
+    }catch(e){ /* no discount shown; the server still applies it */ }
+  }
 
   function nights(){
     if(!state.selectStart || !state.selectEnd) return 0;
@@ -773,13 +836,15 @@
       extrasTotal += amount;
       lines.push({ label: ex.type === "flat" ? ex.label : `${ex.label} × ${sel}`, amount });
     });
-    const total = base + extrasTotal;
+    const promo = state.promo && state.promo.amount > 0 ? state.promo : null;
+    if(promo) lines.push({ label: promo.label, amount: -promo.amount, discount: true });
+    const total = Math.round((base + extrasTotal - (promo ? promo.amount : 0)) * 100) / 100;
     state.quoteTotal = total;
     const deposit = Math.round((total / 2) * 100) / 100;
     const balance = Math.round((total - deposit) * 100) / 100;
 
     const box = $("wa-summary");
-    box.innerHTML = lines.map(l => `<div class="wa-summary-line"><span>${l.label}</span><span>${rand(l.amount)}</span></div>`).join("")
+    box.innerHTML = lines.map(l => `<div class="wa-summary-line${l.discount ? " wa-discount" : ""}"><span>${esc(l.label)}</span><span>${l.amount < 0 ? "−" + rand(-l.amount) : rand(l.amount)}</span></div>`).join("")
       + `<div class="wa-summary-total"><span>Total</span><span>${rand(total)}</span></div>`
       + `<div class="wa-summary-line"><span>50% deposit to secure booking</span><span>${rand(deposit)}</span></div>`
       + `<div class="wa-summary-line"><span>Balance due before check-in</span><span>${rand(balance)}</span></div>`

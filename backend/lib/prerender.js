@@ -20,7 +20,7 @@
 const fs = require("fs").promises;
 const { getSiteContent } = require("./siteContent");
 const { thumbUrl, heroImgAttrs } = require("./thumbnails");
-const { getFacts, factsHtml, SITE } = require("./siteFacts");
+const { getFacts, factsHtml, longStayText, SITE } = require("./siteFacts");
 
 const CONTENT_TTL_MS = 60 * 1000;
 let contentCache = { at: 0, value: null };
@@ -278,7 +278,8 @@ const PAGE_INFO = {
   "location.html": { name: "Location", type: "WebPage" },
   "faq.html":      { name: "FAQ",      type: "WebPage" }, // the FAQPage entity is already in faq.html
   "reviews.html":  { name: "Reviews",  type: "WebPage" },
-  "contact.html":  { name: "Contact",  type: "ContactPage" }
+  "contact.html":  { name: "Contact",  type: "ContactPage" },
+  "policies.html": { name: "House rules & policies", type: "WebPage" }
 };
 
 // JSON for a <script> block: "</" would end the script early.
@@ -369,7 +370,70 @@ function shareImageFor(page, c) {
   return null;
 }
 
+// While a special runs: a slim banner at the top of every page and the special
+// under each "Book now" button; the homepage and unit pages also get a short note
+// with the long-stay steps. Built here so it is in the page without a flicker.
+function fmtDay(d) {
+  return new Date(d + "T00:00:00Z").toLocaleDateString("en-ZA", { day: "numeric", month: "long", timeZone: "UTC" });
+}
+function unitNames(ids) {
+  const names = ids.map(id => id.replace(/^unit(\d+)$/, "Unit $1"));
+  return names.length > 1 ? "both units" : names[0];
+}
+function specialSentence(sp) {
+  return `${esc(sp.name)}: ${sp.percent}% off ${unitNames(sp.units)} for stays of ${sp.minNights}+ nights` +
+    (sp.stayTo ? ` until ${fmtDay(sp.stayTo)}` : "") + ", when you book direct.";
+}
+function addPromotions(page, facts, html) {
+  if (!facts || !facts.promotions) return html;
+  const specials = facts.specials || [];
+  const sp = specials[0];
+  if (sp) {
+    const link = `/booking-widget.html${sp.units.length === 1 ? "?unit=" + sp.units[0] : ""}`;
+    html = html.replace(/(<a class="skip-link"[^>]*>[^<]*<\/a>)/,
+      `$1\n<div class="promo-banner"><span>${specialSentence(sp)}</span> <a href="${link}">Check dates</a></div>`);
+    html = html.split("<small>Save up to R250 per night</small>").join(`<small>${esc(sp.name)}: ${sp.percent}% off</small>`);
+  }
+  const ls = longStayText(facts.promotions);
+  if (page === "index.html") {
+    const cards = specials.map(s => `
+    <div class="home-promo-card">
+      <p class="home-promo-name">${esc(s.name)}</p>
+      <p class="home-promo-deal">${s.percent}% off ${unitNames(s.units)}</p>
+      <p>For stays of ${s.minNights} nights or more${s.stayTo ? ` until ${fmtDay(s.stayTo)}` : ""}, booked direct.${s.reason ? " " + esc(s.reason) : ""}</p>
+    </div>`).join("");
+    const longCard = ls ? `
+    <div class="home-promo-card">
+      <p class="home-promo-name">Stay longer, save more</p>
+      <p class="home-promo-deal">Up to ${Math.max(...facts.promotions.longStay.tiers.map(t => t.percent))}% off</p>
+      <p>${esc(ls.replace(" (book direct)", ""))}. Taken off the nightly rate automatically when you book direct.</p>
+    </div>` : "";
+    if (cards || longCard) {
+      html = html.replace("<!-- promo-section -->", `<section class="home-promo" aria-labelledby="home-promo-title">
+  <div class="home-promo-inner">
+    <h2 id="home-promo-title" class="eyebrow">Book direct and save</h2>
+    <div class="home-promo-cards">${cards}${longCard}
+    </div>
+    ${cards && longCard ? `<p class="home-promo-note">One discount per stay: you automatically get whichever saves you more.</p>` : ""}
+    <a class="book-btn" href="/booking-widget.html">Check availability</a>
+  </div>
+</section>`);
+    }
+  }
+  if (page === "unit1.html" || page === "unit2.html") {
+    const id = page.replace(".html", "");
+    const lines = specials.filter(s => s.units.includes(id)).map(s => `<li><b>${esc(s.name)}:</b> ${s.percent}% off for stays of ${s.minNights}+ nights${s.stayTo ? ` until ${fmtDay(s.stayTo)}` : ""}</li>`);
+    if (ls) lines.push(`<li><b>Stay longer, save more:</b> ${esc(ls.replace(" (book direct)", ""))}</li>`);
+    if (lines.length) {
+      const both = ls && lines.length > 1;
+      html = html.replace("<!-- unit-promo -->", `<ul class="unit-promo">${lines.join("")}${both ? `<li class="unit-promo-note">Booking direct, one discount per stay: whichever saves you more.</li>` : ""}</ul>`);
+    }
+  }
+  return html;
+}
+
 function applyCommon(page, c, facts, html) {
+  html = addPromotions(page, facts, html);
   // "Welverdiend at a glance" goes just before the footer, or where a page marks it
   // with <!-- quick-facts --> (the homepage keeps the weather forecast below it).
   if (facts) html = html.includes("<!-- quick-facts -->")
@@ -412,6 +476,7 @@ const PAGES = {
   "reviews.html":  (c, h) => replaceContainer(h, "reviews-list", reviewsHtml(c.reviews)),
   "location.html": (c, h) => replaceContainer(h, "recs-grid", recsHtml(c.recommendations)),
   "contact.html":  (c, h) => h,
+  "policies.html": (c, h) => h,
   "unit1.html":    (c, h) => { const g = galleryHtml(c, "unit1", "Unit 1"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "unit2.html":    (c, h) => { const g = galleryHtml(c, "unit2", "Unit 2"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "wildlife.html": (c, h) => { const g = flatGalleryHtml(c, "wildlife", "Welverdiend wildlife"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },

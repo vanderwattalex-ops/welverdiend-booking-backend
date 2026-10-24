@@ -16,6 +16,7 @@
 // ---------------------------------------------------------------------------
 
 const { getSettings } = require("./settings");
+const { runningSpecials } = require("./promotions");
 
 const SITE = "https://welverdiendaccommodation.com";
 
@@ -27,10 +28,13 @@ const FIXED = {
   email: "bookings@welverdiendaccommodation.com",
   checkIn: "14:00",
   checkOut: "10:00",
-  pets: "Any well-behaved pet welcome at no extra charge, no set limit on number or size; dogs on a lead or supervised around the wildlife",
-  included: "Free Wi-Fi, free secure parking, fully equipped kitchen, smart TV, dedicated work area and braai facilities",
+  pets: "Any well-behaved pet welcome at no extra charge, no set limit on number or size; dogs on a lead or supervised around the wildlife; no pets in the pool area",
+  included: "Bed linen and towels, fully equipped kitchen with dishwasher, 100 Mbps uncapped Wi-Fi, smart TV (Netflix), indoor fireplace, covered braai, shared pool, 2 covered parking bays",
+  minStay: "1 night",
+  cancellation: "Full refund if you cancel at least 5 days before check-in; 50% back within 5 days; free date changes if the new dates are open",
+  arrival: "Self check-in with a lockbox; instructions and a pin drop are sent before your stay",
   wildlife: "Springbok, ostriches and ducks roam freely on the property",
-  booking: "Book direct on the website with no booking fees; a 50% deposit secures the dates",
+  booking: "Book direct on the website with no booking fees; a 50% deposit by EFT within 24 hours secures the dates, the balance is due before check-in",
   alsoOn: [
     ["Airbnb (Unit 1)", "https://www.airbnb.co.za/rooms/1543967224420154478"],
     ["Airbnb (Unit 2)", "https://www.airbnb.com/rooms/1337503040346302823"],
@@ -67,8 +71,8 @@ function summariseUnits(units) {
 
 async function getFacts() {
   if (cache.value && Date.now() - cache.at < TTL_MS) return cache.value;
-  const { units } = await getSettings();
-  const value = { ...FIXED, ...summariseUnits(units) };
+  const { units, promotions } = await getSettings();
+  const value = { ...FIXED, ...summariseUnits(units), promotions, specials: runningSpecials(promotions) };
   cache = { at: Date.now(), value };
   return value;
 }
@@ -76,6 +80,13 @@ async function getFacts() {
 function esc(value) {
   return String(value == null ? "" : value)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// "3+ nights 3% off · 5+ nights 7% off ..." or null when switched off
+function longStayText(p) {
+  const ls = p && p.longStay;
+  if (!ls || !ls.enabled || !ls.tiers.length) return null;
+  return ls.tiers.map(t => `${t.nights}+ nights ${t.percent}% off`).join(" · ") + " (book direct)";
 }
 
 function rows(f) {
@@ -87,10 +98,13 @@ function rows(f) {
     ["What", `${f.unitCount} private self-catering units`],
     ["Sleeps", sleeps],
     ["Rate", f.rate],
+    ["Long stays", longStayText(f.promotions)],
+    ["Minimum stay", f.minStay],
     ["Pets", f.pets],
-    ["Check-in", `From ${f.checkIn} · check-out by ${f.checkOut}`],
+    ["Check-in", `From ${f.checkIn}, ${f.arrival.charAt(0).toLowerCase() + f.arrival.slice(1)} · check-out by ${f.checkOut}`],
     ["Included", f.included],
-    ["Booking", f.booking]
+    ["Booking", f.booking],
+    ["Cancellation", f.cancellation]
   ].filter(([, v]) => v);
 }
 
@@ -131,6 +145,7 @@ function llmsTxt(f, content) {
     `- [Pet-Friendly Stays](${SITE}/pets.html): pets are welcome, with photos of guests' pets`,
     `- [Location](${SITE}/location.html): where it is, with nearby restaurants and shops`,
     `- [FAQ](${SITE}/faq.html): pets, check-in, booking and payment`,
+    `- [House rules & policies](${SITE}/policies.html): cancellation, payment, arrival, house rules, children and pets`,
     `- [Reviews](${SITE}/reviews.html): what guests say`,
     `- [Contact](${SITE}/contact.html): phone, email and WhatsApp`,
     `- [Book](${SITE}/booking-widget.html): live availability and direct booking`,
@@ -145,4 +160,4 @@ function llmsTxt(f, content) {
   return lines.join("\n") + "\n";
 }
 
-module.exports = { getFacts, factsHtml, llmsTxt, SITE };
+module.exports = { longStayText, getFacts, factsHtml, llmsTxt, SITE };

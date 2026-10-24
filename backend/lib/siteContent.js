@@ -307,6 +307,19 @@ async function addFaq({ question, answer }) {
   return faqs;
 }
 
+/** Changes an FAQ in place (keeps its position). */
+async function updateFaq(id, { question, answer }) {
+  const current = await getSiteContent();
+  if (!current.faqs.some(f => f.id === id)) {
+    const err = new Error("FAQ not found");
+    err.userMessage = "That question no longer exists. Refresh the page and try again.";
+    throw err;
+  }
+  const faqs = current.faqs.map(f => f.id !== id ? f : { ...f, question, answer });
+  await settingsCollection.doc(DOC_ID).set({ faqs }, { merge: true });
+  return faqs;
+}
+
 async function removeFaq(id) {
   const current = await getSiteContent();
   const faqs = current.faqs.filter(f => f.id !== id);
@@ -366,5 +379,5 @@ module.exports = {
   addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
   addGallerySection, renameGallerySection, removeGallerySection,
   addReview, removeReview,
-  addFaq, removeFaq, addRecommendation, updateRecommendation, removeRecommendation
+  addFaq, updateFaq, removeFaq, addRecommendation, updateRecommendation, removeRecommendation
 };
