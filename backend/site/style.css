@@ -323,6 +323,31 @@ h3{font-size:20px;}
   .feature-photos,.feature-photos[data-count="2"]{grid-template-columns:1fr;}
 }
 
+/* "Follow us" card (homepage), in place of Facebook's Page box */
+.social-card{
+  display:flex;align-items:center;gap:30px;max-width:640px;margin:26px auto 0;padding:28px 32px;
+  background:var(--bg);border:1px solid var(--line);border-radius:12px;text-align:left;
+  box-shadow:0 6px 24px rgba(59,42,30,.08);
+}
+.social-card-mark{flex:none;display:flex;align-items:center;justify-content:center;width:96px;height:96px;border-radius:50%;background:var(--taupe-deep);}
+.social-card-mark img{width:58px;height:auto;filter:brightness(0) invert(1) opacity(.92);}
+.social-card-name{margin:0 0 4px;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--taupe-deep);}
+.social-card-line{margin:0 0 16px;font-size:16px;line-height:1.5;color:var(--ink-soft);}
+.social-card-btns{display:flex;flex-wrap:wrap;gap:10px;}
+.social-btn{
+  display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:4px;
+  font:600 14px/1 'Inter',sans-serif;text-decoration:none;border:1px solid var(--taupe-deep);
+}
+.social-btn svg{width:17px;height:17px;}
+.social-btn-fb{background:var(--gold);border-color:var(--gold);color:var(--book-text);}
+.social-btn-fb:hover{background:var(--gold-hover);border-color:var(--gold-hover);}
+.social-btn-ig{background:transparent;color:var(--taupe-deep);}
+.social-btn-ig:hover{background:var(--taupe-deep);color:var(--on-dark);}
+@media (max-width:560px){
+  .social-card{flex-direction:column;text-align:center;padding:26px 20px;gap:18px;}
+  .social-card-btns{justify-content:center;}
+}
+
 /* Weather forecast */
 .weather-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-top:30px;max-width:900px;margin-left:auto;margin-right:auto;}
 .weather-card{background:var(--white);border:1px solid var(--line);border-radius:8px;padding:14px 8px;text-align:center;}
