@@ -41,11 +41,14 @@ const PAGES = [
 // that touches another page leaves it alone, so Google can trust the dates.
 // Fingerprints live in Firestore settings/sitemapDates; SEED holds each page's
 // last real change from the git history for the first run.
+// Bump SEED_VERSION to make every page start again from these dates (e.g. after
+// the dates were recorded before a deploy that changed the pages).
+const SEED_VERSION = 2;
 const SEED = {
-  "/": "2026-10-24", "/about.html": "2026-10-22", "/unit1.html": "2026-10-22", "/unit2.html": "2026-10-22",
-  "/wildlife.html": "2026-10-22", "/pets.html": "2026-10-22", "/location.html": "2026-10-22",
-  "/faq.html": "2026-10-22", "/reviews.html": "2026-10-22", "/contact.html": "2026-10-22", "/policies.html": "2026-10-24",
-  "/booking-widget.html": "2026-10-22"
+  "/": "2026-10-24", "/about.html": "2026-10-24", "/unit1.html": "2026-10-24", "/unit2.html": "2026-10-24",
+  "/wildlife.html": "2026-10-24", "/pets.html": "2026-10-24", "/location.html": "2026-10-24",
+  "/faq.html": "2026-10-24", "/reviews.html": "2026-10-24", "/contact.html": "2026-10-24",
+  "/policies.html": "2026-10-24", "/booking-widget.html": "2026-10-24"
 };
 const DATES_DOC = settingsCollection.doc("sitemapDates");
 
@@ -61,7 +64,8 @@ let datesCache = { at: 0, value: null };
 async function pageDates() {
   if (datesCache.value && Date.now() - datesCache.at < 10 * 60 * 1000) return datesCache.value;
   const snap = await DATES_DOC.get();
-  const saved = (snap.exists && snap.data().pages) || {};
+  const data = snap.exists ? snap.data() : {};
+  const saved = data.seedVersion === SEED_VERSION ? (data.pages || {}) : {};
   const today = new Date().toISOString().slice(0, 10);
   const pages = {};
   let changed = false;
@@ -73,7 +77,7 @@ async function pageDates() {
     pages[p.path] = { hash, date: prev ? today : (SEED[p.path] || today) };
     changed = true;
   }
-  if (changed) await DATES_DOC.set({ pages }, { merge: true });
+  if (changed) await DATES_DOC.set({ pages, seedVersion: SEED_VERSION });
   datesCache = { at: Date.now(), value: pages };
   return pages;
 }
