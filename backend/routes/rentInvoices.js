@@ -1,5 +1,5 @@
 const express = require("express");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID: uuidv4 } = require("crypto"); // same random IDs as the old uuid package
 const router = express.Router();
 const { requireAdmin } = require("./adminAuth");
 const { generateRentInvoice } = require("../lib/rentInvoicePdf");

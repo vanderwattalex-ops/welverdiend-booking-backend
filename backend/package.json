@@ -19,13 +19,12 @@
     "ical-generator": "^7.1.0",
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^2.7.0",
-    "node-ical": "^0.18.0",
-    "nodemailer": "^6.9.14",
+    "node-ical": "^0.27.3",
+    "nodemailer": "^10.2.1",
     "pdfkit": "^0.15.0",
-    "sharp": "^0.33.4",
-    "uuid": "^9.0.1"
+    "sharp": "^0.35.5"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }

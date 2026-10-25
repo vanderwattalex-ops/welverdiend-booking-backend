@@ -1,6 +1,6 @@
 const express = require("express");
 const multer = require("multer");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID: uuidv4 } = require("crypto"); // same random IDs as the old uuid package
 const router = express.Router();
 const { bookingsCollection, bucket, availabilityCollection } = require("../lib/db");
 const { getSettings } = require("../lib/settings");

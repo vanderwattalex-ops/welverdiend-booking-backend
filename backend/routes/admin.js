@@ -4,7 +4,7 @@ const { bookingsCollection, bucket, siteAssetsBucket, availabilityCollection, ov
 const { requireAdmin } = require("./adminAuth");
 const { units } = require("../config/units");
 const { rangesOverlap, subtractRanges } = require("../lib/rangeUtils");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID: uuidv4 } = require("crypto"); // same random IDs as the old uuid package
 const multer = require("multer");
 const sharp = require("sharp");
 const {

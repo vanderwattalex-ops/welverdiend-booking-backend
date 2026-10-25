@@ -1,6 +1,6 @@
 const { settingsCollection } = require("./db");
 const defaults = require("../config/siteContent");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID: uuidv4 } = require("crypto"); // same random IDs as the old uuid package
 
 // Reuses the same Firestore collection as pricing/extras settings, but
 // its own document, so "site content" and "business settings" stay
