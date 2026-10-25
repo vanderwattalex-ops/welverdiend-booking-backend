@@ -12,6 +12,7 @@ const {
   notifyGuestBalanceDue, notifyGuestPaidInFull, notifyGuestManualBooking, sendTestEmail
 } = require("../lib/email");
 const { nightsBetween, calculateTotal } = require("../lib/pricing");
+const { bestDiscount } = require("../lib/promotions");
 const { getSettings, saveSettings } = require("../lib/settings");
 const { DEFAULT_EMAIL_TEMPLATES } = require("../lib/emailTemplates");
 const { generateInvoice } = require("../lib/invoice");
@@ -255,17 +256,17 @@ const MANUAL_STAGES = {
 // body: { unitId, checkIn, checkOut, guestName, email?, phone?, adults?,
 //         children?, childrenAges?, hasPets?, petDetails?, arrivalTime?,
 //         notes?, extras?, ratePerNight?, discount?, depositAmount?,
-//         bookingChannel?, stage?, sendEmail?, force? }
+//         bookingChannel?, stage?, sendEmail?, force?, applyPromotions? }
 router.post("/admin/bookings", async (req, res) => {
   try {
     const {
       unitId, checkIn, checkOut, guestName, email, phone,
       adults, children, childrenAges, hasPets, petDetails, arrivalTime, notes,
       extras: extrasBody, ratePerNight, discount, depositAmount,
-      bookingChannel, stage, sendEmail, force
+      bookingChannel, stage, sendEmail, force, applyPromotions
     } = req.body;
 
-    const { units: settingsUnits, extras } = await getSettings();
+    const { units: settingsUnits, extras, promotions } = await getSettings();
     const unit = settingsUnits.find(u => u.id === unitId);
     if (!unit) return res.status(400).json({ ok: false, error: "Unknown unit" });
     // Dates are compared as strings elsewhere in the system, so they
@@ -309,7 +310,13 @@ router.post("/admin/bookings", async (req, res) => {
 
     const nights = nightsBetween(checkIn, checkOut);
     const selectedExtras = Array.isArray(extrasBody) ? extrasBody : [];
-    const pricing = calculateTotal(unit, nights, selectedExtras, extras, { ratePerNight, discount, depositAmount });
+    // The website's long-stay discount / running special, worked out on the
+    // rate this booking actually uses (a negotiated rate included). On by
+    // default; the form's "Apply website discounts" box switches it off.
+    const rateGiven = ratePerNight !== undefined && ratePerNight !== null && String(ratePerNight).trim() !== "";
+    const rateUsed = rateGiven && Number.isFinite(Number(ratePerNight)) && Number(ratePerNight) >= 0 ? Number(ratePerNight) : unit.pricePerNight;
+    const promo = applyPromotions === false ? null : bestDiscount({ unitId, checkIn, nights, rate: rateUsed, promotions });
+    const pricing = calculateTotal(unit, nights, selectedExtras, extras, { ratePerNight, discount, depositAmount, promo });
 
     const now = new Date().toISOString();
     const bookingId = uuidv4();

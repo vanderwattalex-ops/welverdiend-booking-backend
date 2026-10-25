@@ -758,6 +758,7 @@
           <div class="hint">Shown as its own line on the invoice.</div>
         </div>
       </div>
+      <div class="nb-checkbox"><input type="checkbox" id="nb-promo" checked><label for="nb-promo">Apply website discounts (long-stay discount or a running special, whichever saves more)</label></div>
       <div style="margin-top:6px;">${extrasHtml}</div>
       <div class="settings-field" style="margin-top:12px;"><label>Deposit due (R)</label><input type="number" id="nb-deposit" min="0" value="0">
         <div class="hint">Defaults to half the total. Set it to the full amount if they're paying everything up front.</div>
@@ -765,6 +766,7 @@
       <div class="nb-totals">
         <div class="nb-total-row"><span id="nb-base-label">Accommodation</span><span id="nb-base">R0.00</span></div>
         <div class="nb-total-row"><span>Extras</span><span id="nb-extras-total">R0.00</span></div>
+        <div class="nb-total-row"><span id="nb-promo-label">Website discount</span><span id="nb-promo-total">R0.00</span></div>
         <div class="nb-total-row"><span>Discount</span><span id="nb-discount-total">R0.00</span></div>
         <div class="nb-total-row grand"><span>Total</span><span id="nb-total">R0.00</span></div>
         <div class="nb-total-row" style="margin-top:6px;"><span>Deposit</span><span id="nb-deposit-shown">R0.00</span></div>
@@ -843,9 +845,18 @@
     // total made of extras alone, with no stay under it, reads as a
     // real price and isn't one.
     const quotable = nights > 0;
-    const discount = quotable ? Math.min(Math.max(0, Number(nbVal("nb-discount")) || 0), base + extrasTotal) : 0;
+    // Website discount: the server's quote is for the unit's normal rate, so
+    // scale it to the rate on this form (the server does the same on save).
+    const promoOn = document.getElementById("nb-promo").checked;
+    const q = nbPromo && nbPromo.key === nbPromoKey() ? nbPromo.discount : null;
+    const promoAmt = quotable && promoOn && q && unit.pricePerNight
+      ? Math.min(round2(q.amount * rate / unit.pricePerNight), base) : 0;
+    if(quotable && promoOn && (!nbPromo || nbPromo.key !== nbPromoKey())) fetchNbPromo();
+    const discount = quotable ? Math.min(Math.max(0, Number(nbVal("nb-discount")) || 0), base + extrasTotal - promoAmt) : 0;
     if(!quotable) extrasTotal = 0;
-    const total = quotable ? round2(base + extrasTotal - discount) : 0;
+    const total = quotable ? round2(base + extrasTotal - promoAmt - discount) : 0;
+    document.getElementById("nb-promo-label").textContent = promoAmt > 0 ? q.label : (promoOn ? "Website discount (none for these dates)" : "Website discount (off)");
+    document.getElementById("nb-promo-total").textContent = rand(-promoAmt);
 
     const depositField = document.getElementById("nb-deposit");
     if(!depositEdited) depositField.value = round2(total / 2).toFixed(2);
@@ -888,6 +899,24 @@
     document.getElementById("nb-stage-note").textContent = (emailNote + waNote).trim();
   }
 
+  // The long-stay discount / special for the dates on the form, from the
+  // same server code that prices website bookings.
+  let nbPromo = null, nbPromoBusy = null;
+  function nbPromoKey(){ return [nbVal("nb-unit"), nbVal("nb-checkin"), nbVal("nb-checkout")].join("|"); }
+  async function fetchNbPromo(){
+    const key = nbPromoKey();
+    if(nbPromoBusy === key) return;
+    nbPromoBusy = key;
+    try{
+      const [unitId, checkIn, checkOut] = key.split("|");
+      const r = await fetch(`${API_BASE}/api/quote?unit=${encodeURIComponent(unitId)}&checkIn=${checkIn}&checkOut=${checkOut}`);
+      const data = await r.json();
+      nbPromo = { key, discount: data.ok ? data.discount : null };
+    }catch(e){ nbPromo = { key, discount: null }; }
+    nbPromoBusy = null;
+    if(newBookingSettings && nbPromoKey() === key) recalcNewBooking();
+  }
+
   async function submitNewBooking(force){
     const msg = document.getElementById("new-booking-msg");
     const btn = document.getElementById("new-booking-create");
@@ -922,6 +951,7 @@
       bookingChannel: nbVal("nb-channel"),
       stage: nbVal("nb-stage"),
       sendEmail: document.getElementById("nb-send-email").checked,
+      applyPromotions: document.getElementById("nb-promo").checked,
       force: !!force
     };
 
@@ -1750,7 +1780,7 @@
     content.innerHTML = `
       <div class="unit-block" id="promo-block">
         <h2>Discounts &amp; specials</h2>
-        <p class="range-source" style="margin-bottom:12px;">Applied automatically to bookings made on the website (off the nightly rate only, never the extras). A stay gets one discount: whichever saves the guest more. Bookings you add by hand keep their own discount field.</p>
+        <p class="range-source" style="margin-bottom:12px;">Applied automatically to bookings made on the website (off the nightly rate only, never the extras). A stay gets one discount: whichever saves the guest more. Bookings you add by hand get them too, unless you untick "Apply website discounts" on the booking form.</p>
         <div id="promo-editor"></div>
         <button class="btn-save-settings" id="save-promo-btn">Save discounts &amp; specials</button>
         <div class="settings-msg" id="promo-msg"></div>
