@@ -274,6 +274,13 @@
   }
   .wa-modal-actions button.wa-submit{flex:2;}
   .wa-msg{font-size:12.5px;margin-top:10px;}
+  .wa-done{text-align:center;padding:18px 6px 6px;}
+  .wa-done-tick{width:56px;height:56px;margin:0 auto 12px;border-radius:50%;background:var(--success);color:#fff;font-size:30px;line-height:56px;font-weight:700;}
+  .wa-done h3{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--taupe-deep);margin:0 0 6px;}
+  .wa-done p{font-size:14.5px;line-height:1.6;color:var(--ink);margin:0 0 10px;}
+  .wa-done .wa-done-dates{font-weight:600;}
+  .wa-done .wa-done-note{font-size:13px;color:var(--ink-soft);}
+  .wa-done .wa-btn{margin-top:8px;min-width:160px;}
   .wa-msg.error{color:var(--danger);}
   .wa-msg.success{color:var(--success);}
   .wa-close{position:absolute;top:16px;right:18px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink-soft);}
@@ -452,6 +459,14 @@
       </div>
       <div class="wa-msg" id="wa-form-msg"></div>
     </form>
+    <div class="wa-done" id="wa-done" hidden role="status" aria-live="polite">
+      <div class="wa-done-tick" aria-hidden="true">✓</div>
+      <h3 id="wa-done-title">Request sent</h3>
+      <p class="wa-done-dates" id="wa-done-dates"></p>
+      <p id="wa-done-msg"></p>
+      <p class="wa-done-note">Please don't send it again. Questions? WhatsApp us on 079 118 3173.</p>
+      <button type="button" class="wa-btn" id="wa-done-close">Done</button>
+    </div>
   </div>
 </div>
 
@@ -868,10 +883,16 @@
     if(window.wdPixel) wdPixel("InitiateCheckout", { content_ids: [state.activeUnitId], content_type: "hotel", num_items: nights(), value: state.quoteTotal, currency: "ZAR" });
   };
   $("wa-modal-close").onclick = closeModal;
+  $("wa-done-close").onclick = closeModal;
   $("wa-cancel").onclick = closeModal;
   function closeModal(){
     $("wa-modal-overlay").classList.remove("show");
     $("wa-form-msg").textContent = "";
+    // back to the form for a next booking
+    $("wa-done").hidden = true;
+    $("wa-booking-form").hidden = false;
+    $("wa-modal-title").hidden = false; $("wa-modal-sub").hidden = false;
+    $("wa-submit-btn").disabled = false; $("wa-submit-btn").textContent = "Submit booking request";
   }
 
   $("wa-booking-form").onsubmit = async (e) => {
@@ -911,19 +932,24 @@
       });
       const data = await res.json();
       if(data.ok){
-        if(window.wdPixel) wdPixel("Lead", { content_ids: [payload.unitId], content_type: "hotel", value: state.quoteTotal, currency: "ZAR" });
-        msg.className = "wa-msg success";
-        msg.textContent = data.message;
-        setTimeout(() => {
-          closeModal();
-          state.selectStart = null; state.selectEnd = null;
-          state.extraSelections = {};
-          $("wa-booking-form").reset();
-          $("wa-pet-details-wrap").classList.remove("show");
-          $("wa-children-ages-wrap").style.display = "none";
-          loadAll();
-          updateSelectionBar();
-        }, 3200);
+        if(window.wdPixel && !data.duplicate) wdPixel("Lead", { content_ids: [payload.unitId], content_type: "hotel", value: state.quoteTotal, currency: "ZAR" });
+        // A clear screen that stays until the guest closes it, so nobody
+        // thinks it didn't go through and sends it again.
+        const unit = activeUnit();
+        $("wa-done-title").textContent = data.duplicate ? "We already have your request" : "Request sent";
+        $("wa-done-dates").textContent = `${unit ? unit.unitName : ""} · ${fmtDate(payload.checkIn)} to ${fmtDate(payload.checkOut)}`;
+        $("wa-done-msg").textContent = data.message;
+        $("wa-booking-form").hidden = true;
+        $("wa-done").hidden = false;
+        $("wa-modal-title").hidden = true; $("wa-modal-sub").hidden = true;
+        $("wa-done-close").focus();
+        state.selectStart = null; state.selectEnd = null;
+        state.extraSelections = {};
+        $("wa-booking-form").reset();
+        $("wa-pet-details-wrap").classList.remove("show");
+        $("wa-children-ages-wrap").style.display = "none";
+        updateSelectionBar();
+        return; // the button stays disabled: this request is done
       } else {
         msg.className = "wa-msg error";
         msg.textContent = data.error || "Something went wrong — please try again.";

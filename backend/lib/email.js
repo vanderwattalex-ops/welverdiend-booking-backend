@@ -78,6 +78,16 @@ async function resolveEmail(templateKey, vars) {
   return { subject: fillTemplate(subjectTemplate, vars), html: fillTemplate(bodyTemplate, vars) };
 }
 
+async function notifyGuestReceived(booking, unitName) {
+  const vars = {
+    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    nights: booking.nights, nightsSuffix: booking.nights === 1 ? "" : "s",
+    totalAmount: rand(booking.totalAmount), depositAmount: rand(booking.depositAmount)
+  };
+  const { subject, html } = await resolveEmail("received", vars);
+  return sendMail({ to: booking.email, subject, html });
+}
+
 async function notifyOwnerNewRequest(booking, unitName) {
   const { ownerNotificationEmail } = await getSettings();
   return sendMail({
@@ -296,6 +306,7 @@ async function sendTestEmail(to) {
 
 module.exports = {
   notifyOwnerNewRequest,
+  notifyGuestReceived,
   notifyGuestApproved,
   notifyGuestManualBooking,
   sendRentInvoice,

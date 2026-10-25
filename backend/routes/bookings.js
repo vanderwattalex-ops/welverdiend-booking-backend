@@ -7,7 +7,7 @@ const { getSettings } = require("../lib/settings");
 const { rangesOverlap } = require("../lib/rangeUtils");
 const { nightsBetween, calculateTotal } = require("../lib/pricing");
 const { bestDiscount } = require("../lib/promotions");
-const { notifyOwnerNewRequest, notifyOwnerProofUploaded, notifyOwnerBalanceProofUploaded } = require("../lib/email");
+const { notifyOwnerNewRequest, notifyGuestReceived, notifyOwnerProofUploaded, notifyOwnerBalanceProofUploaded } = require("../lib/email");
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -65,6 +65,30 @@ router.post("/bookings", express.json(), async (req, res) => {
       return res.status(400).json({ ok: false, error: "Name, email and phone are required" });
     }
 
+    // Same person, same unit, same dates, request still open: don't make a
+    // second one (a guest who didn't notice the first went through). They get
+    // the same "received" answer and the owner isn't notified twice.
+    const digits = s => String(s || "").replace(/\D/g, "").slice(-9);
+    const sameGuest = b => (email && b.email && b.email.trim().toLowerCase() === String(email).trim().toLowerCase())
+      || (digits(phone).length >= 9 && digits(b.phone) === digits(phone));
+    const openSnap = await bookingsCollection.where("unitId", "==", unitId).where("checkIn", "==", checkIn).get();
+    const existing = openSnap.docs.map(d => d.data())
+      .find(b => b.checkOut === checkOut && ["requested", "awaiting_payment", "submitted"].includes(b.status) && sameGuest(b));
+    if (existing) {
+      return res.json({
+        ok: true,
+        duplicate: true,
+        bookingId: existing.id,
+        totalAmount: existing.totalAmount,
+        depositAmount: existing.depositAmount,
+        balanceAmount: existing.balanceAmount,
+        lineItems: existing.lineItems,
+        message: existing.status === "requested"
+          ? "We already have your request for these dates, so there's no need to send it again. We'll email you as soon as they're approved."
+          : "We already have your booking for these dates. Please check your email for the payment details, or WhatsApp us on 079 118 3173."
+      });
+    }
+
     const free = await isRangeFree(unitId, checkIn, checkOut);
     if (!free) {
       return res.status(409).json({ ok: false, error: "Those dates were just booked elsewhere — please pick different dates." });
@@ -108,6 +132,7 @@ router.post("/bookings", express.json(), async (req, res) => {
     };
     await bookingsCollection.doc(bookingId).set(booking);
     notifyOwnerNewRequest(booking, unit.name).catch(err => console.error("[bookings] owner notification failed:", err));
+    notifyGuestReceived(booking, unit.name).catch(err => console.error("[bookings] guest receipt failed:", err));
 
     res.json({
       ok: true,
@@ -116,7 +141,7 @@ router.post("/bookings", express.json(), async (req, res) => {
       depositAmount,
       balanceAmount,
       lineItems,
-      message: `Request received — we'll check these dates and email you as soon as they're approved, with instructions to pay a R${depositAmount.toFixed(2)} deposit.`
+      message: `We'll check these dates and email you as soon as they're approved, with instructions to pay the R${depositAmount.toFixed(2)} deposit. We've also emailed you a copy of your request.`
     });
   } catch (err) {
     console.error("[bookings] request failed:", err);

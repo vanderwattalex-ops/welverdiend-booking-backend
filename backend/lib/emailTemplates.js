@@ -4,6 +4,15 @@
 // is customized, AND what's shown pre-filled in the dashboard's Settings
 // tab so there's never a mismatch between the two.
 const DEFAULT_EMAIL_TEMPLATES = {
+  received: {
+    subject: `We've received your booking request — Welverdiend Accommodation`,
+    body: `
+      <p>Hi {{guestName}},</p>
+      <p>Thank you! We've received your request for <b>{{unitName}}, {{checkIn}} → {{checkOut}}</b> ({{nights}} night{{nightsSuffix}}), total <b>{{totalAmount}}</b>.</p>
+      <p>There's no need to send it again. We'll check the dates and email you as soon as they're approved, usually within a few hours, with the banking details to pay the {{depositAmount}} deposit that secures your stay.</p>
+      <p>Your dates aren't reserved until the deposit is paid. Questions? Just reply to this email or WhatsApp us on 079 118 3173.</p>
+    `
+  },
   approved: {
     subject: `Good news — your dates at Welverdiend Accommodation are available`,
     body: `
