@@ -96,6 +96,12 @@
           data,
           isDeposit: true
         });
+      } else if(data.status === "requested"){
+        content.innerHTML = `<p class="state-note">We're still checking these dates. We'll email you as soon as your booking is approved, with the payment details. There's nothing to pay yet.</p>`;
+      } else if(data.status === "expired"){
+        content.innerHTML = `<p class="state-note">This booking expired because we didn't receive proof of payment within 24 hours of approval, so the dates were released. If you've already paid, please WhatsApp us on 079 118 3173 with your proof of payment and we'll sort it out.</p>`;
+      } else if(data.status === "rejected"){
+        content.innerHTML = `<p class="state-note">This booking is no longer active. If you have any questions, please WhatsApp us on 079 118 3173.</p>`;
       } else if(data.status === "submitted"){
         content.innerHTML = `<p class="state-note">Thanks — your deposit proof of payment has already been received. We'll be in touch with final confirmation shortly.</p>`;
       } else if(data.status === "confirmed" && data.balanceStatus === "unpaid"){

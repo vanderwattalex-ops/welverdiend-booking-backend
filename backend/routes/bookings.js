@@ -18,6 +18,12 @@ const upload = multer({
   }
 });
 
+// File extension from the (already checked) file type, never from the
+// uploaded file's name.
+function proofExt(file) {
+  return { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "application/pdf": "pdf" }[file.mimetype] || "bin";
+}
+
 // excludeOwnRange lets a booking's own hold (which the sync already wrote
 // into busyRanges the moment it was approved, so a second guest can't be
 // approved for the same dates) be ignored when THAT SAME booking re-checks
@@ -58,12 +64,27 @@ router.post("/bookings", express.json(), async (req, res) => {
     const { units, extras, promotions } = await getSettings();
     const unit = units.find(u => u.id === unitId);
     if (!unit) return res.status(400).json({ ok: false, error: "Unknown unit" });
-    if (!checkIn || !checkOut || checkIn >= checkOut) {
-      return res.status(400).json({ ok: false, error: "Invalid date range" });
+    // Real calendar dates only (YYYY-MM-DD). Anything else is refused: these
+    // strings are stored, compared and shown in the dashboard.
+    const isDate = d => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d) && new Date(d + "T00:00:00Z").toISOString().slice(0, 10) === d;
+    const todaySA = new Date(Date.now() + 2 * 3600 * 1000).toISOString().slice(0, 10); // South African date
+    if (!isDate(checkIn) || !isDate(checkOut) || checkIn >= checkOut) {
+      return res.status(400).json({ ok: false, error: "Please pick a check-in date and a later check-out date." });
     }
-    if (!guestName || !email || !phone) {
+    if (checkIn < todaySA) {
+      return res.status(400).json({ ok: false, error: "That check-in date has already passed. Please pick new dates." });
+    }
+    if (nightsBetween(checkIn, checkOut) > 120) {
+      return res.status(400).json({ ok: false, error: "For stays longer than 120 nights, please contact us directly." });
+    }
+    const text = (v, max) => String(v == null ? "" : v).trim().slice(0, max);
+    if (!text(guestName, 120) || !text(email, 200) || !text(phone, 40)) {
       return res.status(400).json({ ok: false, error: "Name, email and phone are required" });
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text(email, 200))) {
+      return res.status(400).json({ ok: false, error: "That email address doesn't look right. Please check it." });
+    }
+    const count = (v, min, max, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : dflt; };
 
     // Same person, same unit, same dates, request still open: don't make a
     // second one (a guest who didn't notice the first went through). They get
@@ -107,16 +128,16 @@ router.post("/bookings", express.json(), async (req, res) => {
       checkIn,
       checkOut,
       nights,
-      guestName,
-      email,
-      phone,
-      adults: adults ? Number(adults) : 1,
-      children: children ? Number(children) : 0,
-      childrenAges: childrenAges || "",
+      guestName: text(guestName, 120),
+      email: text(email, 200),
+      phone: text(phone, 40),
+      adults: count(adults, 1, 10, 1),
+      children: count(children, 0, 10, 0),
+      childrenAges: text(childrenAges, 120),
       hasPets: !!hasPets,
-      petDetails: petDetails || "",
-      arrivalTime: arrivalTime || "",
-      notes: notes || "",
+      petDetails: text(petDetails, 300),
+      arrivalTime: text(arrivalTime, 60),
+      notes: text(notes, 2000),
       extras: selectedExtras,
       lineItems,
       totalAmount: total,
@@ -213,7 +234,7 @@ router.post("/bookings/:id/proof", upload.single("proof"), async (req, res) => {
       return res.status(409).json({ ok: false, error: "Sorry — these dates were booked elsewhere in the meantime. Please contact us directly." });
     }
 
-    const ext = (req.file.originalname.split(".").pop() || "jpg");
+    const ext = proofExt(req.file);
     const objectPath = `proof-of-payment/${booking.id}-deposit.${ext}`;
     await bucket.file(objectPath).save(req.file.buffer, {
       contentType: req.file.mimetype,
@@ -255,7 +276,7 @@ router.post("/bookings/:id/balance-proof", upload.single("proof"), async (req, r
       return res.status(400).json({ ok: false, error: "Please attach your proof of payment." });
     }
 
-    const ext = (req.file.originalname.split(".").pop() || "jpg");
+    const ext = proofExt(req.file);
     const objectPath = `proof-of-payment/${booking.id}-balance.${ext}`;
     await bucket.file(objectPath).save(req.file.buffer, {
       contentType: req.file.mimetype,

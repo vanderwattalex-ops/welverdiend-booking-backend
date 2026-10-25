@@ -1,7 +1,7 @@
 const { syncUnit } = require("./icalSync");
 const { units } = require("../config/units");
 const { availabilityCollection, bookingsCollection, overridesCollection } = require("./db");
-const { subtractRanges } = require("./rangeUtils");
+const { subtractRanges, mergeRanges } = require("./rangeUtils");
 const { recordStartedStays } = require("./reviews");
 
 /**
@@ -38,11 +38,34 @@ async function getOverrides(unitId) {
  * or auto-expiring a booking — instead of waiting up to 5 minutes for
  * the next scheduled sync to catch up.
  */
+/**
+ * When Airbnb, Booking.com or Lekkeslaap can't be reached (both attempts
+ * failed), that feed contributes nothing to this sync. Saving that as-is
+ * would wipe its reservations from the calendar until the next good sync,
+ * showing booked nights as open. Instead, its ranges from the last saved
+ * calendar are carried over until the feed loads again.
+ */
+function keepFailedFeeds(result, previous) {
+  const failed = Object.entries(result.feedHealth || {}).filter(([, h]) => h && h.ok === false).map(([k]) => k);
+  if (!failed.length || !previous || !Array.isArray(previous.busyRanges)) return result;
+  const carried = previous.busyRanges
+    .filter(r => (r.sources || []).some(s => failed.includes(s)))
+    .map(r => ({ start: r.start, end: r.end, source: (r.sources || []).find(s => failed.includes(s)), blocked: r.blocked === true }));
+  if (!carried.length) return result;
+  const flat = [];
+  for (const r of result.busyRanges) {
+    (r.sources || []).forEach(s => flat.push({ start: r.start, end: r.end, source: s, blocked: r.blocked === true }));
+    (r.details || []).forEach(d => flat.push({ start: r.start, end: r.end, source: "direct", detail: d, blocked: false }));
+  }
+  return { ...result, busyRanges: mergeRanges([...flat, ...carried]), carriedFromLastSync: failed };
+}
+
 async function syncUnitAndSave(unitId) {
   const unitConfig = units.find(u => u.id === unitId);
   if (!unitConfig) return null;
   const own = await getOwnBusyRanges(unitId);
-  const result = await syncUnit(unitConfig, own);
+  const previousDoc = await availabilityCollection.doc(unitId).get();
+  const result = keepFailedFeeds(await syncUnit(unitConfig, own), previousDoc.exists ? previousDoc.data() : null);
   const overrides = await getOverrides(unitId);
   if (overrides.length) result.busyRanges = subtractRanges(result.busyRanges, overrides);
   await availabilityCollection.doc(unitId).set(result);
@@ -53,4 +76,4 @@ async function syncUnitAndSave(unitId) {
   return result;
 }
 
-module.exports = { getOwnBusyRanges, getOverrides, syncUnitAndSave };
+module.exports = { getOwnBusyRanges, getOverrides, syncUnitAndSave, keepFailedFeeds };

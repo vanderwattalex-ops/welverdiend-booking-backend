@@ -298,6 +298,14 @@ router.post("/admin/bookings", async (req, res) => {
     if (!force) {
       const availDoc = await availabilityCollection.doc(unitId).get();
       const busyRanges = availDoc.exists ? availDoc.data().busyRanges || [] : [];
+      const own = await ownHoldClash(unitId, checkIn, checkOut, null);
+      if (own) {
+        return res.status(409).json({
+          ok: false,
+          conflict: true,
+          error: `${unit.name} is already booked ${own.checkIn} → ${own.checkOut} (${own.guestName}, direct).`
+        });
+      }
       const clash = busyRanges.find(r => rangesOverlap(checkIn, checkOut, r.start, r.end));
       if (clash) {
         return res.status(409).json({
@@ -444,6 +452,18 @@ router.post("/admin/bookings/:id/send-invoice", async (req, res) => {
 // gets caught here instead of double-booking a unit.
 // -----------------------------------------------------------------
 
+// Another of our own bookings already holding (part of) these dates. Read
+// from the bookings themselves, so two approvals a few seconds apart can't
+// both pass before the calendar has been re-synced.
+async function ownHoldClash(unitId, checkIn, checkOut, excludeId) {
+  const snap = await bookingsCollection
+    .where("unitId", "==", unitId)
+    .where("status", "in", ["awaiting_payment", "submitted", "confirmed"])
+    .get();
+  return snap.docs.map(d => d.data())
+    .find(b => b.id !== excludeId && rangesOverlap(checkIn, checkOut, b.checkIn, b.checkOut)) || null;
+}
+
 // POST /api/admin/bookings/:id/approve
 router.post("/admin/bookings/:id/approve", async (req, res) => {
   try {
@@ -460,6 +480,13 @@ router.post("/admin/bookings/:id/approve", async (req, res) => {
     const availDoc = await availabilityCollection.doc(booking.unitId).get();
     const busyRanges = availDoc.exists ? availDoc.data().busyRanges || [] : [];
     const conflict = busyRanges.some(r => rangesOverlap(booking.checkIn, booking.checkOut, r.start, r.end));
+    const clash = await ownHoldClash(booking.unitId, booking.checkIn, booking.checkOut, booking.id);
+    if (clash) {
+      return res.status(409).json({
+        ok: false,
+        error: `${clash.guestName}'s booking already holds ${clash.checkIn} → ${clash.checkOut} in this unit. Decline this request, or cancel the other booking first.`
+      });
+    }
     if (conflict) {
       return res.status(409).json({
         ok: false,

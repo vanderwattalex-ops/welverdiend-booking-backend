@@ -478,7 +478,7 @@
         <div class="card-head">
           <div>
             <h3>${esc(b.guestName)} · ${esc(b.unitId)}</h3>
-            <div class="dates">${b.checkIn} → ${b.checkOut} (${b.nights || ""} night${b.nights===1?"":"s"})${b.arrivalTime ? " · arriving " + esc(b.arrivalTime) : ""}</div>
+            <div class="dates">${esc(b.checkIn)} → ${esc(b.checkOut)} (${Number(b.nights) || ""} night${b.nights===1?"":"s"})${b.arrivalTime ? " · arriving " + esc(b.arrivalTime) : ""}</div>
           </div>
           <div class="head-tags">
             ${b.manual ? `<span class="status manual" title="Captured by you, not requested through the website">Manual${b.bookingChannel && CHANNEL_LABELS[b.bookingChannel] ? " · " + CHANNEL_LABELS[b.bookingChannel] : ""}</span>` : ""}
@@ -1660,10 +1660,10 @@
         return `
           <div class="range-row">
             <div>
-              <div class="range-dates">${r.start} → ${r.end}</div>
+              <div class="range-dates">${esc(r.start)} → ${esc(r.end)}</div>
               <div class="range-source">Booked via ${names}${who}</div>
             </div>
-            <button class="btn-unblock" data-unit="${u.unitId}" data-start="${r.start}" data-end="${r.end}">Unblock</button>
+            <button class="btn-unblock" data-unit="${escAttr(u.unitId)}" data-start="${escAttr(r.start)}" data-end="${escAttr(r.end)}">Unblock</button>
           </div>
         `;
       }).join("") || `<p class="no-ranges">No booked dates right now.</p>`;

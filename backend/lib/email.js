@@ -80,7 +80,7 @@ async function resolveEmail(templateKey, vars) {
 
 async function notifyGuestReceived(booking, unitName) {
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights, nightsSuffix: booking.nights === 1 ? "" : "s",
     totalAmount: rand(booking.totalAmount), depositAmount: rand(booking.depositAmount)
   };
@@ -98,9 +98,9 @@ async function notifyOwnerNewRequest(booking, unitName) {
       <ul>
         <li><b>Unit:</b> ${unitName}</li>
         <li><b>Dates:</b> ${fmtDate(booking.checkIn)} → ${fmtDate(booking.checkOut)} (${booking.nights} night${booking.nights === 1 ? "" : "s"})</li>
-        <li><b>Guest:</b> ${booking.guestName} (${booking.email}, ${booking.phone})</li>
+        <li><b>Guest:</b> ${escapeHtml(booking.guestName)} (${escapeHtml(booking.email)}, ${escapeHtml(booking.phone)})</li>
         <li><b>Guests:</b> ${booking.adults} adult${booking.adults === 1 ? "" : "s"}${booking.children ? `, ${booking.children} child${booking.children === 1 ? "" : "ren"}` : ""}</li>
-        <li><b>Pets:</b> ${booking.hasPets ? (booking.petDetails || "Yes") : "No"}</li>
+        <li><b>Pets:</b> ${booking.hasPets ? (escapeHtml(booking.petDetails) || "Yes") : "No"}</li>
         <li><b>Total:</b> ${rand(booking.totalAmount)} (${rand(booking.depositAmount)} deposit + ${rand(booking.balanceAmount)} balance)</li>
       </ul>
       <p>Open your admin dashboard to approve or decline these dates.</p>
@@ -116,7 +116,7 @@ async function notifyGuestApproved(booking, unitName, invoiceBuffer) {
     : `<p>Please reply to this email with your proof of payment to secure your booking.</p>`;
 
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights, depositAmount: rand(booking.depositAmount), balanceAmount: rand(booking.balanceAmount),
     bankDetails, uploadUrl, paymentInstructions, depositDeadline: fmtDepositDeadline(booking)
   };
@@ -142,7 +142,7 @@ async function notifyGuestManualBooking(booking, unitName, invoiceBuffer) {
     : `<p>Please reply to this email with your proof of payment once you've paid.</p>`;
 
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights, nightsSuffix: booking.nights === 1 ? "" : "s",
     depositAmount: rand(booking.depositAmount), balanceAmount: rand(booking.balanceAmount),
     totalAmount: rand(booking.totalAmount), bankDetails, uploadUrl, paymentInstructions
@@ -205,7 +205,7 @@ async function notifyOwnerProofUploaded(booking, unitName) {
 
 async function notifyGuestConfirmed(booking, unitName, invoiceBuffer) {
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights, balanceAmount: rand(booking.balanceAmount)
   };
   const { subject, html } = await resolveEmail("confirmed", vars);
@@ -224,7 +224,7 @@ async function notifyGuestConfirmed(booking, unitName, invoiceBuffer) {
 async function notifyGuestDeclined(booking, unitName, reason) {
   const reasonSuffix = reason ? `: ${reason}` : ".";
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights, reason: reason || "", reasonSuffix
   };
   const { subject, html } = await resolveEmail("declined", vars);
@@ -233,7 +233,7 @@ async function notifyGuestDeclined(booking, unitName, reason) {
 
 async function notifyGuestExpired(booking, unitName) {
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights
   };
   const { subject, html } = await resolveEmail("expired", vars);
@@ -248,7 +248,7 @@ async function notifyGuestBalanceDue(booking, unitName) {
     : `<p>Please reply to this email once you've paid the balance.</p>`;
 
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights, balanceAmount: rand(booking.balanceAmount), uploadUrl, paymentInstructions
   };
   const { subject, html } = await resolveEmail("balanceDue", vars);
@@ -264,7 +264,7 @@ async function notifyGuestCheckinReminder(booking, unitName) {
     : `<p>Your remaining balance of <b>${rand(booking.balanceAmount)}</b> is still due. ${uploadUrl ? `Please pay by EFT and upload proof here: <a href="${uploadUrl}">${uploadUrl}</a>` : "Please arrange payment before check-in."}</p>`;
 
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     paidSoFar: rand(paidSoFar), totalAmount: rand(booking.totalAmount), balanceAmount: rand(booking.balanceAmount),
     uploadUrl, balanceStatusNote
   };
@@ -274,7 +274,7 @@ async function notifyGuestCheckinReminder(booking, unitName) {
 
 async function notifyGuestPaidInFull(booking, unitName, invoiceBuffer) {
   const vars = {
-    guestName: booking.guestName, unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
+    guestName: escapeHtml(booking.guestName), unitName, checkIn: fmtDate(booking.checkIn), checkOut: fmtDate(booking.checkOut),
     nights: booking.nights
   };
   const { subject, html } = await resolveEmail("paidInFull", vars);
