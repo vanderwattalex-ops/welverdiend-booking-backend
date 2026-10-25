@@ -10,7 +10,7 @@ const DEFAULT_EMAIL_TEMPLATES = {
       <p>Hi {{guestName}},</p>
       <p>Thank you! We've received your request for <b>{{unitName}}, {{checkIn}} → {{checkOut}}</b> ({{nights}} night{{nightsSuffix}}), total <b>{{totalAmount}}</b>.</p>
       <p>There's no need to send it again. We'll check the dates and email you as soon as they're approved, usually within a few hours, with the banking details to pay the {{depositAmount}} deposit that secures your stay.</p>
-      <p>Your dates aren't reserved until the deposit is paid. Questions? Just reply to this email or WhatsApp us on 079 118 3173.</p>
+      <p>Please note: your dates aren't reserved yet. They stay open until we approve your request; once approved, we hold them for you for 24 hours while you pay the deposit. Questions? Just reply to this email or WhatsApp us on 079 118 3173.</p>
     `
   },
   approved: {
