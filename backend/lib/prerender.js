@@ -392,7 +392,7 @@ function addPromotions(page, facts, html) {
     const link = `/booking-widget.html${sp.units.length === 1 ? "?unit=" + sp.units[0] : ""}`;
     html = html.replace(/(<a class="skip-link"[^>]*>[^<]*<\/a>)/,
       `$1\n<div class="promo-banner"><span>${specialSentence(sp)}</span> <a href="${link}">Check dates</a></div>`);
-    html = html.split("<small>Save up to R250 per night</small>").join(`<small>${esc(sp.name)}: ${sp.percent}% off</small>`);
+    html = html.split("<small>Save up to R250 per night</small>").join(`<small>${sp.percent}% off ${unitNames(sp.units)}</small>`);
   }
   const ls = longStayText(facts.promotions);
   if (page === "index.html") {
