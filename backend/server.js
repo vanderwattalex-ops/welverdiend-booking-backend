@@ -93,7 +93,7 @@ app.get("/i/:id/:key", require("./routes/invoiceLink").invoicePage);
 function cacheFor(res, filePath) {
   // Font files are never edited in place (a new font gets a new name), so they can be cached for a year
   if (/\.woff2$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
-  else if (/\.(png|jpe?g|webp|svg|ico)$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=604800");
+  else if (/\.(png|jpe?g|webp|svg|ico|mp4)$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=604800");
   else if (/\.(css|js)$/i.test(filePath)) res.setHeader("Cache-Control", "public, max-age=3600");
 }
 app.use("/assets", express.static(path.join(__dirname, "public"), { setHeaders: cacheFor })); // unit photos

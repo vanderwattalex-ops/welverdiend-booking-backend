@@ -142,7 +142,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/style.css?v=20261024d">
+<link rel="stylesheet" href="/style.css?v=20261026a">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -195,6 +195,7 @@
 
 <div class="hero">
   <img id="hero-top-img" src="" width="1600" height="1067" alt="Welverdiend Accommodation">
+  <video id="hero-video" class="hero-video" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
   <div class="hero-overlay">
     <p class="eyebrow">Your perfect escape · wildlife, tranquility and city convenience</p>
     <h1>Pet-friendly self-catering in Bloemfontein</h1>
@@ -458,6 +459,27 @@
       `).join("");
     })
     .catch(() => {});
+
+  // Background video over the top photo. It only starts after the page has
+  // loaded, so the photo stays the first thing people see, and it's skipped
+  // for anyone who has motion turned off, data saver on, or a very slow
+  // connection (they keep the photo).
+  (function(){
+    const video = document.getElementById("hero-video");
+    const conn = navigator.connection || {};
+    if(matchMedia("(prefers-reduced-motion: reduce)").matches || conn.saveData || /2g/.test(conn.effectiveType || "")) return;
+    const size = window.innerWidth <= 900 ? "720" : "1080";
+    function start(){
+      video.src = `/assets/video/home-hero-20261026-${size}.mp4`;
+      video.addEventListener("playing", () => video.classList.add("is-playing"), { once: true });
+      video.play().catch(() => {}); // e.g. phone battery saver blocks it: the photo stays
+      // Pause while the top of the page is scrolled out of view
+      if("IntersectionObserver" in window){
+        new IntersectionObserver(([e]) => { if(e.isIntersecting) video.play().catch(() => {}); else video.pause(); }).observe(video);
+      }
+    }
+    if(document.readyState === "complete") start(); else window.addEventListener("load", start, { once: true });
+  })();
 
   function toISO(d){
     const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,"0"), day = String(d.getDate()).padStart(2,"0");
