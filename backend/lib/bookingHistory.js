@@ -43,12 +43,26 @@ function planHistoryWrites(unitId, busyRanges, existing, today, nowIso) {
   const byId = new Map(existing.map(d => [d.id, d]));
   const writes = [];
 
+  const active = existing
+    .filter(d => d.status === "live" || d.status === "kept")
+    .sort((a, b) => a.start.localeCompare(b.start));
+  const seen = new Set();
+
   for (const r of current) {
-    const id = historyKey(unitId, r);
-    const prev = byId.get(id);
-    const data = { unitId, start: r.start, end: r.end, sources: r.sources || [], blocked: r.blocked === true, status: "live", lastSeenAt: nowIso };
+    let id = historyKey(unitId, r);
+    let prev = byId.get(id);
+    if (!prev) {
+      // Booking.com and Lekkeslaap trim the nights already passed off an
+      // in-progress stay, so 26 Sep → 2 Oct comes back as 27 Sep → 2 Oct
+      // the next day. That's the same stay, not a new one — carry it on
+      // under its original check-in instead of losing the earlier nights.
+      const parent = active.find(d => d.start < r.start && r.start <= today && d.end > r.start && !seen.has(d.id));
+      if (parent) { id = parent.id; prev = parent; }
+    }
+    seen.add(id);
+    const data = { unitId, start: prev ? prev.start : r.start, end: r.end, sources: r.sources || [], blocked: r.blocked === true, status: "live", lastSeenAt: nowIso };
     if (!prev) data.firstSeenAt = nowIso;
-    if (!prev || prev.status !== "live" || prev.blocked !== data.blocked || String(prev.sources) !== String(data.sources)) {
+    if (!prev || prev.status !== "live" || prev.end !== data.end || prev.blocked !== data.blocked || String(prev.sources) !== String(data.sources)) {
       writes.push({ id, data });
     } else {
       // Unchanged — only refresh lastSeenAt once a day to keep writes low.
@@ -57,7 +71,7 @@ function planHistoryWrites(unitId, busyRanges, existing, today, nowIso) {
   }
 
   for (const d of existing) {
-    if (currentKeys.has(d.id)) continue;
+    if (currentKeys.has(d.id) || seen.has(d.id)) continue;
     if (d.status !== "live" && d.status !== "kept") continue;
     const overlapsLive = current.some(r => rangesOverlap(r.start, r.end, d.start, d.end));
     let status;
@@ -113,12 +127,39 @@ async function backfillFromReviewStays() {
   await batch.commit();
 }
 
-/** Stays that have left the feed but really happened. */
-async function getKeptStays() {
-  await backfillFromReviewStays()
-    .catch(err => console.error("[bookingHistory] reviewStays backfill failed:", err.message));
-  const snap = await bookingHistoryCollection.where("status", "==", "kept").get();
-  return snap.docs.map(d => d.data());
+/**
+ * Folds overlapping records of one unit into a single stay (earliest
+ * check-in, latest check-out). The Reviews-tab import holds one record per
+ * day of a trimmed stay, and a unit can't host two stays at once, so any
+ * overlap is the same stay. Back-to-back stays (checkout = next check-in)
+ * don't overlap and stay separate.
+ */
+function foldStays(records) {
+  const out = [];
+  const byUnit = {};
+  records.forEach(r => (byUnit[r.unitId] = byUnit[r.unitId] || []).push(r));
+  Object.values(byUnit).forEach(list => {
+    list.sort((a, b) => a.start.localeCompare(b.start));
+    for (const r of list) {
+      const last = out.length && out[out.length - 1].unitId === r.unitId ? out[out.length - 1] : null;
+      if (last && r.start < last.end) {
+        if (r.end > last.end) last.end = r.end;
+        last.sources = [...new Set([...last.sources, ...(r.sources || [])])];
+        last.blocked = last.blocked && r.blocked === true;
+      } else {
+        out.push({ unitId: r.unitId, start: r.start, end: r.end, sources: [...(r.sources || [])], blocked: r.blocked === true });
+      }
+    }
+  });
+  return out;
 }
 
-module.exports = { recordBookingHistory, getKeptStays, planHistoryWrites, historyKey };
+/** Every OTA stay on record — still in the feed or already dropped by it. */
+async function getRecordedStays() {
+  await backfillFromReviewStays()
+    .catch(err => console.error("[bookingHistory] reviewStays backfill failed:", err.message));
+  const snap = await bookingHistoryCollection.where("status", "in", ["live", "kept"]).get();
+  return foldStays(snap.docs.map(d => d.data()).filter(s => !(s.sources || []).includes("direct")));
+}
+
+module.exports = { recordBookingHistory, getRecordedStays, planHistoryWrites, foldStays, historyKey };

@@ -18,7 +18,7 @@ const { DEFAULT_EMAIL_TEMPLATES } = require("../lib/emailTemplates");
 const { generateInvoice } = require("../lib/invoice");
 const { invoiceLinkKey } = require("./invoiceLink");
 const { syncUnitAndSave } = require("../lib/availabilitySync");
-const { getKeptStays } = require("../lib/bookingHistory");
+const { getRecordedStays } = require("../lib/bookingHistory");
 const {
   getSiteContent,
   saveAboutParagraphs, savePetCaptions, saveFeatureText, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
@@ -146,21 +146,30 @@ router.get("/admin/booking-stats", async (req, res) => {
       });
     });
 
-    // Stays the feeds have since dropped (Airbnb removes a reservation
-    // around check-in) but that really happened — see lib/bookingHistory.js.
-    // Skipped if the live calendar already covers those dates, so a stay is
-    // never counted twice while history catches up with a date change.
-    const liveByUnit = {};
-    availSnap.docs.forEach(doc => { liveByUnit[doc.id] = doc.data().busyRanges || []; });
-    const kept = await getKeptStays().catch(err => {
+    // The live calendar only shows what the feeds list right now: Airbnb
+    // drops a reservation around check-in, and Booking.com/Lekkeslaap trim
+    // the nights already passed off an in-progress stay. So stays come from
+    // the permanent history (lib/bookingHistory.js), with the live calendar
+    // only filling in anything history hasn't recorded yet. If history
+    // can't be read, the live calendar is used on its own, as before.
+    const recorded = await getRecordedStays().catch(err => {
       console.error("[admin] booking history unavailable:", err.message);
-      return [];
+      return null;
     });
-    kept.forEach(s => {
-      if ((s.sources || []).includes("direct")) return;
-      if ((liveByUnit[s.unitId] || []).some(r => rangesOverlap(r.start, r.end, s.start, s.end))) return;
+    if (recorded) {
+      const live = ota.splice(0);
+      const fromHistory = recorded.map(historyEntry);
+      live.forEach(b => {
+        const match = fromHistory.find(h => h.unitId === b.unitId && rangesOverlap(h.checkIn, h.checkOut, b.checkIn, b.checkOut));
+        if (!match) return ota.push(b);
+        // History lags the feed by up to one sync (e.g. a just-extended stay).
+        if (b.checkOut > match.checkOut) match.checkOut = b.checkOut;
+      });
+      ota.push(...fromHistory);
+    }
+    function historyEntry(s) {
       const source = (s.sources || [])[0];
-      ota.push({
+      return {
         id: `${s.start}_${s.unitId}_${source}`,
         unitId: s.unitId,
         source,
@@ -169,10 +178,9 @@ router.get("/admin/booking-stats", async (req, res) => {
         nights: null,
         guestName: "",
         totalAmount: null,
-        blocked: s.blocked === true,
-        fromHistory: true
-      });
-    });
+        blocked: s.blocked === true
+      };
+    }
 
     const bookings = [...direct, ...ota].sort((a, b) => (a.checkIn || "").localeCompare(b.checkIn || ""));
     res.json({ ok: true, bookings });
