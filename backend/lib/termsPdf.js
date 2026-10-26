@@ -39,6 +39,8 @@ const SECTIONS = [
   ]],
   ["Payment", [
     "Once we confirm your dates, a 50% deposit by EFT within 24 hours secures your booking. If we don't receive proof of payment in time, the dates are released.",
+    "A proof of payment is not proof that we've received the money. A booking is only confirmed once the payment reflects in our bank account.",
+    "For last-minute bookings (check-in within 3 days), payment must be made by instant EFT (immediate payment). No booking is confirmed until the payment has reflected.",
     "The balance is due before check-in. We send you a reminder 2 days before.",
     "We're not VAT-registered, so there's no VAT on our prices.",
     "Direct bookings may get a long-stay discount or a running special. A stay gets one discount: whichever saves you more. Discounts never apply to extras such as cleaning, laundry or firewood."

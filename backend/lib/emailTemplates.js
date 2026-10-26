@@ -22,7 +22,7 @@ const DEFAULT_EMAIL_TEMPLATES = {
       <p>Please pay the deposit by EFT to:<br>{{bankDetails}}</p>
       {{paymentInstructions}}
       <p>Please note: we hold your dates for 24 hours. If we haven't received your proof of payment by <b>{{depositDeadline}}</b>, the dates are released automatically.</p>
-      <p>We'll send a final confirmation as soon as we've checked it.</p>
+      <p><b>Please note:</b> a proof of payment on its own doesn't confirm your booking. We send your final confirmation once the deposit reflects in our bank account. If your check-in is within 3 days, please pay by <b>instant EFT</b> (immediate payment), as a normal EFT can take 1–2 working days to reflect.</p>
       <p>By paying the deposit you agree to our house rules &amp; policies, including the cancellation policy (a full refund up to 5 days before check-in; no refund after that or if you don't arrive): <a href="https://welverdiendaccommodation.com/policies.html">welverdiendaccommodation.com/policies.html</a></p>
     `
   },

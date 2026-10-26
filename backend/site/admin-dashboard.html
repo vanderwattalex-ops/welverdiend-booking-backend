@@ -403,6 +403,7 @@
       console.error("[Welverdiend admin] network error:", err);
       return;
     }
+    await loadBlocklist();
     const cards = document.getElementById("cards");
     const empty = document.getElementById("empty");
     cards.innerHTML = "";
@@ -468,6 +469,8 @@
         }
         actionsHtml = parts.join("");
       }
+      const blocked = isBlocked(b);
+      if(!blocked && (b.email || b.phone)) actionsHtml += `<button class="btn-reject" data-id="${b.id}" data-action="block">Block guest</button>`;
       actionsHtml += `<button class="btn-reject" data-id="${b.id}" data-action="delete">Delete</button>`;
 
       const knownStatus = ["requested","awaiting_payment","submitted","confirmed","rejected","expired"].includes(b.status);
@@ -482,6 +485,7 @@
           </div>
           <div class="head-tags">
             ${b.manual ? `<span class="status manual" title="Captured by you, not requested through the website">Manual${b.bookingChannel && CHANNEL_LABELS[b.bookingChannel] ? " · " + CHANNEL_LABELS[b.bookingChannel] : ""}</span>` : ""}
+            ${blocked ? `<span class="status rejected" title="This email or phone number can't send new booking requests. Unblock it in Settings.">Blocked</span>` : ""}
             <span class="status ${knownStatus ? b.status : ''}">${statusLabels[b.status] || `Unrecognized status: ${esc(b.status)}`}</span>
           </div>
         </div>
@@ -519,6 +523,7 @@
     cards.querySelectorAll("[data-action='remind']").forEach(btn => btn.onclick = () => balanceAction(btn.dataset.id, "remind"));
     cards.querySelectorAll("[data-action='mark-paid']").forEach(btn => btn.onclick = () => balanceAction(btn.dataset.id, "mark-paid"));
     cards.querySelectorAll("[data-action='delete']").forEach(btn => btn.onclick = () => deleteBooking(btn.dataset.id));
+    cards.querySelectorAll("[data-action='block']").forEach(btn => btn.onclick = () => blockGuest(bookingsById[btn.dataset.id]));
   }
 
 
@@ -606,6 +611,61 @@
     const data = await res.json();
     if(data.ok) loadBookings();
     else alert(data.error || "Action failed.");
+  }
+
+  // ---- Blocked guests (lib/blocklist.js on the server)
+  let blocklist = [];
+  const phoneKey = p => { const d = String(p || "").replace(/\D/g, ""); return d.length >= 9 ? d.slice(-9) : ""; };
+  function isBlocked(b){
+    const e = String(b.email || "").trim().toLowerCase(), p = phoneKey(b.phone);
+    return blocklist.some(x => (e && x.email && x.email === e) || (p && x.phone && phoneKey(x.phone) === p));
+  }
+  async function loadBlocklist(){
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/blocklist`, { headers: { "x-admin-token": token() } });
+      const data = await res.json();
+      if(data.ok) blocklist = data.entries;
+    }catch(e){ /* cards still load; they just won't show the Blocked tag */ }
+  }
+  async function blockGuest(b){
+    const who = [b.guestName, b.email, b.phone].filter(Boolean).join(" · ");
+    const reason = prompt(`Block ${who}?\n\nThis email address and phone number won't be able to send booking requests on the website any more. They see "Sorry, we're unable to accept this booking request online." You can unblock them in Settings.\n\nReason (for your own records, e.g. "fake proof of payment"):`, "");
+    if(reason === null) return;
+    const res = await fetch(`${API_BASE}/api/admin/blocklist`, {
+      method: "POST",
+      headers: { "x-admin-token": token(), "Content-Type": "application/json" },
+      body: JSON.stringify({ name: b.guestName, email: b.email, phone: b.phone, reason, bookingId: b.id })
+    });
+    const data = await res.json();
+    if(data.ok) loadBookings();
+    else alert(data.error || "Could not block that guest.");
+  }
+  function renderBlocklist(){
+    const el = document.getElementById("blocklist-list");
+    if(!el) return;
+    el.innerHTML = blocklist.length ? blocklist.map(x => `
+      <div class="settings-row" style="align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;">
+        <div><b>${esc(x.name) || "No name"}</b> · ${esc(x.email) || "no email"} · ${esc(x.phone) || "no phone"}<br>
+          <span class="range-source">Blocked ${esc((x.blockedAt || "").slice(0, 10))}${x.reason ? " · " + esc(x.reason) : ""}</span></div>
+        <button type="button" class="btn-reblock" data-unblock="${escAttr(x.id)}">Unblock</button>
+      </div>`).join("") : `<p class="range-source">Nobody is blocked.</p>`;
+    el.querySelectorAll("[data-unblock]").forEach(btn => btn.onclick = async () => {
+      if(!confirm("Unblock this guest? They'll be able to send booking requests again.")) return;
+      const res = await fetch(`${API_BASE}/api/admin/blocklist/${encodeURIComponent(btn.dataset.unblock)}`, { method: "DELETE", headers: { "x-admin-token": token() } });
+      const data = await res.json();
+      if(!data.ok) alert(data.error || "Could not unblock.");
+      await loadBlocklist(); renderBlocklist();
+    });
+  }
+  async function addBlockFromForm(){
+    const msg = document.getElementById("block-msg");
+    const body = { name: document.getElementById("block-name").value, email: document.getElementById("block-email").value, phone: document.getElementById("block-phone").value, reason: document.getElementById("block-reason").value };
+    const res = await fetch(`${API_BASE}/api/admin/blocklist`, { method: "POST", headers: { "x-admin-token": token(), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await res.json();
+    if(!data.ok){ msg.className = "settings-msg error"; msg.textContent = data.error || "Could not block."; return; }
+    ["block-name", "block-email", "block-phone", "block-reason"].forEach(id => document.getElementById(id).value = "");
+    msg.className = "settings-msg success"; msg.textContent = "Blocked.";
+    await loadBlocklist(); renderBlocklist();
   }
 
   async function deleteBooking(id){
@@ -1799,6 +1859,19 @@
         <div class="settings-msg" id="test-email-msg"></div>
       </div>
       <div class="unit-block">
+        <h2>Blocked guests</h2>
+        <p class="range-source" style="margin-bottom:12px;">These email addresses and phone numbers can't send booking requests on the website. They see "Sorry, we're unable to accept this booking request online." Nobody is emailed. You can also block someone straight from their booking card.</p>
+        <div id="blocklist-list"></div>
+        <div class="settings-row" style="margin-top:14px;">
+          <div class="settings-field"><label>Name</label><input type="text" id="block-name" maxlength="120"></div>
+          <div class="settings-field"><label>Email</label><input type="email" id="block-email" maxlength="200"></div>
+          <div class="settings-field"><label>Phone</label><input type="tel" id="block-phone" maxlength="40"></div>
+        </div>
+        <div class="settings-field"><label>Reason (for your own records)</label><input type="text" id="block-reason" maxlength="300"></div>
+        <button type="button" class="btn-add-extra" id="add-block-btn">Block this guest</button>
+        <div class="settings-msg" id="block-msg"></div>
+      </div>
+      <div class="unit-block">
         <h2>Email templates</h2>
         <p class="range-source" style="margin-bottom:14px;">Each email below shows its current wording — edit or delete whatever you like. Placeholders like <code>{{guestName}}</code> get filled in automatically when the email is sent; clearing a field entirely puts that part back to the original default.</p>
         <div id="email-templates-list"></div>
@@ -1808,6 +1881,8 @@
     `;
 
     document.getElementById("test-email-btn").onclick = sendTestEmail;
+    document.getElementById("add-block-btn").onclick = addBlockFromForm;
+    loadBlocklist().then(renderBlocklist);
     renderPromotions(s.promotions || { longStay: { enabled: false, tiers: [] }, specials: [] });
     document.getElementById("save-promo-btn").onclick = savePromotions;
     renderExtrasList(s.extras);

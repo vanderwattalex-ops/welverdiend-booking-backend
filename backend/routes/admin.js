@@ -29,6 +29,7 @@ const {
 const { getAnalyticsSummary } = require("../lib/analytics");
 const { saveThumbnail, saveHeroVariants, IMMUTABLE } = require("../lib/thumbnails");
 const { notifyIndexNow } = require("../lib/indexnow");
+const { getBlocklist, addBlock, removeBlock } = require("../lib/blocklist");
 
 const photoUpload = multer({
   storage: multer.memoryStorage(),
@@ -843,6 +844,40 @@ router.post("/admin/promotions", async (req, res) => {
   } catch (err) {
     console.error("[admin] save promotions failed:", err);
     res.status(500).json({ ok: false, error: "Could not save discounts and specials" });
+  }
+});
+
+// Blocked guests: their email / phone can't send website booking requests.
+// GET    /api/admin/blocklist
+// POST   /api/admin/blocklist        body: { name?, email?, phone?, reason?, bookingId? }
+// DELETE /api/admin/blocklist/:id
+router.get("/admin/blocklist", async (req, res) => {
+  try {
+    res.json({ ok: true, entries: await getBlocklist() });
+  } catch (err) {
+    console.error("[admin] load blocklist failed:", err);
+    res.status(500).json({ ok: false, error: "Could not load blocked guests" });
+  }
+});
+
+router.post("/admin/blocklist", async (req, res) => {
+  try {
+    const entry = await addBlock(req.body || {});
+    res.json({ ok: true, entry });
+  } catch (err) {
+    if (/email address or a phone/.test(err.message)) return res.status(400).json({ ok: false, error: err.message });
+    console.error("[admin] block guest failed:", err);
+    res.status(500).json({ ok: false, error: "Could not block that guest" });
+  }
+});
+
+router.delete("/admin/blocklist/:id", async (req, res) => {
+  try {
+    if (!(await removeBlock(req.params.id))) return res.status(404).json({ ok: false, error: "That guest isn't blocked" });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("[admin] unblock guest failed:", err);
+    res.status(500).json({ ok: false, error: "Could not unblock that guest" });
   }
 });
 

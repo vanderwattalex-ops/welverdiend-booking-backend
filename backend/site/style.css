@@ -178,9 +178,9 @@ h3{font-size:20px;}
 }
 .promo-banner a{color:var(--book-text);font-weight:700;margin-left:6px;white-space:nowrap;}
 .home-promo{background:var(--dark);color:var(--on-dark);}
-.home-promo-inner{max-width:1100px;margin:0 auto;padding:44px 5vw;text-align:center;display:grid;gap:18px;justify-items:center;}
+.home-promo-inner{max-width:1100px;margin:0 auto;padding:44px 5vw;text-align:center;display:grid;grid-template-columns:minmax(0,1fr);gap:18px;justify-items:center;}
 .home-promo .eyebrow{color:var(--gold);margin:0;font-family:'Inter',sans-serif;font-size:13px;font-weight:400;}
-.home-promo-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;width:100%;max-width:820px;}
+.home-promo-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:18px;width:100%;max-width:820px;}
 .home-promo-card{border:1px solid rgba(237,230,214,.25);border-radius:10px;padding:22px 22px 20px;text-align:left;}
 .home-promo-card p{margin:0;color:var(--on-dark);font-size:15px;line-height:1.55;opacity:.9;}
 .home-promo-card .home-promo-name{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);opacity:1;}

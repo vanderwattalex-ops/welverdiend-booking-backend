@@ -103,7 +103,7 @@
       } else if(data.status === "rejected"){
         content.innerHTML = `<p class="state-note">This booking is no longer active. If you have any questions, please WhatsApp us on 079 118 3173.</p>`;
       } else if(data.status === "submitted"){
-        content.innerHTML = `<p class="state-note">Thanks — your deposit proof of payment has already been received. We'll be in touch with final confirmation shortly.</p>`;
+        content.innerHTML = `<p class="state-note">Thanks — your deposit proof of payment has already been received. We'll send your final confirmation once the payment reflects in our bank account.</p>`;
       } else if(data.status === "confirmed" && data.balanceStatus === "unpaid"){
         renderPaymentStep({
           heading: "Pay your final balance",
@@ -133,7 +133,7 @@
         <div class="summary-line"><span>${data.unitName}</span><span>${data.checkIn} → ${data.checkOut}</span></div>
         <div class="summary-total"><span>${amountLabel}</span><span>${rand(amount)}</span></div>
       </div>
-      <div class="bank"><b>Pay by EFT to:</b><br>${bankDetails}<br><br>${note}</div>
+      <div class="bank"><b>Pay by EFT to:</b><br>${bankDetails}<br><br>${note}<br><br><b>Please note:</b> a proof of payment on its own doesn't confirm your booking. We confirm once the payment reflects in our bank account. Checking in within 3 days? Please pay by instant EFT.</div>
       <div class="file-drop" id="file-drop">Click to upload a screenshot or PDF of your EFT payment</div>
       <input type="file" id="file-input" accept="image/*,application/pdf" style="display:none">
       <button class="btn" id="submit-btn">Submit proof of payment</button>

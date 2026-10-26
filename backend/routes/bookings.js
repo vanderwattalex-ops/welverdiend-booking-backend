@@ -7,6 +7,7 @@ const { getSettings } = require("../lib/settings");
 const { rangesOverlap } = require("../lib/rangeUtils");
 const { nightsBetween, calculateTotal } = require("../lib/pricing");
 const { bestDiscount } = require("../lib/promotions");
+const { findBlock } = require("../lib/blocklist");
 const { notifyOwnerNewRequest, notifyGuestReceived, notifyOwnerProofUploaded, notifyOwnerBalanceProofUploaded } = require("../lib/email");
 
 const upload = multer({
@@ -85,6 +86,12 @@ router.post("/bookings", express.json(), async (req, res) => {
       return res.status(400).json({ ok: false, error: "That email address doesn't look right. Please check it." });
     }
     const count = (v, min, max, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : dflt; };
+
+    // Blocked by the owner (nuisance requests, fake proof of payment): no
+    // request is stored, and no email goes to the owner or to the address.
+    if (await findBlock(email, phone)) {
+      return res.status(403).json({ ok: false, error: "Sorry, we're unable to accept this booking request online." });
+    }
 
     // Same person, same unit, same dates, request still open: don't make a
     // second one (a guest who didn't notice the first went through). They get
@@ -246,7 +253,7 @@ router.post("/bookings/:id/proof", upload.single("proof"), async (req, res) => {
     const unit = (await getSettings()).units.find(u => u.id === booking.unitId);
     notifyOwnerProofUploaded(booking, unit ? unit.name : booking.unitId).catch(err => console.error("[bookings] owner notification failed:", err));
 
-    res.json({ ok: true, message: "Thanks — your deposit proof of payment has been received. We'll send final confirmation shortly." });
+    res.json({ ok: true, message: "Thanks — your deposit proof of payment has been received. We'll send your final confirmation once the payment reflects in our bank account." });
   } catch (err) {
     console.error("[bookings] proof upload failed:", err);
     res.status(500).json({ ok: false, error: "Could not upload proof of payment" });
