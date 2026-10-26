@@ -142,7 +142,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/style.css?v=20261026b">
+<link rel="stylesheet" href="/style.css?v=20261026c">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -470,7 +470,7 @@
     if(matchMedia("(prefers-reduced-motion: reduce)").matches || conn.saveData || /2g/.test(conn.effectiveType || "")) return;
     const size = window.innerWidth <= 900 ? "720" : "1080";
     function start(){
-      video.src = `/assets/video/home-hero-20261026-${size}.mp4`;
+      video.src = `/assets/video/home-hero-20261026b-${size}.mp4`;
       video.addEventListener("playing", () => video.classList.add("is-playing"), { once: true });
       video.play().catch(() => {}); // e.g. phone battery saver blocks it: the photo stays
       // Pause while the top of the page is scrolled out of view
