@@ -3,6 +3,7 @@ const { units } = require("../config/units");
 const { availabilityCollection, bookingsCollection, overridesCollection } = require("./db");
 const { subtractRanges, mergeRanges } = require("./rangeUtils");
 const { recordStartedStays } = require("./reviews");
+const { recordBookingHistory } = require("./bookingHistory");
 
 /**
  * A booking blocks the calendar as soon as you APPROVE it — not only
@@ -73,6 +74,9 @@ async function syncUnitAndSave(unitId) {
   // Never allowed to fail the sync itself.
   await recordStartedStays(unitId, result.busyRanges)
     .catch(err => console.error("[availabilitySync] recording stays for reviews failed:", err.message));
+  // Same for booking stats: keep every OTA stay after the feed drops it.
+  await recordBookingHistory(unitId, result.busyRanges)
+    .catch(err => console.error("[availabilitySync] recording booking history failed:", err.message));
   return result;
 }
 

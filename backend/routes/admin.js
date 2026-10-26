@@ -18,6 +18,7 @@ const { DEFAULT_EMAIL_TEMPLATES } = require("../lib/emailTemplates");
 const { generateInvoice } = require("../lib/invoice");
 const { invoiceLinkKey } = require("./invoiceLink");
 const { syncUnitAndSave } = require("../lib/availabilitySync");
+const { getKeptStays } = require("../lib/bookingHistory");
 const {
   getSiteContent,
   saveAboutParagraphs, savePetCaptions, saveFeatureText, addGalleryPhoto, removeGalleryPhoto, movePhoto, setPhotoSection, reorderGallery, setHeroFocus,
@@ -142,6 +143,34 @@ router.get("/admin/booking-stats", async (req, res) => {
           // count it as that platform's booking or income.
           blocked: range.blocked === true
         });
+      });
+    });
+
+    // Stays the feeds have since dropped (Airbnb removes a reservation
+    // around check-in) but that really happened — see lib/bookingHistory.js.
+    // Skipped if the live calendar already covers those dates, so a stay is
+    // never counted twice while history catches up with a date change.
+    const liveByUnit = {};
+    availSnap.docs.forEach(doc => { liveByUnit[doc.id] = doc.data().busyRanges || []; });
+    const kept = await getKeptStays().catch(err => {
+      console.error("[admin] booking history unavailable:", err.message);
+      return [];
+    });
+    kept.forEach(s => {
+      if ((s.sources || []).includes("direct")) return;
+      if ((liveByUnit[s.unitId] || []).some(r => rangesOverlap(r.start, r.end, s.start, s.end))) return;
+      const source = (s.sources || [])[0];
+      ota.push({
+        id: `${s.start}_${s.unitId}_${source}`,
+        unitId: s.unitId,
+        source,
+        checkIn: s.start,
+        checkOut: s.end,
+        nights: null,
+        guestName: "",
+        totalAmount: null,
+        blocked: s.blocked === true,
+        fromHistory: true
       });
     });
 
