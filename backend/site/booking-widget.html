@@ -201,6 +201,22 @@
     color:var(--ink-soft);border-top:1px solid var(--line);text-transform:uppercase;
   }
 
+  .wd-credit{
+    max-width:560px;width:calc(100% - 32px);margin:28px auto 8px;padding:26px 24px 24px;text-align:center;box-sizing:border-box;
+    background:#fff;border:1px solid var(--line);border-radius:14px;color:var(--ink-soft);
+  }
+  .wd-credit-kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;margin:0 0 12px;}
+  .wd-credit-logo{display:block;width:220px;max-width:70%;height:auto;margin:0 auto 14px;}
+  .wd-credit-text{font-size:14.5px;line-height:1.55;margin:0 auto 6px;max-width:440px;}
+  .wd-credit-services{font-size:12.5px;margin:0 0 18px;}
+  .wd-credit-btn{
+    display:inline-block;padding:11px 22px;border-radius:999px;background:var(--taupe-deep);
+    color:#fff;font-size:13.5px;font-weight:600;text-decoration:none;
+  }
+  .wd-credit-btn:hover{background:var(--gold);}
+  .wd-credit-contact{font-size:12.5px;margin:14px 0 0;}
+  .wd-credit-contact a{color:inherit;}
+
   .wa-modal-overlay{
     position:fixed;inset:0;background:rgba(43,42,38,.6);
     display:none;align-items:center;justify-content:center;padding:20px;z-index:999;
@@ -389,6 +405,15 @@
 
   <div class="wa-footer">Welverdiend Accommodation · 4 Kenilworth Road · 079 118 3173 · bookings@welverdiendaccommodation.com</div>
 </main>
+
+<aside class="wd-credit" aria-label="Website and booking system by Welverdiend Digital">
+  <p class="wd-credit-kicker">Booking system created by</p>
+  <a href="https://welverdienddigital.co.za/?utm_source=welverdiendaccommodation&amp;utm_medium=referral&amp;utm_campaign=booking_credit" target="_blank" rel="noopener"><img class="wd-credit-logo" src="/assets/wd-digital-logo.svg" width="220" height="44" alt="Welverdiend Digital" loading="lazy"></a>
+  <p class="wd-credit-text">This website and its online booking system were designed and created by Welverdiend Digital.</p>
+  <p class="wd-credit-services">Websites · Online booking systems · Digital solutions for small businesses</p>
+  <a class="wd-credit-btn" href="https://welverdienddigital.co.za/?utm_source=welverdiendaccommodation&amp;utm_medium=referral&amp;utm_campaign=booking_credit" target="_blank" rel="noopener">Want one for your business?</a>
+  <p class="wd-credit-contact">Alex van der Watt · <a href="tel:+27640674041">064 067 4041</a></p>
+</aside>
 </div>
 
 <div class="wa-modal-overlay" id="wa-modal-overlay">
