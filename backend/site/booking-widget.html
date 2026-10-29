@@ -450,8 +450,8 @@
           <input type="number" id="wa-children" min="0" max="2" value="0">
         </div>
         <div class="wa-field">
-          <label for="wa-arrival">Estimated arrival</label>
-          <input type="time" id="wa-arrival">
+          <label for="wa-arrival">Estimated arrival (from 14:00)</label>
+          <input type="time" id="wa-arrival" min="14:00" max="23:59">
         </div>
       </div>
       <p class="wa-guest-note" style="font-size:12.5px;color:var(--ink-soft);margin:-4px 0 12px;"><strong>Each unit can accommodate a maximum of 4 guests</strong> (adults and children together). Babies under 2 don't count. Just mention them under special requests.</p>
@@ -943,6 +943,14 @@
     const btn = $("wa-submit-btn");
     msg.className = "wa-msg";
     msg.textContent = "";
+
+    const arrival = $("wa-arrival").value;
+    if(arrival && arrival < "14:00"){
+      msg.className = "wa-msg error";
+      msg.textContent = "Check-in is from 14:00. Please choose an arrival time of 14:00 or later.";
+      $("wa-arrival").focus();
+      return;
+    }
 
     const extrasPayload = Object.entries(state.extraSelections)
       .filter(([id, qty]) => qty > 0)

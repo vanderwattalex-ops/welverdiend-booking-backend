@@ -90,6 +90,10 @@ router.post("/bookings", express.json(), async (req, res) => {
     if (count(adults, 1, 10, 1) + count(children, 0, 10, 0) > 4) {
       return res.status(400).json({ ok: false, error: "Each unit sleeps up to 4 guests. Babies under 2 don't count, so please mention them under special requests." });
     }
+    // Check-in is from 14:00 (the form sends HH:MM).
+    if (typeof arrivalTime === "string" && /^\d{2}:\d{2}$/.test(arrivalTime) && arrivalTime < "14:00") {
+      return res.status(400).json({ ok: false, error: "Check-in is from 14:00. Please choose an arrival time of 14:00 or later." });
+    }
 
     // Blocked by the owner (nuisance requests, fake proof of payment): no
     // request is stored, and no email goes to the owner or to the address.
