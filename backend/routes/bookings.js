@@ -86,6 +86,10 @@ router.post("/bookings", express.json(), async (req, res) => {
       return res.status(400).json({ ok: false, error: "That email address doesn't look right. Please check it." });
     }
     const count = (v, min, max, dflt) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : dflt; };
+    // Each unit sleeps 4 (babies under 2 don't count and go in the notes).
+    if (count(adults, 1, 10, 1) + count(children, 0, 10, 0) > 4) {
+      return res.status(400).json({ ok: false, error: "Each unit sleeps up to 4 guests. Babies under 2 don't count, so please mention them under special requests." });
+    }
 
     // Blocked by the owner (nuisance requests, fake proof of payment): no
     // request is stored, and no email goes to the owner or to the address.

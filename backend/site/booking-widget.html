@@ -443,17 +443,18 @@
       <div class="wa-row">
         <div class="wa-field">
           <label for="wa-adults">Adults</label>
-          <input type="number" id="wa-adults" min="1" max="12" value="2" required>
+          <input type="number" id="wa-adults" min="1" max="4" value="2" required>
         </div>
         <div class="wa-field">
           <label for="wa-children">Children</label>
-          <input type="number" id="wa-children" min="0" max="10" value="0">
+          <input type="number" id="wa-children" min="0" max="2" value="0">
         </div>
         <div class="wa-field">
           <label for="wa-arrival">Estimated arrival</label>
           <input type="time" id="wa-arrival">
         </div>
       </div>
+      <p class="wa-guest-note" style="font-size:12.5px;color:var(--ink-soft);margin:-4px 0 12px;"><strong>Each unit can accommodate a maximum of 4 guests</strong> (adults and children together). Babies under 2 don't count. Just mention them under special requests.</p>
       <div class="wa-field" id="wa-children-ages-wrap" style="display:none;">
         <label for="wa-children-ages">Ages of children</label>
         <input type="text" id="wa-children-ages" placeholder="e.g. 4 and 7">
@@ -892,7 +893,22 @@
       + `<div class="wa-eft-note">This is a request, not a payment yet. Once we've confirmed these dates are genuinely available, we'll email you with our banking details and a link to pay your deposit.</div>`;
   }
 
+  // Max 4 guests per unit: adults + children together.
+  const MAX_GUESTS = 4;
+  function limitGuests(){
+    const adults = $("wa-adults"), children = $("wa-children");
+    if(adults.value === "" || children.value === "") return; // let the guest finish typing
+    let a = Math.min(MAX_GUESTS, Math.max(1, Number(adults.value) || 1));
+    let c = Math.max(0, Number(children.value) || 0);
+    if(a + c > MAX_GUESTS) c = MAX_GUESTS - a;
+    if(String(a) !== adults.value) adults.value = a;
+    if(String(c) !== children.value) children.value = c;
+    adults.max = MAX_GUESTS - c;
+    children.max = MAX_GUESTS - a;
+  }
+  $("wa-adults").oninput = limitGuests;
   $("wa-children").oninput = () => {
+    limitGuests();
     $("wa-children-ages-wrap").style.display = Number($("wa-children").value) > 0 ? "block" : "none";
   };
   $("wa-has-pets").onchange = (e) => {
