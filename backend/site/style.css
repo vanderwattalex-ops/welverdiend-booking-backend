@@ -13,6 +13,8 @@
   --taupe-deep:#3B2A1E; /* espresso: headings, dark buttons */
   --gold:#C68B3F; /* ochre: Book now, accents */
   --gold-hover:#A9742F;
+  --sage:#5F6E47; /* olive sage: Book now buttons and the offer bar */
+  --sage-hover:#4C5939;
   --book-text:#1E140D;
   --ink:#24190F;
   --ink-soft:#54412F;
@@ -55,14 +57,14 @@ img{max-width:100%;height:auto;display:block;}
 /* Book now: the main call to action -- gold, larger, with the direct-booking saving underneath. */
 .site-nav .book-btn{
   display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.2;
-  background:var(--gold);color:var(--book-text);padding:11px 24px;
+  background:var(--sage);color:var(--white);padding:11px 24px;
   border-radius:4px;font-weight:700;font-size:15px;letter-spacing:.07em;
   box-shadow:0 2px 8px rgba(0,0,0,.35);
 }
 .site-nav .book-btn small{
   display:block;margin-top:2px;font-size:11px;font-weight:600;letter-spacing:.02em;text-transform:none;
 }
-.site-nav .book-btn:hover{background:var(--gold-hover);color:var(--white);}
+.site-nav .book-btn:hover{background:var(--sage-hover);color:var(--white);}
 /* Eleven menu items: tighten the spacing on laptop-width screens so the menu stays beside the logo. */
 @media (min-width:761px) and (max-width:1400px){
   .site-nav{gap:14px;}
@@ -173,10 +175,10 @@ h3{font-size:20px;}
 
 /* Specials and long-stay discount (filled in by lib/prerender.js) */
 .promo-banner{
-  background:var(--gold);color:var(--book-text);text-align:center;font-size:14px;line-height:1.45;
+  background:var(--sage);color:var(--white);text-align:center;font-size:14px;line-height:1.45;
   padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));
 }
-.promo-banner a{color:var(--book-text);font-weight:700;margin-left:6px;white-space:nowrap;}
+.promo-banner a{color:var(--white);font-weight:700;margin-left:6px;white-space:nowrap;}
 .home-promo{background:var(--dark);color:var(--on-dark);}
 .home-promo-inner{max-width:1100px;margin:0 auto;padding:44px 5vw;text-align:center;display:grid;grid-template-columns:minmax(0,1fr);gap:18px;justify-items:center;}
 .home-promo .eyebrow{color:var(--gold);margin:0;font-family:'Inter',sans-serif;font-size:13px;font-weight:400;}
@@ -254,11 +256,11 @@ h3{font-size:20px;}
 .unit-price{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;color:var(--taupe-deep);line-height:1;}
 .unit-price small{font-family:'Inter',sans-serif;font-size:14px;font-weight:500;color:var(--ink-soft);}
 .btn-primary{
-  display:inline-block;background:var(--gold);color:var(--book-text);text-decoration:none;
+  display:inline-block;background:var(--sage);color:var(--white);text-decoration:none;
   padding:14px 30px;border-radius:4px;font-weight:700;font-size:15px;letter-spacing:.04em;
   box-shadow:0 2px 8px rgba(59,42,30,.2);
 }
-.btn-primary:hover{background:var(--gold-hover);color:var(--white);}
+.btn-primary:hover{background:var(--sage-hover);color:var(--white);}
 .unit-intro{max-width:720px;margin:0 auto;}
 .unit-intro .lede{text-align:left;}
 
@@ -408,8 +410,8 @@ h3{font-size:20px;}
   font:600 14px/1 'Inter',sans-serif;text-decoration:none;border:1px solid var(--taupe-deep);
 }
 .social-btn svg{width:17px;height:17px;}
-.social-btn-fb{background:var(--gold);border-color:var(--gold);color:var(--book-text);}
-.social-btn-fb:hover{background:var(--gold-hover);border-color:var(--gold-hover);}
+.social-btn-fb{background:var(--sage);border-color:var(--sage);color:var(--white);}
+.social-btn-fb:hover{background:var(--sage-hover);border-color:var(--sage-hover);}
 .social-btn-ig{background:transparent;color:var(--taupe-deep);}
 .social-btn-ig:hover{background:var(--taupe-deep);color:var(--on-dark);}
 @media (max-width:560px){
@@ -441,8 +443,8 @@ h3{font-size:20px;}
 }
 .ota-list a:hover{border-color:var(--taupe);color:var(--taupe-deep);}
 /* Book direct sits first among the booking-site links, in the Book now gold so it stands out. */
-.ota-list a.ota-direct{background:var(--gold);border-color:var(--gold);color:var(--book-text);font-weight:700;}
-.ota-list a.ota-direct:hover{background:var(--gold-hover);border-color:var(--gold-hover);color:var(--white);}
+.ota-list a.ota-direct{background:var(--sage);border-color:var(--sage);color:var(--white);font-weight:700;}
+.ota-list a.ota-direct:hover{background:var(--sage-hover);border-color:var(--sage-hover);color:var(--white);}
 
 /* CTA band */
 .cta-band{
@@ -451,11 +453,11 @@ h3{font-size:20px;}
 .cta-band h2{color:var(--white);}
 .cta-band p{color:#D8D2C4;margin:0 0 24px;}
 .cta-band .book-btn,.home-promo .book-btn{
-  display:inline-block;background:var(--gold);color:var(--white);
+  display:inline-block;background:var(--sage);color:var(--white);
   padding:14px 32px;border-radius:3px;text-decoration:none;font-weight:600;font-size:14px;
   letter-spacing:.03em;
 }
-.cta-band .book-btn:hover,.home-promo .book-btn:hover{background:var(--gold-hover);}
+.cta-band .book-btn:hover,.home-promo .book-btn:hover{background:var(--sage-hover);}
 
 /* Footer */
 .site-footer{
