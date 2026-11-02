@@ -1,0 +1,65 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Release signing secrets live outside git (android-admin/keystore.properties,
+// gitignored, pointing at a .jks in Documents\WelverdiendAdmin-Signing). The
+// repo is public, so neither may ever be committed. Without that file only the
+// debug build works.
+def keystorePropsFile = rootProject.file("keystore.properties")
+def keystoreProps = new Properties()
+if (keystorePropsFile.exists()) {
+    keystoreProps.load(new FileInputStream(keystorePropsFile))
+}
+
+android {
+    namespace 'com.welverdiend.admin'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.welverdiend.admin"
+        minSdk 24
+        targetSdk 35
+        // Only bump for changes to the Java side; the dashboard updates on its own.
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropsFile.exists()) {
+                storeFile file(keystoreProps['storeFile'])
+                storePassword keystoreProps['storePassword']
+                keyAlias keystoreProps['keyAlias']
+                keyPassword keystoreProps['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            // Sideloaded, not Play Store. Always signed with the same keystore so
+            // a new version installs over the old one.
+            signingConfig keystorePropsFile.exists() ? signingConfigs.release : null
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    // FileProvider (handing PDFs to WhatsApp / a viewer) and the edge-to-edge insets helpers.
+    implementation 'androidx.core:core:1.13.1'
+    // Pull down to refresh.
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    // Aligns the Kotlin stdlib pieces androidx pulls in at different versions.
+    implementation platform('org.jetbrains.kotlin:kotlin-bom:1.8.22')
+}

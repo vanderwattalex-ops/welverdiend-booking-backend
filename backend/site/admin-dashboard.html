@@ -128,6 +128,29 @@
   #live-screen .bar-requested{line-height:30px;}
   #live-screen .bar-awaiting,#live-screen .bar-check,#live-screen .bar-owing{line-height:32px;}
   #live-screen .tl-label{font-size:15px;}
+
+  /* Signed in: the token box makes way for a small session bar. */
+  .session-bar{display:none;gap:10px;align-items:center;margin-bottom:20px;font-size:12.5px;color:var(--ink-soft);}
+  .session-bar button{padding:6px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white);cursor:pointer;font-size:12.5px;color:var(--ink);}
+  body.logged-in .token-bar{display:none;}
+  body.logged-in .session-bar{display:flex;}
+  .detail-grid a{color:inherit;}
+
+  /* Phone layout: bottom navigation like an app, big touch targets. The
+     Android app (android-admin/) shows this same page. */
+  .bottom-nav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--white);border-top:1px solid var(--line);padding:2px 4px env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,.06);}
+  .bottom-nav button{flex:1;border:none;background:none;padding:8px 2px 7px;font-size:11px;color:var(--ink-soft);display:flex;flex-direction:column;align-items:center;gap:3px;position:relative;font-family:inherit;cursor:pointer;}
+  .bottom-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  .bottom-nav button.active{color:var(--taupe-deep);font-weight:600;}
+  .nav-badge{position:absolute;top:3px;left:calc(50% + 6px);background:var(--danger);color:var(--white);border-radius:9px;font-size:10px;min-width:17px;padding:1px 4px;font-weight:700;line-height:14px;}
+  .nav-badge:empty{display:none;}
+  .more-sheet{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;}
+  .more-sheet[hidden]{display:none;}
+  .more-sheet .sheet{background:var(--white);width:100%;border-radius:14px 14px 0 0;padding:8px 14px calc(12px + env(safe-area-inset-bottom));}
+  .more-sheet button{display:block;width:100%;text-align:left;padding:15px 6px;border:none;border-bottom:1px solid var(--line);background:none;font-size:15px;font-family:inherit;color:var(--ink);cursor:pointer;}
+  .more-sheet button:last-child{border-bottom:none;color:var(--ink-soft);}
+  .more-sheet .danger{color:var(--danger);}
+
   .head-tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
   .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0;font-size:13px;}
   .detail-grid .label{color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px;}
@@ -309,6 +332,36 @@
   .stat-row .stat-count{font-weight:600;color:var(--taupe-deep);}
   .big-stat{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:600;color:var(--taupe-deep);line-height:1;}
   .big-stat-label{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-top:6px;}
+
+  /* Phone layout — last in the stylesheet so it wins over the rules above. */
+  @media (max-width:760px){
+    body{padding:12px 12px calc(84px + env(safe-area-inset-bottom));}
+    h1{font-size:22px;}
+    .sub,.tabs,.session-bar{display:none !important;}
+    .bottom-nav{display:flex;}
+    .filters{flex-wrap:nowrap;overflow-x:auto;margin:0 -12px;padding:0 12px 4px;scrollbar-width:none;}
+    .filters::-webkit-scrollbar{display:none;}
+    .filters button{flex:0 0 auto;padding:9px 14px;font-size:13px;}
+    .bookings-toolbar{margin-bottom:12px;}
+    .btn-new-booking{position:fixed;right:16px;bottom:calc(78px + env(safe-area-inset-bottom));z-index:30;border-radius:28px;padding:14px 20px;font-size:14px;box-shadow:0 4px 14px rgba(0,0,0,.25);}
+    .card{padding:14px;}
+    .card-head h3{font-size:18px;}
+    .head-tags{justify-content:flex-start;}
+    .detail-grid{grid-template-columns:1fr 1fr;gap:10px 12px;}
+    .pay-line{flex-direction:column;align-items:flex-start;}
+    .actions > button{flex:1 1 calc(50% - 4px);min-height:42px;font-size:13px;}
+    .actions > .btn-approve,.actions > .btn-confirm{flex-basis:100%;order:-1;}
+    .more{flex:1 1 calc(50% - 4px);margin-left:0;}
+    .more summary{min-height:42px;display:flex;align-items:center;justify-content:center;}
+    .more-menu{left:0;right:0;}
+    .more-menu button{min-height:42px;}
+    .reason-modal-overlay{align-items:flex-end;padding:0;}
+    .reason-modal{border-radius:14px 14px 0 0;max-height:92vh;overflow-y:auto;padding:20px 18px calc(20px + env(safe-area-inset-bottom));}
+    #live-screen{padding:12px;}
+    .live-head h2{font-size:20px;}
+    .live-clock{font-size:16px;margin-left:0;}
+    .tl-toolbar .btn-live{margin-left:0;}
+  }
 </style>
 <!-- Drag-and-drop for reordering website photos (works with mouse and touch) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js" integrity="sha384-BSxuMLxX+FCbTdYec3TbXlnMGEEM2QXTFdtDaveen71o+jswm2J36+xFqp8k4VHM" crossorigin="anonymous" defer></script>
@@ -324,6 +377,28 @@
   <input type="password" id="token" placeholder="Admin token" autocomplete="off" name="welverdiend-admin-token-field" data-lpignore="true" data-1p-ignore>
   <button type="button" id="token-toggle" title="Show/hide token">Show</button>
   <button id="load-btn">Load bookings</button>
+</div>
+<div class="session-bar">
+  <span>Signed in on this device.</span>
+  <button type="button" id="refresh-btn">Refresh</button>
+  <button type="button" id="logout-btn">Log out</button>
+</div>
+
+<nav class="bottom-nav" id="bottom-nav">
+  <button type="button" data-go="bookings" class="active"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Bookings<span class="nav-badge" id="nav-badge"></span></button>
+  <button type="button" data-go="calendar"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendar</button>
+  <button type="button" data-go="longstay"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg>Long stay</button>
+  <button type="button" data-go="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>More</button>
+</nav>
+<div class="more-sheet" id="more-sheet" hidden>
+  <div class="sheet">
+    <button type="button" data-go="reviews">Reviews</button>
+    <button type="button" data-go="settings">Settings</button>
+    <button type="button" data-go="website">Website</button>
+    <button type="button" data-go="analytics">Analytics</button>
+    <button type="button" class="danger" id="logout-sheet-btn">Log out on this phone</button>
+    <button type="button" id="more-sheet-close">Close</button>
+  </div>
 </div>
 
 <div class="tabs">
@@ -403,6 +478,10 @@
 
 <script>
   const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app"; // same backend URL as the widget
+  // Set by the Android app (android-admin/ → AppBridge.java) when this page
+  // runs inside it; null in a normal browser. A WebView can't open blob:
+  // links or the share sheet itself, so files go through the app instead.
+  const APP = window.WelverdiendApp || null;
   let currentView = "action";
 
   function setView(view){
@@ -429,6 +508,8 @@
       btn.classList.add("active");
       document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
       document.getElementById(`panel-${btn.dataset.tab}`).classList.add("active");
+      const inMore = ["reviews", "settings", "website", "analytics"].includes(btn.dataset.tab);
+      document.querySelectorAll(".bottom-nav button").forEach(b => b.classList.toggle("active", b.dataset.go === (inMore ? "more" : btn.dataset.tab)));
       if(btn.dataset.tab === "longstay" && token()) loadLongStay();
       if(btn.dataset.tab === "reviews" && token()) loadReviews();
       if(btn.dataset.tab === "calendar" && token()) loadCalendar();
@@ -445,6 +526,64 @@
     btn.textContent = showing ? "Show" : "Hide";
   };
   function token(){ return document.getElementById("token").value.trim(); }
+
+  // The token is remembered on this device after it works once, so the
+  // phone app opens straight onto the bookings. Log out forgets it.
+  const TOKEN_KEY = "wv-admin-token";
+  function savedToken(){ try{ return localStorage.getItem(TOKEN_KEY) || ""; }catch(_){ return ""; } }
+  function rememberToken(t){ try{ localStorage.setItem(TOKEN_KEY, t); }catch(_){} document.body.classList.add("logged-in"); }
+  function forgetToken(){ try{ localStorage.removeItem(TOKEN_KEY); }catch(_){} document.body.classList.remove("logged-in"); }
+  function logOut(){
+    if(!confirm("Log out on this device? You'll need the admin token to get back in.")) return;
+    forgetToken();
+    document.getElementById("token").value = "";
+    document.getElementById("more-sheet").hidden = true;
+    allBookings = null;
+    document.getElementById("cards").innerHTML = "";
+    document.getElementById("empty").style.display = "block";
+    document.getElementById("empty").textContent = "Logged out. Enter your admin token and load bookings.";
+    goTab("bookings");
+  }
+  document.getElementById("logout-btn").onclick = logOut;
+  document.getElementById("logout-sheet-btn").onclick = logOut;
+  document.getElementById("refresh-btn").onclick = () => window.appRefresh();
+
+  function goTab(name){
+    document.getElementById("more-sheet").hidden = true;
+    document.querySelector(`.tabs button[data-tab="${name}"]`).click();
+    window.scrollTo(0, 0);
+  }
+  document.querySelectorAll("[data-go]").forEach(btn => btn.onclick = () => {
+    if(btn.dataset.go === "more") document.getElementById("more-sheet").hidden = false;
+    else goTab(btn.dataset.go);
+  });
+  document.getElementById("more-sheet-close").onclick = () => { document.getElementById("more-sheet").hidden = true; };
+  document.getElementById("more-sheet").onclick = e => { if(e.target.id === "more-sheet") e.target.hidden = true; };
+
+  function blobToBase64(blob){
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(",")[1] || "");
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+  }
+  // Opens a PDF or photo: a new tab in a browser, the phone's own viewer in the app.
+  async function openBlob(blob, name){
+    if(APP){ APP.openFile(await blobToBase64(blob), blob.type || "application/octet-stream", name || "file"); return; }
+    window.open(URL.createObjectURL(blob), "_blank");
+  }
+  // Email and phone as tap-to-email / tap-to-call links.
+  function contactHtml(email, phone){
+    const mail = email ? `<a href="mailto:${escAttr(email)}">${esc(email)}</a>` : `<span class="range-source">No email on file</span>`;
+    const tel = phone ? `<a href="tel:${escAttr(String(phone).replace(/[^\d+]/g, ""))}">${esc(phone)}</a>` : "";
+    return `${mail}<br>${tel}`;
+  }
+  async function copyText(text){
+    if(APP){ APP.copyText(text); return true; }
+    try{ await navigator.clipboard.writeText(text); return true; }
+    catch(_){ prompt("Copy this:", text); return false; }
+  }
   function esc(s){ const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
   // Negative amounts (a manual booking's discount line) read as
   // "-R500.00", not "R-500.00".
@@ -540,8 +679,11 @@
       empty.style.display = "block";
       empty.textContent = `Could not load bookings — check your admin token. (Sent a token that's ${token().length} characters long, HTTP status ${res.status}.)`;
       console.error("[Welverdiend admin] auth/load failed:", { status: res.status, tokenLength: token().length, response: data });
+      // A remembered token that no longer works (e.g. ADMIN_TOKEN changed): ask again.
+      if(res.status === 401 || res.status === 403) forgetToken();
       return;
     }
+    if(token() !== savedToken() || !document.body.classList.contains("logged-in")) rememberToken(token());
     allBookings = data.bookings;
     bookingsById = {};
     allBookings.forEach(b => { bookingsById[b.id] = b; });
@@ -558,6 +700,7 @@
       const n = allBookings.filter(b => VIEWS[btn.dataset.view].test(b, states.get(b))).length;
       btn.querySelector(".count").textContent = n;
       btn.classList.toggle("has-action", btn.dataset.view === "action" && n > 0);
+      if(btn.dataset.view === "action") document.getElementById("nav-badge").textContent = n > 0 ? n : "";
     });
 
     const view = VIEWS[currentView];
@@ -675,7 +818,7 @@
         </div>
         ${!knownStatus ? `<div class="notes">This booking has a status from an older version of the system and won't show any action buttons except Delete. Safe to delete if it's old test data.</div>` : ""}
         <div class="detail-grid">
-          <div><div class="label">Contact</div>${b.email ? esc(b.email) : `<span class="range-source">No email on file</span>`}<br>${esc(b.phone)}</div>
+          <div><div class="label">Contact</div>${contactHtml(b.email, b.phone)}</div>
           <div><div class="label">Guests</div>${guestsLine}</div>
           <div><div class="label">Pets</div>${petsLine}</div>
           <div><div class="label">Extras</div><div class="extras-list">${extrasLines}</div></div>
@@ -721,9 +864,8 @@
         alert(errMsg);
         return;
       }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
+      const what = type === "invoice" ? "Invoice" : type === "balance" ? "Balance proof" : "Deposit proof";
+      await openBlob(await res.blob(), `${what} - ${(bookingsById[id] && bookingsById[id].guestName) || id}`);
     }catch(err){
       alert("Could not reach the server to load that file.");
     }
@@ -1400,7 +1542,8 @@
     const [blob, link] = await Promise.all([waFetchInvoice(b.id), waFetchInvoiceLink(b.id)]);
     const name = `Welverdiend invoice - ${b.guestName}.pdf`.replace(/[\\/:*?"<>|]/g, "");
     let file = null;
-    if(blob && typeof navigator.canShare === "function" && typeof navigator.share === "function"){
+    if(blob && APP) file = "app"; // the Android app hands the PDF straight to WhatsApp
+    else if(blob && typeof navigator.canShare === "function" && typeof navigator.share === "function"){
       try{
         const f = new File([blob], name, { type: "application/pdf" });
         if(navigator.canShare({ files: [f] })) file = f;
@@ -1418,7 +1561,9 @@
       <div class="settings-field"><label>Message</label><textarea id="wa-text" style="min-height:280px;">${esc(waMessage(b, settings, link))}</textarea></div>
       ${file ? `
         <button type="button" class="rv-open-btn" id="wa-share" style="width:100%;border:0;cursor:pointer;">Send PDF</button>
-        <div class="hint" style="margin-top:6px;">Hands the invoice to WhatsApp as a document — pick ${esc(b.guestName)} in the share menu. WhatsApp often drops the text when a file is shared, so tap <b>Copy message</b> first and paste it as the caption, or send the message separately with <b>Open chat only</b>.</div>
+        <div class="hint" style="margin-top:6px;">${file === "app"
+          ? `Opens WhatsApp with the invoice attached for ${esc(b.guestName)} and the message as its caption. If WhatsApp asks, pick ${esc(b.guestName)}'s chat.`
+          : `Hands the invoice to WhatsApp as a document — pick ${esc(b.guestName)} in the share menu. WhatsApp often drops the text when a file is shared, so tap <b>Copy message</b> first and paste it as the caption, or send the message separately with <b>Open chat only</b>.`}</div>
       ` : `
         <button type="button" class="rv-open-btn" id="wa-download-open" style="width:100%;border:0;cursor:pointer;">${blob ? "Download PDF &amp; open chat" : "Open chat"}</button>
         ${blob ? `<ol class="hint" style="margin:8px 0 0;padding-left:20px;line-height:1.6;">
@@ -1444,11 +1589,14 @@
       refresh();
     }
     document.getElementById("wa-copy").onclick = async () => {
-      try{ await navigator.clipboard.writeText(text.value); alert("Message copied — paste it as the caption in WhatsApp."); }
-      catch(_){ prompt("Copy this:", text.value); }
+      if(await copyText(text.value)) alert("Message copied — paste it as the caption in WhatsApp.");
     };
     const share = document.getElementById("wa-share");
-    if(share) share.onclick = () => {
+    if(share && waState.file === "app") share.onclick = async () => {
+      APP.shareToWhatsApp(await blobToBase64(waState.blob), "application/pdf", waState.name, text.value, waState.phone);
+      document.getElementById("wa-overlay").classList.remove("show");
+    };
+    else if(share) share.onclick = () => {
       navigator.share({ files: [waState.file], title: waState.name, text: text.value })
         .then(() => document.getElementById("wa-overlay").classList.remove("show"))
         .catch(err => { if(err && err.name !== "AbortError") alert("Could not share: " + (err.message || "unknown error")); });
@@ -1545,7 +1693,7 @@
             <div class="head-tags"><span class="status ${paid ? "confirmed" : "requested"}">${paid ? "Paid " + lsDmy(inv.paidAt) : "Unpaid"}</span></div>
           </div>
           <div class="detail-grid">
-            <div><div class="label">Contact</div>${b.email ? esc(b.email) : `<span class="range-source">No email on file</span>`}<br>${esc(b.phone)}</div>
+            <div><div class="label">Contact</div>${contactHtml(b.email, b.phone)}</div>
             <div><div class="label">Lines</div>${count} item${count === 1 ? "" : "s"}</div>
             <div><div class="label">Emailed</div>${inv.sentAt ? lsDmy(inv.sentAt) : `<span class="range-source">Not yet</span>`}</div>
             <div><div class="label">Total</div><div class="total">${lsRands(inv.total)}</div></div>
@@ -1617,7 +1765,7 @@
         alert(msg);
         return;
       }
-      window.open(URL.createObjectURL(await res.blob()), "_blank");
+      await openBlob(await res.blob(), `Invoice ${inv.number}`);
     }catch(err){
       alert("Could not reach the server to load the PDF.");
     }
@@ -2157,13 +2305,15 @@
     refreshLive();
     liveTimers = [setInterval(refreshLive, LIVE_REFRESH_MS), setInterval(tickLiveClock, 15000)];
     try{ await document.documentElement.requestFullscreen(); }catch(e){ /* not allowed here — the overlay still fills the window */ }
-    try{ liveWakeLock = await navigator.wakeLock.request("screen"); }catch(e){ /* screen may sleep on this device */ }
+    if(APP) APP.keepScreenOn(true);
+    else try{ liveWakeLock = await navigator.wakeLock.request("screen"); }catch(e){ /* screen may sleep on this device */ }
   }
 
   function closeLiveScreen(){
     document.getElementById("live-screen").hidden = true;
     liveTimers.forEach(clearInterval);
     liveTimers = [];
+    if(APP) APP.keepScreenOn(false);
     if(liveWakeLock){ liveWakeLock.release().catch(() => {}); liveWakeLock = null; }
     if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
     renderTimelineSection();
@@ -3751,10 +3901,7 @@
     msg.textContent = "Saved.";
   }
 
-  async function rvCopy(text){
-    try{ await navigator.clipboard.writeText(text); return true; }
-    catch(_){ prompt("Copy this:", text); return false; }
-  }
+  const rvCopy = copyText;
 
   async function rvAction(action, ds){
     if(action === "ask") return openRvModal(rvState.due[+ds.i]);
@@ -3899,6 +4046,38 @@
     refresh();
     document.getElementById("rv-copy-msg").onclick = async () => { if(await rvCopy(text.value)) alert("Message copied."); };
     document.getElementById("rv-copy-link").onclick = async () => { if(await rvCopy(r.link)) alert("Link copied."); };
+  }
+
+  // ---- Hooks for the Android app (android-admin/)
+  // Back button: close whatever is on top; returns false when there's
+  // nothing left to close, and the app then goes to the background.
+  window.appBack = () => {
+    if(!document.getElementById("live-screen").hidden){ closeLiveScreen(); return true; }
+    const overlay = document.querySelector(".reason-modal-overlay.show");
+    if(overlay){ const c = overlay.querySelector(".cancel-btn"); c ? c.click() : overlay.classList.remove("show"); return true; }
+    const sheet = document.getElementById("more-sheet");
+    if(!sheet.hidden){ sheet.hidden = true; return true; }
+    const menu = document.querySelector("details.more[open]");
+    if(menu){ menu.open = false; return true; }
+    const tab = document.querySelector(".tabs button.active");
+    if(tab && tab.dataset.tab !== "bookings"){ goTab("bookings"); return true; }
+    return false;
+  };
+  // Pull down to refresh. Settings and Website are left alone so a pull
+  // can't throw away edits that haven't been saved yet.
+  window.appRefresh = () => {
+    if(!token()) return;
+    if(!document.getElementById("live-screen").hidden) return refreshLive();
+    const tab = document.querySelector(".tabs button.active").dataset.tab;
+    if(tab === "bookings") loadBookings();
+    else if(["calendar", "longstay", "reviews", "analytics"].includes(tab)) document.querySelector(`.tabs button[data-tab="${tab}"]`).click();
+  };
+
+  // Signed in before on this device: go straight to the bookings.
+  if(savedToken()){
+    document.getElementById("token").value = savedToken();
+    document.body.classList.add("logged-in");
+    loadBookings();
   }
 
 </script>
