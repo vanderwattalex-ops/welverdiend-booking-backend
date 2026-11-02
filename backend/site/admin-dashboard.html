@@ -49,6 +49,85 @@
   .status.rejected{background:#F5E1DC;color:var(--danger);}
   .status.expired{background:#EFE7DD;color:#8A6A1F;}
   .status.manual{background:var(--surface);color:var(--taupe-dark);border:1px solid var(--line);}
+  .status.owing{background:#F5EAD2;color:var(--warning);}
+  .status.paid{background:var(--success);color:var(--white);}
+  .filters button .count{display:inline-block;min-width:18px;margin-left:6px;padding:0 5px;border-radius:9px;background:var(--surface);color:var(--ink-soft);font-size:11px;font-weight:600;text-align:center;}
+  .filters button.active .count{background:rgba(255,255,255,.25);color:var(--white);}
+  .filters button.has-action .count{background:var(--danger);color:var(--white);}
+  .card.closed{opacity:.62;}
+  .pay-line{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center;padding:9px 12px;margin-top:12px;border-radius:4px;background:var(--surface);font-size:13px;}
+  .pay-step{display:flex;align-items:center;gap:6px;}
+  .pay-step .dot{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:1.5px solid var(--line);color:var(--ink-soft);background:var(--white);}
+  .pay-step.done .dot{background:var(--success);border-color:var(--success);color:var(--white);}
+  .pay-step.check .dot{background:#2A5F8A;border-color:#2A5F8A;color:var(--white);}
+  .pay-step.owing{color:var(--warning);font-weight:600;}
+  .pay-step.urgent{color:var(--danger);font-weight:700;}
+  .pay-step.urgent .dot{border-color:var(--danger);color:var(--danger);}
+  .more{position:relative;margin-left:auto;}
+  .more summary{list-style:none;padding:7px 12px;border:1px solid var(--line);border-radius:4px;font-size:12.5px;cursor:pointer;color:var(--ink-soft);background:var(--white);}
+  .more summary::-webkit-details-marker{display:none;}
+  .more[open] .more-menu{display:flex;}
+  .more-menu{display:none;flex-direction:column;gap:6px;position:absolute;right:0;bottom:calc(100% + 6px);z-index:5;padding:8px;background:var(--white);border:1px solid var(--line);border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.12);min-width:150px;}
+  .more-menu button{text-align:left;}
+  .card.flash{box-shadow:0 0 0 3px var(--taupe);transition:box-shadow .3s;}
+
+  /* Timeline: units as rows, days across. Bars start and end mid-day so a
+     same-day changeover shows as two bars meeting, not overlapping. */
+  .tl-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+  .tl-toolbar button{padding:6px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white);cursor:pointer;font-size:12.5px;}
+  .tl-toolbar .btn-live{background:var(--taupe-deep);color:var(--white);border-color:var(--taupe-deep);font-weight:600;margin-left:auto;}
+  .tl-range{font-size:13px;color:var(--ink-soft);}
+  .tl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--white);}
+  .tl{min-width:calc(96px + var(--days) * 30px);}
+  .tl-head,.tl-row{display:flex;}
+  .tl-label{flex:0 0 96px;padding:8px 10px;font-size:13px;font-weight:600;border-right:1px solid var(--line);background:var(--surface);}
+  .tl-days{flex:1;display:flex;border-bottom:1px solid var(--line);}
+  .tl-day{flex:1;text-align:center;font-size:10.5px;color:var(--ink-soft);padding:4px 0;line-height:1.3;border-left:1px solid transparent;}
+  .tl-day b{display:block;font-size:12px;color:var(--ink);}
+  .tl-day.we{background:#F3EFE6;}
+  .tl-day.today{background:var(--taupe-deep);color:var(--white);}
+  .tl-day.today b{color:var(--white);}
+  .tl-day.month{border-left-color:var(--taupe);}
+  .tl-row{border-bottom:1px solid var(--line);}
+  .tl-row:last-child{border-bottom:none;}
+  .tl-track{flex:1;position:relative;min-height:42px;}
+  .tl-bg{position:absolute;inset:0;display:flex;}
+  .tl-bg div{flex:1;}
+  .tl-bg .we{background:#FAF7F0;}
+  .tl-now{position:absolute;top:0;bottom:0;width:2px;background:var(--danger);opacity:.55;}
+  .tl-bar{position:absolute;height:28px;border-radius:5px;font-size:11.5px;line-height:28px;padding:0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;font-weight:600;}
+  .tl-bar.cut-l{border-top-left-radius:0;border-bottom-left-radius:0;}
+  .tl-bar.cut-r{border-top-right-radius:0;border-bottom-right-radius:0;}
+  .tl-bar[data-booking-id]{cursor:pointer;}
+  .bar-ota{background:var(--taupe);color:var(--white);}
+  .bar-block{background:repeating-linear-gradient(45deg,#D8D2C4 0 6px,#E9E4D8 6px 12px);color:var(--ink-soft);}
+  .bar-requested{background:var(--white);border:2px dashed var(--warning);color:var(--warning);line-height:24px;}
+  .bar-awaiting{background:#EAE3F5;border:1px solid #5A3E99;color:#5A3E99;line-height:26px;}
+  .bar-check{background:#DCEAF5;border:1px solid #2A5F8A;color:#2A5F8A;line-height:26px;}
+  .bar-owing{background:#F5EAD2;border:1px solid var(--warning);color:var(--warning);line-height:26px;}
+  .bar-paid{background:var(--success);color:var(--white);}
+  .tl-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 4px;font-size:12px;color:var(--ink-soft);}
+  .tl-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .tl-legend i{display:inline-block;width:20px;height:12px;border-radius:3px;box-sizing:border-box;}
+  .tl-coming{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;}
+  .tl-coming .box{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:10px 14px;font-size:13px;}
+  .tl-coming h4{margin:0 0 6px;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);}
+  .tl-coming .ev{padding:3px 0;}
+  .tl-coming .when{display:inline-block;min-width:78px;font-weight:600;}
+  .tl-section{margin-bottom:28px;}
+
+  #live-screen{position:fixed;inset:0;z-index:100;background:var(--surface);overflow:auto;padding:18px 24px;box-sizing:border-box;}
+  #live-screen[hidden]{display:none;}
+  .live-head{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:14px;}
+  .live-head h2{font-family:'Cormorant Garamond',serif;font-size:26px;margin:0;}
+  .live-updated{font-size:12.5px;color:var(--ink-soft);}
+  .live-updated.stale{color:var(--danger);font-weight:600;}
+  .live-clock{margin-left:auto;font-size:22px;font-weight:600;color:var(--taupe-deep);}
+  .live-head button{padding:7px 14px;border:1px solid var(--line);border-radius:4px;background:var(--white);cursor:pointer;}
+  #live-screen .tl-bar{height:34px;line-height:34px;font-size:13px;}
+  #live-screen .bar-requested{line-height:30px;}
+  #live-screen .bar-awaiting,#live-screen .bar-check,#live-screen .bar-owing{line-height:32px;}
+  #live-screen .tl-label{font-size:15px;}
   .head-tags{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
   .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:14px 0;font-size:13px;}
   .detail-grid .label{color:var(--ink-soft);font-size:11px;text-transform:uppercase;letter-spacing:.03em;margin-bottom:2px;}
@@ -260,13 +339,13 @@
 <div class="tab-panel active" id="panel-bookings">
   <div class="bookings-toolbar">
     <div class="filters">
-      <button class="active" data-status="">All</button>
-      <button data-status="requested">New requests</button>
-      <button data-status="awaiting_payment">Awaiting payment</button>
-      <button data-status="submitted">Ready to confirm</button>
-      <button data-status="confirmed">Confirmed</button>
-      <button data-status="rejected">Rejected</button>
-      <button data-status="expired">Expired</button>
+      <button class="active" data-view="action">Needs action<span class="count"></span></button>
+      <button data-view="upcoming">Upcoming<span class="count"></span></button>
+      <button data-view="owing">Balance owing<span class="count"></span></button>
+      <button data-view="paid">Paid in full<span class="count"></span></button>
+      <button data-view="past">Past stays<span class="count"></span></button>
+      <button data-view="closed">Closed<span class="count"></span></button>
+      <button data-view="all">All<span class="count"></span></button>
     </div>
     <button type="button" class="btn-new-booking" id="new-booking-btn">+ New booking</button>
   </div>
@@ -310,20 +389,39 @@
   </div>
 </div>
 
+<div id="live-screen" hidden>
+  <div class="live-head">
+    <div>
+      <h2>Welverdiend — live calendar</h2>
+      <div class="live-updated" id="live-updated"></div>
+    </div>
+    <div class="live-clock" id="live-clock"></div>
+    <button type="button" id="live-exit">Exit live screen</button>
+  </div>
+  <div id="live-body"></div>
+</div>
+
 <script>
   const API_BASE = "https://welverdiend-booking-478269051372.europe-west1.run.app"; // same backend URL as the widget
-  let currentStatus = "";
+  let currentView = "action";
 
+  function setView(view){
+    currentView = view;
+    document.querySelectorAll(".filters button").forEach(b => b.classList.toggle("active", b.dataset.view === view));
+  }
   document.querySelectorAll(".filters button").forEach(btn => {
     btn.onclick = () => {
-      document.querySelectorAll(".filters button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentStatus = btn.dataset.status;
-      loadBookings();
+      setView(btn.dataset.view);
+      if(allBookings) renderBookings(); else loadBookings();
     };
   });
 
   document.getElementById("load-btn").onclick = loadBookings;
+
+  // Clicking anywhere else closes an open "More" menu on a booking card.
+  document.addEventListener("click", e => {
+    document.querySelectorAll("details.more[open]").forEach(d => { if(!d.contains(e.target)) d.open = false; });
+  });
 
   document.querySelectorAll(".tabs button").forEach(btn => {
     btn.onclick = () => {
@@ -388,11 +486,42 @@
 
 
   let bookingsById = {}; // the bookings last loaded, for the WhatsApp message builder
+  let allBookings = null; // every booking, newest request first; the filters only change what's shown
+
+  // Dates are compared as YYYY-MM-DD strings in South African time, like the server does.
+  function saToday(offsetDays = 0){
+    const d = new Date(Date.now() + offsetDays * 86400000);
+    return d.toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" });
+  }
+
+  // Where a booking stands with money — one place, so the badge, the
+  // payment line and the filters can never disagree.
+  function payState(b){
+    const closed = b.status === "rejected" || b.status === "expired";
+    const paidInFull = b.status === "confirmed" && (b.balanceStatus === "paid" || Number(b.balanceAmount) <= 0);
+    const owing = b.status === "confirmed" && !paidInFull;
+    const past = (b.checkOut || "") < saToday();
+    const soon = (b.checkIn || "") <= saToday(7);
+    const needsAction = b.status === "requested" || b.status === "submitted"
+      || (owing && b.balanceStatus === "submitted")
+      || (owing && soon);
+    return { closed, paidInFull, owing, past, soon, needsAction };
+  }
+
+  const VIEWS = {
+    action:   { test: (b, s) => s.needsAction, sort: "checkIn", empty: "Nothing needs your attention right now." },
+    upcoming: { test: (b, s) => !s.closed && !s.past, sort: "checkIn", empty: "No upcoming bookings." },
+    owing:    { test: (b, s) => s.owing, sort: "checkIn", empty: "Nobody owes a balance." },
+    paid:     { test: (b, s) => s.paidInFull && !s.past, sort: "checkIn", empty: "No upcoming bookings are paid in full yet." },
+    past:     { test: (b, s) => b.status === "confirmed" && s.past, sort: "checkInDesc", empty: "No past stays yet." },
+    closed:   { test: (b, s) => s.closed, sort: "created", empty: "No rejected, declined or expired bookings." },
+    all:      { test: () => true, sort: "created", empty: "No bookings yet." }
+  };
 
   async function loadBookings(){
     if(!token()){ alert("Enter your admin token first."); return; }
     checkFeedHealth();
-    const url = `${API_BASE}/api/admin/bookings${currentStatus ? "?status="+currentStatus : ""}`;
+    const url = `${API_BASE}/api/admin/bookings`;
     let res, data;
     try{
       res = await fetch(url, { headers: { "x-admin-token": token() } });
@@ -404,26 +533,48 @@
       return;
     }
     await loadBlocklist();
-    const cards = document.getElementById("cards");
-    const empty = document.getElementById("empty");
-    cards.innerHTML = "";
 
     if(!data.ok){
+      document.getElementById("cards").innerHTML = "";
+      const empty = document.getElementById("empty");
       empty.style.display = "block";
       empty.textContent = `Could not load bookings — check your admin token. (Sent a token that's ${token().length} characters long, HTTP status ${res.status}.)`;
       console.error("[Welverdiend admin] auth/load failed:", { status: res.status, tokenLength: token().length, response: data });
       return;
     }
-    if(data.bookings.length === 0){
+    allBookings = data.bookings;
+    bookingsById = {};
+    allBookings.forEach(b => { bookingsById[b.id] = b; });
+    renderBookings();
+  }
+
+  function renderBookings(){
+    const cards = document.getElementById("cards");
+    const empty = document.getElementById("empty");
+    cards.innerHTML = "";
+
+    const states = new Map(allBookings.map(b => [b, payState(b)]));
+    document.querySelectorAll(".filters button").forEach(btn => {
+      const n = allBookings.filter(b => VIEWS[btn.dataset.view].test(b, states.get(b))).length;
+      btn.querySelector(".count").textContent = n;
+      btn.classList.toggle("has-action", btn.dataset.view === "action" && n > 0);
+    });
+
+    const view = VIEWS[currentView];
+    const shown = allBookings.filter(b => view.test(b, states.get(b)));
+    if(view.sort === "checkIn") shown.sort((a, b) => (a.checkIn || "").localeCompare(b.checkIn || ""));
+    else if(view.sort === "checkInDesc") shown.sort((a, b) => (b.checkIn || "").localeCompare(a.checkIn || ""));
+    // "created" keeps the server's order: newest request first.
+
+    if(shown.length === 0){
       empty.style.display = "block";
-      empty.textContent = "No bookings found for this filter.";
+      empty.textContent = view.empty;
       return;
     }
     empty.style.display = "none";
 
-    bookingsById = {};
-    data.bookings.forEach(b => {
-      bookingsById[b.id] = b;
+    shown.forEach(b => {
+      const st = states.get(b);
       const guestsLine = `${b.adults || 1} adult${(b.adults||1)===1?"":"s"}` + (b.children ? `, ${b.children} child${b.children===1?"":"ren"}${b.childrenAges ? " ("+esc(b.childrenAges)+")" : ""}` : "");
       const petsLine = b.hasPets ? (esc(b.petDetails) || "Yes") : "No";
       // Everything after the first line item is an add-on — except a
@@ -432,8 +583,36 @@
       const addOns = (b.lineItems || []).slice(1);
       const extrasLines = addOns.filter(li => li.amount >= 0).map(li => `${esc(li.label)} — ${rand(li.amount)}`).join("<br>") || "None";
       const discountLine = addOns.filter(li => li.amount < 0).map(li => `${esc(li.label)} ${rand(li.amount)}`).join(", ");
-      const statusLabels = { requested: "New request", awaiting_payment: "Awaiting deposit", submitted: "Ready to confirm", confirmed: "Confirmed", rejected: "Rejected", expired: "Expired" };
-      const balanceLabels = { unpaid: "Balance not yet paid", submitted: "Balance proof received", paid: "Balance paid" };
+      let badge, badgeClass = b.status;
+      if(b.status === "requested") badge = "New request";
+      else if(b.status === "awaiting_payment") badge = "Awaiting deposit";
+      else if(b.status === "submitted") badge = b.proofOfPaymentPath ? "Deposit proof to check" : "Deposit in — confirm booking";
+      else if(st.paidInFull) { badge = "Paid in full"; badgeClass = "paid"; }
+      else if(b.status === "confirmed" && b.balanceStatus === "submitted") { badge = "Balance proof to check"; badgeClass = "submitted"; }
+      else if(b.status === "confirmed") { badge = "Deposit paid · balance owing"; badgeClass = "owing"; }
+      else if(b.status === "rejected") badge = "Rejected / declined";
+      else if(b.status === "expired") badge = "Expired";
+
+      // The payment line: deposit step, then balance step.
+      const step = (cls, mark, text) => `<span class="pay-step ${cls}"><span class="dot">${mark}</span>${text}</span>`;
+      let payLine = "";
+      if(!st.closed){
+        const dep = rand(b.depositAmount), bal = rand(b.balanceAmount);
+        let depStep, balStep;
+        if(b.status === "requested") depStep = step("", "1", `Deposit ${dep} — due after you approve`);
+        else if(b.status === "awaiting_payment") depStep = step("", "1", `Deposit ${dep} — waiting for the guest`);
+        else if(b.status === "submitted" && b.proofOfPaymentPath) depStep = step("check", "?", `Deposit ${dep} — proof uploaded, check your bank`);
+        else depStep = step("done", "✓", `Deposit ${dep} paid`);
+
+        if(st.paidInFull) balStep = step("done", "✓", `<strong>Paid in full — ${rand(b.totalAmount)}</strong>`);
+        else if(b.status === "confirmed" && b.balanceStatus === "submitted") balStep = step("check", "?", `Balance ${bal} — proof uploaded, check your bank`);
+        else if(b.status === "confirmed"){
+          const when = st.past ? " — guest has already checked out" : st.soon ? ` — check-in ${esc(b.checkIn)}` : "";
+          balStep = step(st.soon ? "urgent" : "owing", "!", `Balance ${bal} still owing${when}`);
+        }
+        else balStep = step("", "2", `Balance ${bal}`);
+        payLine = `<div class="pay-line">${depStep}${balStep}</div>`;
+      }
 
       let actionsHtml = "";
       if(b.status === "requested"){
@@ -470,13 +649,18 @@
         actionsHtml = parts.join("");
       }
       const blocked = isBlocked(b);
-      if(!blocked && (b.email || b.phone)) actionsHtml += `<button class="btn-reject" data-id="${b.id}" data-action="block">Block guest</button>`;
-      actionsHtml += `<button class="btn-reject" data-id="${b.id}" data-action="delete">Delete</button>`;
+      // Rarely-used and destructive buttons sit behind "More" so the
+      // coloured buttons on a card are only the ones that need you.
+      const moreItems = [];
+      if(!blocked && (b.email || b.phone)) moreItems.push(`<button class="btn-reject" data-id="${b.id}" data-action="block">Block guest</button>`);
+      moreItems.push(`<button class="btn-reject" data-id="${b.id}" data-action="delete">Delete booking</button>`);
+      actionsHtml += `<details class="more"><summary>More ▾</summary><div class="more-menu">${moreItems.join("")}</div></details>`;
 
       const knownStatus = ["requested","awaiting_payment","submitted","confirmed","rejected","expired"].includes(b.status);
 
       const card = document.createElement("div");
-      card.className = "card";
+      card.className = st.closed ? "card closed" : "card";
+      card.dataset.bookingId = b.id;
       card.innerHTML = `
         <div class="card-head">
           <div>
@@ -486,7 +670,7 @@
           <div class="head-tags">
             ${b.manual ? `<span class="status manual" title="Captured by you, not requested through the website">Manual${b.bookingChannel && CHANNEL_LABELS[b.bookingChannel] ? " · " + CHANNEL_LABELS[b.bookingChannel] : ""}</span>` : ""}
             ${blocked ? `<span class="status rejected" title="This email or phone number can't send new booking requests. Unblock it in Settings.">Blocked</span>` : ""}
-            <span class="status ${knownStatus ? b.status : ''}">${statusLabels[b.status] || `Unrecognized status: ${esc(b.status)}`}</span>
+            <span class="status ${knownStatus ? badgeClass : ''}">${badge || `Unrecognized status: ${esc(b.status)}`}</span>
           </div>
         </div>
         ${!knownStatus ? `<div class="notes">This booking has a status from an older version of the system and won't show any action buttons except Delete. Safe to delete if it's old test data.</div>` : ""}
@@ -499,9 +683,9 @@
             <div class="label">Payment</div>
             <div class="total">${rand(b.totalAmount)} total</div>
             ${discountLine ? `<div class="range-source">${discountLine} applied</div>` : ""}
-            <div class="range-source">Deposit ${rand(b.depositAmount)} · Balance ${rand(b.balanceAmount)}${b.status === 'confirmed' ? ` — ${balanceLabels[b.balanceStatus] || b.balanceStatus}` : ''}</div>
           </div>
         </div>
+        ${payLine}
         ${b.notes ? `<div class="notes">"${esc(b.notes)}"</div>` : ""}
         ${b.status === "awaiting_payment" ? `<div class="waiting-note">${b.manual ? "Dates are held for this guest. Manual bookings never auto-expire — cancel it to release the dates." : "Waiting for the guest to upload deposit proof of payment."}</div>` : ""}
         ${b.status === "expired" ? `<div class="waiting-note">Automatically expired 24 hours after approval — no deposit proof was received. Dates have been released.</div>` : ""}
@@ -1054,8 +1238,7 @@
 
     const wantWa = document.getElementById("nb-send-wa").checked;
     closeNewBooking();
-    currentStatus = "";
-    document.querySelectorAll(".filters button").forEach(b => b.classList.toggle("active", b.dataset.status === ""));
+    setView("all"); // newest first, so the booking just made is at the top
     await loadBookings();
     const created = bookingsById[data.bookingId];
     if(wantWa && created){
@@ -1712,8 +1895,10 @@
       return;
     }
     renderFeedWarnings(data.units);
+    calendarUnits = data.units;
+    await loadTimelineBookings();
 
-    content.innerHTML = data.units.map(u => {
+    content.innerHTML = `<div class="tl-section" id="tl-section"></div><h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;margin:0 0 10px;">Booked dates per unit</h3>` + data.units.map(u => {
       const rows = (u.busyRanges || []).map(r => {
         const names = (r.sources||[]).map(s => sourceLabels[s] || s).join(" + ");
         const who = (r.details||[]).length ? ` — ${r.details.map(esc).join(", ")}` : "";
@@ -1752,6 +1937,7 @@
         </div>
       `;
     }).join("");
+    renderTimelineSection();
 
     content.querySelectorAll("[data-unit]").forEach(btn => {
       btn.onclick = () => unblockRange(btn.dataset.unit, btn.dataset.start, btn.dataset.end);
@@ -1793,6 +1979,202 @@
     if(data.ok) loadCalendar();
     else alert(data.error || "Could not remove that unblock.");
   }
+
+  // ---- Timeline + live screen
+  // Platform bookings come from the synced calendar (busyRanges); website
+  // and manual bookings come from the bookings list, so they can be coloured
+  // by payment. Ranges that are "direct" only are skipped from the calendar
+  // side so our own bookings aren't drawn twice.
+  let calendarUnits = [];
+  let tlStart = null; // first day shown in the Calendar tab; null = a few days before today
+  const TL_DAYS = 42;
+
+  const addDays = (ymd, n) => { const d = new Date(ymd + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+  const dayDiff = (a, b) => Math.round((Date.parse(b + "T12:00:00Z") - Date.parse(a + "T12:00:00Z")) / 86400000);
+  const dayName = ymd => new Date(ymd + "T12:00:00Z").toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+
+  async function loadTimelineBookings(){
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/bookings`, { headers: { "x-admin-token": token() } });
+      const data = await res.json();
+      if(!data.ok) return false;
+      allBookings = data.bookings;
+      bookingsById = {};
+      allBookings.forEach(b => { bookingsById[b.id] = b; });
+      return true;
+    }catch(e){ return false; }
+  }
+
+  function timelineBars(unit){
+    const bars = [];
+    (unit.busyRanges || []).forEach(r => {
+      const ota = (r.sources || []).filter(s => s !== "direct");
+      if(!ota.length) return;
+      const names = ota.map(s => sourceLabels[s] || s).join(" + ");
+      bars.push(r.blocked
+        ? { start: r.start, end: r.end, cls: "bar-block", label: `Blocked on ${names}`, title: `Blocked on ${names} (not a guest booking)` }
+        : { start: r.start, end: r.end, cls: "bar-ota", label: names, title: `Booked on ${names}`, guest: names });
+    });
+    (allBookings || []).filter(b => b.unitId === unit.unitId).forEach(b => {
+      const st = payState(b);
+      if(st.closed) return;
+      let cls, what;
+      if(b.status === "requested"){ cls = "bar-requested"; what = "Request — not holding dates"; }
+      else if(b.status === "awaiting_payment"){ cls = "bar-awaiting"; what = "Awaiting deposit"; }
+      else if(b.status === "submitted" || (b.status === "confirmed" && b.balanceStatus === "submitted")){ cls = "bar-check"; what = "Proof of payment to check"; }
+      else if(st.paidInFull){ cls = "bar-paid"; what = "Paid in full"; }
+      else { cls = "bar-owing"; what = `Balance ${rand(b.balanceAmount)} owing`; }
+      bars.push({ start: b.checkIn, end: b.checkOut, cls, label: String(b.guestName || "Guest").trim().split(/\s+/)[0], title: `${b.guestName} · ${b.checkIn} → ${b.checkOut} · ${what}`, bookingId: b.id, guest: b.guestName, request: b.status === "requested" });
+    });
+    return bars.sort((a, b) => a.start.localeCompare(b.start));
+  }
+
+  function timelineHtml(units, start, days){
+    const today = saToday(), end = addDays(start, days);
+    const dates = Array.from({ length: days }, (_, i) => addDays(start, i));
+    const isWe = d => [0, 6].includes(new Date(d + "T12:00:00Z").getUTCDay());
+    const head = dates.map((d, i) => {
+      const dt = new Date(d + "T12:00:00Z");
+      const cls = ["tl-day", isWe(d) ? "we" : "", d === today ? "today" : "", (i > 0 && dt.getUTCDate() === 1) ? "month" : ""].join(" ");
+      const top = (i === 0 || dt.getUTCDate() === 1) ? dt.toLocaleDateString("en-ZA", { month: "short", timeZone: "UTC" }) : dt.toLocaleDateString("en-ZA", { weekday: "narrow", timeZone: "UTC" });
+      return `<div class="${cls}">${top}<b>${dt.getUTCDate()}</b></div>`;
+    }).join("");
+    const bg = dates.map(d => `<div class="${isWe(d) ? "we" : ""}"></div>`).join("");
+    const nowPos = dayDiff(start, today);
+    const nowLine = nowPos >= 0 && nowPos < days ? `<div class="tl-now" style="left:${(nowPos + 0.5) / days * 100}%"></div>` : "";
+
+    const rows = units.map(u => {
+      const lanes = [];
+      const barsHtml = timelineBars(u).filter(b => b.end > start && b.start < end).map(b => {
+        let lane = lanes.findIndex(lastEnd => lastEnd <= b.start);
+        if(lane === -1){ lane = lanes.length; lanes.push(b.end); } else lanes[lane] = b.end;
+        let from = dayDiff(start, b.start) + 0.5, to = dayDiff(start, b.end) + 0.5;
+        const cutL = from < 0, cutR = to > days;
+        from = Math.max(from, 0); to = Math.min(to, days);
+        const nights = dayDiff(b.start, b.end);
+        return `<div class="tl-bar ${b.cls}${cutL ? " cut-l" : ""}${cutR ? " cut-r" : ""}" style="left:${from / days * 100}%;width:${(to - from) / days * 100}%;top:${7 + lane * 38}px" title="${escAttr(b.title)}"${b.bookingId ? ` data-booking-id="${escAttr(b.bookingId)}"` : ""}>${esc(b.label)} · ${nights}n</div>`;
+      }).join("");
+      const height = 14 + Math.max(lanes.length, 1) * 38;
+      return `<div class="tl-row"><div class="tl-label">${esc(u.unitName)}</div><div class="tl-track" style="height:${height}px"><div class="tl-bg">${bg}</div>${nowLine}${barsHtml}</div></div>`;
+    }).join("");
+
+    const legend = [
+      ["bar-paid", "Paid in full"], ["bar-owing", "Balance owing"], ["bar-check", "Proof to check"],
+      ["bar-awaiting", "Awaiting deposit"], ["bar-requested", "Request (dates not held)"],
+      ["bar-ota", "Airbnb / Booking.com / Lekkeslaap"], ["bar-block", "Blocked dates"]
+    ].map(([c, t]) => `<span><i class="${c}"></i>${t}</span>`).join("");
+
+    return `<div class="tl-scroll"><div class="tl" style="--days:${days}">
+      <div class="tl-head"><div class="tl-label"></div><div class="tl-days">${head}</div></div>${rows}
+    </div></div><div class="tl-legend">${legend}</div>`;
+  }
+
+  // Arrivals and departures over the next 7 days, across every platform.
+  function comingUpHtml(units){
+    const today = saToday(), until = saToday(7);
+    const when = d => d === today ? "Today" : d === saToday(1) ? "Tomorrow" : dayName(d);
+    const arrivals = [], departures = [];
+    units.forEach(u => timelineBars(u).forEach(b => {
+      if(b.cls === "bar-block" || b.request) return;
+      if(b.start >= today && b.start < until) arrivals.push({ d: b.start, text: `${esc(b.guest)} — ${esc(u.unitName)}${b.bookingId && bookingsById[b.bookingId].arrivalTime ? ", arriving " + esc(bookingsById[b.bookingId].arrivalTime) : ""}` });
+      if(b.end >= today && b.end < until) departures.push({ d: b.end, text: `${esc(b.guest)} — ${esc(u.unitName)}` });
+    }));
+    const list = items => items.length
+      ? items.sort((a, b) => a.d.localeCompare(b.d)).map(e => `<div class="ev"><span class="when">${when(e.d)}</span>${e.text}</div>`).join("")
+      : `<div class="ev range-source">None in the next 7 days</div>`;
+    return `<div class="tl-coming"><div class="box"><h4>Arrivals — next 7 days</h4>${list(arrivals)}</div><div class="box"><h4>Departures — next 7 days</h4>${list(departures)}</div></div>`;
+  }
+
+  function renderTimelineSection(){
+    const el = document.getElementById("tl-section");
+    if(!el) return;
+    const start = tlStart || saToday(-3);
+    el.innerHTML = `
+      <div class="tl-toolbar">
+        <button type="button" data-tl="-14">← 2 weeks</button>
+        <button type="button" data-tl="today">Today</button>
+        <button type="button" data-tl="14">2 weeks →</button>
+        <span class="tl-range">${dayName(start)} – ${dayName(addDays(start, TL_DAYS - 1))}</span>
+        <button type="button" class="btn-live" id="live-open">Live screen ⛶</button>
+      </div>
+      ${timelineHtml(calendarUnits, start, TL_DAYS)}
+      ${comingUpHtml(calendarUnits)}`;
+    el.querySelectorAll("[data-tl]").forEach(btn => btn.onclick = () => {
+      tlStart = btn.dataset.tl === "today" ? null : addDays(start, Number(btn.dataset.tl));
+      renderTimelineSection();
+    });
+    el.querySelectorAll(".tl-bar[data-booking-id]").forEach(bar => bar.onclick = () => openBookingCard(bar.dataset.bookingId));
+    document.getElementById("live-open").onclick = openLiveScreen;
+  }
+
+  // Jump from a bar on the timeline to that booking's card.
+  function openBookingCard(id){
+    document.querySelector('.tabs button[data-tab="bookings"]').click();
+    setView("all");
+    renderBookings();
+    const card = document.querySelector(`.card[data-booking-id="${CSS.escape(id)}"]`);
+    if(!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.classList.add("flash");
+    setTimeout(() => card.classList.remove("flash"), 2000);
+  }
+
+  // Full-screen, self-refreshing view for a tablet or TV. It never reloads
+  // the page (the admin token isn't remembered), it just fetches again.
+  const LIVE_REFRESH_MS = 5 * 60 * 1000; // the calendars sync every 5 minutes
+  let liveTimers = [], liveWakeLock = null, liveLastOk = null;
+
+  async function refreshLive(){
+    let ok = false;
+    try{
+      const res = await fetch(`${API_BASE}/api/admin/calendar`, { headers: { "x-admin-token": token() } });
+      const data = await res.json();
+      if(data.ok){
+        calendarUnits = data.units;
+        renderFeedWarnings(data.units);
+        ok = await loadTimelineBookings();
+      }
+    }catch(e){ /* keep showing the last data */ }
+    if(ok) liveLastOk = new Date();
+    const days = Math.max(14, Math.min(60, Math.floor((window.innerWidth - 150) / 32)));
+    const warning = document.getElementById("sync-warning");
+    document.getElementById("live-body").innerHTML =
+      (warning.classList.contains("show") ? `<div class="sync-warning show">${warning.innerHTML}</div>` : "") +
+      timelineHtml(calendarUnits, saToday(-2), days) + comingUpHtml(calendarUnits);
+    const upd = document.getElementById("live-updated");
+    const t = liveLastOk ? liveLastOk.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" }) : "never";
+    upd.textContent = ok ? `Updated ${t} · refreshes every 5 minutes` : `Couldn't refresh — showing data from ${t}. Will try again in 5 minutes.`;
+    upd.classList.toggle("stale", !ok);
+  }
+
+  function tickLiveClock(){
+    document.getElementById("live-clock").textContent = new Date().toLocaleString("en-ZA", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+  }
+
+  async function openLiveScreen(){
+    document.getElementById("live-screen").hidden = false;
+    tickLiveClock();
+    refreshLive();
+    liveTimers = [setInterval(refreshLive, LIVE_REFRESH_MS), setInterval(tickLiveClock, 15000)];
+    try{ await document.documentElement.requestFullscreen(); }catch(e){ /* not allowed here — the overlay still fills the window */ }
+    try{ liveWakeLock = await navigator.wakeLock.request("screen"); }catch(e){ /* screen may sleep on this device */ }
+  }
+
+  function closeLiveScreen(){
+    document.getElementById("live-screen").hidden = true;
+    liveTimers.forEach(clearInterval);
+    liveTimers = [];
+    if(liveWakeLock){ liveWakeLock.release().catch(() => {}); liveWakeLock = null; }
+    if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    renderTimelineSection();
+  }
+  document.getElementById("live-exit").onclick = closeLiveScreen;
+  // The screen lock is dropped whenever the tab is hidden; take it back on return.
+  document.addEventListener("visibilitychange", async () => {
+    if(document.visibilityState === "visible" && !document.getElementById("live-screen").hidden){
+      try{ liveWakeLock = await navigator.wakeLock.request("screen"); }catch(e){}
+    }
+  });
 
   let settingsState = null;
   let extraCounter = 0;
