@@ -71,41 +71,41 @@
   .more-menu button{text-align:left;}
   .card.flash{box-shadow:0 0 0 3px var(--taupe);transition:box-shadow .3s;}
 
-  /* Timeline: units as rows, days across. Bars start and end mid-day so a
-     same-day changeover shows as two bars meeting, not overlapping. */
   .tl-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
   .tl-toolbar button{padding:6px 12px;border:1px solid var(--line);border-radius:4px;background:var(--white);cursor:pointer;font-size:12.5px;}
   .tl-toolbar .btn-live{background:var(--taupe-deep);color:var(--white);border-color:var(--taupe-deep);font-weight:600;margin-left:auto;}
   .tl-range{font-size:13px;color:var(--ink-soft);}
-  .tl-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:6px;background:var(--white);}
-  .tl{min-width:calc(96px + var(--days) * 30px);}
-  .tl-head,.tl-row{display:flex;}
-  .tl-label{flex:0 0 96px;padding:8px 10px;font-size:13px;font-weight:600;border-right:1px solid var(--line);background:var(--surface);}
-  .tl-days{flex:1;display:flex;border-bottom:1px solid var(--line);}
-  .tl-day{flex:1;text-align:center;font-size:10.5px;color:var(--ink-soft);padding:4px 0;line-height:1.3;border-left:1px solid transparent;}
-  .tl-day b{display:block;font-size:12px;color:var(--ink);}
-  .tl-day.we{background:#F3EFE6;}
-  .tl-day.today{background:var(--taupe-deep);color:var(--white);}
-  .tl-day.today b{color:var(--white);}
-  .tl-day.month{border-left-color:var(--taupe);}
-  .tl-row{border-bottom:1px solid var(--line);}
-  .tl-row:last-child{border-bottom:none;}
-  .tl-track{flex:1;position:relative;min-height:42px;}
-  .tl-bg{position:absolute;inset:0;display:flex;}
-  .tl-bg div{flex:1;}
-  .tl-bg .we{background:#FAF7F0;}
-  .tl-now{position:absolute;top:0;bottom:0;width:2px;background:var(--danger);opacity:.55;}
-  .tl-bar{position:absolute;height:28px;border-radius:5px;font-size:11.5px;line-height:28px;padding:0 7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box;font-weight:600;}
-  .tl-bar.cut-l{border-top-left-radius:0;border-bottom-left-radius:0;}
-  .tl-bar.cut-r{border-top-right-radius:0;border-bottom-right-radius:0;}
-  .tl-bar[data-booking-id]{cursor:pointer;}
+  /* Month grid, one per unit. A stay is drawn on each night it covers
+     (check-in day up to the night before check-out). */
+  .cal-units{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:16px;}
+  .cal-month{background:var(--white);border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  .cal-month h4{margin:0;padding:8px 12px;font-size:14px;background:var(--surface);border-bottom:1px solid var(--line);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));}
+  .cal-wd{font-size:10.5px;text-align:center;padding:4px 0;color:var(--ink-soft);text-transform:uppercase;border-bottom:1px solid var(--line);}
+  .cal-day{min-height:68px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:3px 0;}
+  .cal-day:nth-child(7n){border-right:none;}
+  .cal-day.out{background:#FAF8F3;}
+  .cal-day.out .cal-num{opacity:.35;}
+  .cal-num{display:inline-block;font-size:11.5px;font-weight:600;padding:1px 6px;margin:0 0 2px 3px;border-radius:10px;}
+  .cal-day.today .cal-num{background:var(--taupe-deep);color:var(--white);}
+  .cal-chip,.cal-gap{display:block;height:20px;margin:2px 0;box-sizing:border-box;}
+  .cal-chip{line-height:16px;font-size:11px;font-weight:600;padding:1px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+  .cal-chip.first{margin-left:3px;border-top-left-radius:5px;border-bottom-left-radius:5px;}
+  .cal-chip.last{margin-right:3px;border-top-right-radius:5px;border-bottom-right-radius:5px;}
+  .cal-chip:not(.first){border-left:none;}
+  .cal-chip:not(.last){border-right:none;}
   .bar-ota{background:var(--taupe);color:var(--white);}
   .bar-block{background:repeating-linear-gradient(45deg,#D8D2C4 0 6px,#E9E4D8 6px 12px);color:var(--ink-soft);}
-  .bar-requested{background:var(--white);border:2px dashed var(--warning);color:var(--warning);line-height:24px;}
-  .bar-awaiting{background:#EAE3F5;border:1px solid #5A3E99;color:#5A3E99;line-height:26px;}
-  .bar-check{background:#DCEAF5;border:1px solid #2A5F8A;color:#2A5F8A;line-height:26px;}
-  .bar-owing{background:#F5EAD2;border:1px solid var(--warning);color:var(--warning);line-height:26px;}
+  .bar-requested{background:var(--white);border:2px dashed var(--warning);color:var(--warning);}
+  .bar-awaiting{background:#EAE3F5;border:1px solid #5A3E99;color:#5A3E99;}
+  .bar-check{background:#DCEAF5;border:1px solid #2A5F8A;color:#2A5F8A;}
+  .bar-owing{background:#F5EAD2;border:1px solid var(--warning);color:var(--warning);}
   .bar-paid{background:var(--success);color:var(--white);}
+  .bar-requested.cal-chip{line-height:14px;}
+  .cal-detail .row{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .cal-detail .row:last-child{border-bottom:none;}
+  .cal-detail .k{flex:0 0 96px;color:var(--ink-soft);font-size:12.5px;}
+  .cal-detail .status{display:inline-block;padding:3px 9px;border-radius:4px;font-size:12px;font-weight:600;margin-bottom:8px;}
   .tl-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0 4px;font-size:12px;color:var(--ink-soft);}
   .tl-legend span{display:inline-flex;align-items:center;gap:5px;}
   .tl-legend i{display:inline-block;width:20px;height:12px;border-radius:3px;box-sizing:border-box;}
@@ -123,11 +123,13 @@
   .live-updated{font-size:12.5px;color:var(--ink-soft);}
   .live-updated.stale{color:var(--danger);font-weight:600;}
   .live-clock{margin-left:auto;font-size:22px;font-weight:600;color:var(--taupe-deep);}
+  .live-month{font-family:'Cormorant Garamond',serif;font-size:22px;margin:0 0 10px;}
   .live-head button{padding:7px 14px;border:1px solid var(--line);border-radius:4px;background:var(--white);cursor:pointer;}
-  #live-screen .tl-bar{height:34px;line-height:34px;font-size:13px;}
-  #live-screen .bar-requested{line-height:30px;}
-  #live-screen .bar-awaiting,#live-screen .bar-check,#live-screen .bar-owing{line-height:32px;}
-  #live-screen .tl-label{font-size:15px;}
+  #live-screen .cal-day{min-height:84px;}
+  #live-screen .cal-chip,#live-screen .cal-gap{height:24px;}
+  #live-screen .cal-chip{line-height:20px;font-size:12.5px;}
+  #live-screen .bar-requested.cal-chip{line-height:18px;}
+  #live-screen .cal-month h4{font-size:16px;}
 
   /* Signed in: the token box makes way for a small session bar. */
   .session-bar{display:none;gap:10px;align-items:center;margin-bottom:20px;font-size:12.5px;color:var(--ink-soft);}
@@ -357,6 +359,10 @@
     .more-menu button{min-height:42px;}
     .reason-modal-overlay{align-items:flex-end;padding:0;}
     .reason-modal{border-radius:14px 14px 0 0;max-height:92vh;overflow-y:auto;padding:20px 18px calc(20px + env(safe-area-inset-bottom));}
+    .cal-day{min-height:56px;}
+    .cal-chip{font-size:10px;padding:1px 3px;}
+    .cal-num{font-size:11px;padding:1px 4px;margin-left:2px;}
+    .cal-detail .k{flex-basis:82px;}
     #live-screen{padding:12px;}
     .live-head h2{font-size:20px;}
     .live-clock{font-size:16px;margin-left:0;}
@@ -474,6 +480,17 @@
     <button type="button" id="live-exit">Exit live screen</button>
   </div>
   <div id="live-body"></div>
+</div>
+
+<div class="reason-modal-overlay" id="cal-overlay">
+  <div class="reason-modal form-modal" style="max-width:460px;">
+    <h3 id="cal-title"></h3>
+    <div id="cal-body"></div>
+    <div class="reason-modal-actions">
+      <button type="button" class="cancel-btn" id="cal-close">Close</button>
+      <button type="button" class="create-btn" id="cal-open">Open booking</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2085,7 +2102,7 @@
         </div>
       `;
     }).join("");
-    renderTimelineSection();
+    renderCalendarSection();
 
     content.querySelectorAll("[data-unit]").forEach(btn => {
       btn.onclick = () => unblockRange(btn.dataset.unit, btn.dataset.start, btn.dataset.end);
@@ -2128,14 +2145,14 @@
     else alert(data.error || "Could not remove that unblock.");
   }
 
-  // ---- Timeline + live screen
+  // ---- Month calendar + live screen
   // Platform bookings come from the synced calendar (busyRanges); website
   // and manual bookings come from the bookings list, so they can be coloured
   // by payment. Ranges that are "direct" only are skipped from the calendar
   // side so our own bookings aren't drawn twice.
   let calendarUnits = [];
-  let tlStart = null; // first day shown in the Calendar tab; null = a few days before today
-  const TL_DAYS = 42;
+  let calMonth = null; // "YYYY-MM" shown in the Calendar tab; null = this month
+  let calBarList = []; // stays drawn on screen, looked up by index when tapped
 
   const addDays = (ymd, n) => { const d = new Date(ymd + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
   const dayDiff = (a, b) => Math.round((Date.parse(b + "T12:00:00Z") - Date.parse(a + "T12:00:00Z")) / 86400000);
@@ -2153,15 +2170,15 @@
     }catch(e){ return false; }
   }
 
-  function timelineBars(unit){
+  function stayBars(unit){
     const bars = [];
     (unit.busyRanges || []).forEach(r => {
       const ota = (r.sources || []).filter(s => s !== "direct");
       if(!ota.length) return;
       const names = ota.map(s => sourceLabels[s] || s).join(" + ");
       bars.push(r.blocked
-        ? { start: r.start, end: r.end, cls: "bar-block", label: `Blocked on ${names}`, title: `Blocked on ${names} (not a guest booking)` }
-        : { start: r.start, end: r.end, cls: "bar-ota", label: names, title: `Booked on ${names}`, guest: names });
+        ? { start: r.start, end: r.end, cls: "bar-block", label: "Blocked", title: `Blocked on ${names} (not a guest booking)`, what: `Blocked on ${names}`, names, unit, details: r.details }
+        : { start: r.start, end: r.end, cls: "bar-ota", label: names, title: `Booked on ${names}`, what: `Booked on ${names}`, guest: names, names, unit, details: r.details });
     });
     (allBookings || []).filter(b => b.unitId === unit.unitId).forEach(b => {
       const st = payState(b);
@@ -2172,38 +2189,49 @@
       else if(b.status === "submitted" || (b.status === "confirmed" && b.balanceStatus === "submitted")){ cls = "bar-check"; what = "Proof of payment to check"; }
       else if(st.paidInFull){ cls = "bar-paid"; what = "Paid in full"; }
       else { cls = "bar-owing"; what = `Balance ${rand(b.balanceAmount)} owing`; }
-      bars.push({ start: b.checkIn, end: b.checkOut, cls, label: String(b.guestName || "Guest").trim().split(/\s+/)[0], title: `${b.guestName} · ${b.checkIn} → ${b.checkOut} · ${what}`, bookingId: b.id, guest: b.guestName, request: b.status === "requested" });
+      bars.push({ start: b.checkIn, end: b.checkOut, cls, label: String(b.guestName || "Guest").trim().split(/\s+/)[0], title: `${b.guestName} · ${b.checkIn} → ${b.checkOut} · ${what}`, what, bookingId: b.id, guest: b.guestName, request: b.status === "requested", unit });
     });
     return bars.sort((a, b) => a.start.localeCompare(b.start));
   }
 
-  function timelineHtml(units, start, days){
-    const today = saToday(), end = addDays(start, days);
-    const dates = Array.from({ length: days }, (_, i) => addDays(start, i));
-    const isWe = d => [0, 6].includes(new Date(d + "T12:00:00Z").getUTCDay());
-    const head = dates.map((d, i) => {
-      const dt = new Date(d + "T12:00:00Z");
-      const cls = ["tl-day", isWe(d) ? "we" : "", d === today ? "today" : "", (i > 0 && dt.getUTCDate() === 1) ? "month" : ""].join(" ");
-      const top = (i === 0 || dt.getUTCDate() === 1) ? dt.toLocaleDateString("en-ZA", { month: "short", timeZone: "UTC" }) : dt.toLocaleDateString("en-ZA", { weekday: "narrow", timeZone: "UTC" });
-      return `<div class="${cls}">${top}<b>${dt.getUTCDate()}</b></div>`;
-    }).join("");
-    const bg = dates.map(d => `<div class="${isWe(d) ? "we" : ""}"></div>`).join("");
-    const nowPos = dayDiff(start, today);
-    const nowLine = nowPos >= 0 && nowPos < days ? `<div class="tl-now" style="left:${(nowPos + 0.5) / days * 100}%"></div>` : "";
+  const monthName = ym => new Date(ym + "-01T12:00:00Z").toLocaleDateString("en-ZA", { month: "long", year: "numeric", timeZone: "UTC" });
+  const addMonths = (ym, n) => { const d = new Date(ym + "-01T12:00:00Z"); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 7); };
 
-    const rows = units.map(u => {
-      const lanes = [];
-      const barsHtml = timelineBars(u).filter(b => b.end > start && b.start < end).map(b => {
-        let lane = lanes.findIndex(lastEnd => lastEnd <= b.start);
-        if(lane === -1){ lane = lanes.length; lanes.push(b.end); } else lanes[lane] = b.end;
-        let from = dayDiff(start, b.start) + 0.5, to = dayDiff(start, b.end) + 0.5;
-        const cutL = from < 0, cutR = to > days;
-        from = Math.max(from, 0); to = Math.min(to, days);
-        const nights = dayDiff(b.start, b.end);
-        return `<div class="tl-bar ${b.cls}${cutL ? " cut-l" : ""}${cutR ? " cut-r" : ""}" style="left:${from / days * 100}%;width:${(to - from) / days * 100}%;top:${7 + lane * 38}px" title="${escAttr(b.title)}"${b.bookingId ? ` data-booking-id="${escAttr(b.bookingId)}"` : ""}>${esc(b.label)} · ${nights}n</div>`;
-      }).join("");
-      const height = 14 + Math.max(lanes.length, 1) * 38;
-      return `<div class="tl-row"><div class="tl-label">${esc(u.unitName)}</div><div class="tl-track" style="height:${height}px"><div class="tl-bg">${bg}</div>${nowLine}${barsHtml}</div></div>`;
+  // One wall-calendar month per unit, Monday first. Each stay keeps the same
+  // row within a week so it reads as one strip across the days.
+  function monthGridHtml(units, ym){
+    const today = saToday();
+    const first = ym + "-01", next = addMonths(ym, 1) + "-01";
+    const gridStart = addDays(first, -((new Date(first + "T12:00:00Z").getUTCDay() + 6) % 7));
+    const weeks = Math.ceil(dayDiff(gridStart, next) / 7);
+    calBarList = [];
+
+    const months = units.map(u => {
+      const bars = stayBars(u);
+      let cells = "";
+      for(let w = 0; w < weeks; w++){
+        const ws = addDays(gridStart, w * 7), we = addDays(ws, 7);
+        const lanes = [], placed = [];
+        bars.filter(b => b.start < we && b.end > ws).forEach(b => {
+          let lane = lanes.findIndex(lastEnd => lastEnd <= b.start);
+          if(lane === -1){ lane = lanes.length; lanes.push(b.end); } else lanes[lane] = b.end;
+          calBarList.push(b);
+          placed.push({ b, lane, idx: calBarList.length - 1 });
+        });
+        for(let i = 0; i < 7; i++){
+          const d = addDays(ws, i);
+          const slots = lanes.map(() => `<span class="cal-gap"></span>`);
+          placed.filter(p => p.b.start <= d && p.b.end > d).forEach(({ b, lane, idx }) => {
+            const isFirst = d === b.start, isLast = addDays(d, 1) === b.end;
+            const label = isFirst || i === 0 ? esc(b.label) : "&nbsp;";
+            slots[lane] = `<span class="cal-chip ${b.cls}${isFirst ? " first" : ""}${isLast ? " last" : ""}" data-bar="${idx}" title="${escAttr(b.title)}">${label}</span>`;
+          });
+          const cls = ["cal-day", d.slice(0, 7) !== ym ? "out" : "", d === today ? "today" : ""].join(" ");
+          cells += `<div class="${cls}"><span class="cal-num">${Number(d.slice(8))}</span>${slots.join("")}</div>`;
+        }
+      }
+      const head = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(n => `<div class="cal-wd">${n}</div>`).join("");
+      return `<div class="cal-month"><h4>${esc(u.unitName)}</h4><div class="cal-grid">${head}${cells}</div></div>`;
     }).join("");
 
     const legend = [
@@ -2212,17 +2240,54 @@
       ["bar-ota", "Airbnb / Booking.com / Lekkeslaap"], ["bar-block", "Blocked dates"]
     ].map(([c, t]) => `<span><i class="${c}"></i>${t}</span>`).join("");
 
-    return `<div class="tl-scroll"><div class="tl" style="--days:${days}">
-      <div class="tl-head"><div class="tl-label"></div><div class="tl-days">${head}</div></div>${rows}
-    </div></div><div class="tl-legend">${legend}</div>`;
+    return `<div class="cal-units">${months}</div><div class="tl-legend">${legend}</div>`;
   }
+
+  function wireCalendarChips(root){
+    root.querySelectorAll(".cal-chip[data-bar]").forEach(chip => chip.onclick = () => openStayDetail(calBarList[Number(chip.dataset.bar)]));
+  }
+
+  // Tap a stay on the calendar: the basics, plus a way into the full booking.
+  function openStayDetail(bar){
+    if(!bar) return;
+    const nights = dayDiff(bar.start, bar.end);
+    const row = (k, v) => v ? `<div class="row"><div class="k">${k}</div><div>${v}</div></div>` : "";
+    const dates = `${esc(dayName(bar.start))} → ${esc(dayName(bar.end))} · ${nights} night${nights === 1 ? "" : "s"}`;
+    let title, body;
+    const b = bar.bookingId && bookingsById[bar.bookingId];
+    if(b){
+      const guests = `${b.adults || 1} adult${(b.adults || 1) === 1 ? "" : "s"}` + (b.children ? `, ${b.children} child${b.children === 1 ? "" : "ren"}` : "");
+      title = b.guestName || "Guest";
+      body = row("Unit", esc(bar.unit.unitName)) + row("Dates", dates) + row("Guests", guests)
+        + row("Arriving", b.arrivalTime ? esc(b.arrivalTime) : "")
+        + row("Contact", contactHtml(b.email, b.phone))
+        + row("Total", b.totalAmount ? rand(b.totalAmount) : "")
+        + row("Notes", b.notes ? esc(b.notes) : "");
+    } else {
+      title = bar.cls === "bar-block" ? "Blocked dates" : `${bar.names} booking`;
+      body = row("Unit", esc(bar.unit.unitName)) + row("Dates", dates)
+        + row("Details", (bar.details || []).length ? bar.details.map(esc).join("<br>") : "")
+        + `<p style="margin:10px 0 0;">${bar.cls === "bar-block"
+          ? `These dates were closed on ${esc(bar.names)}. It isn't a guest booking.`
+          : `Guest details and payment for this one are on ${esc(bar.names)}.`}</p>`;
+    }
+    document.getElementById("cal-title").textContent = title;
+    document.getElementById("cal-body").innerHTML = `<div class="cal-detail"><span class="status ${bar.cls}">${esc(bar.what)}</span>${body}</div>`;
+    const openBtn = document.getElementById("cal-open");
+    openBtn.hidden = !b;
+    openBtn.onclick = () => { closeStayDetail(); openBookingCard(bar.bookingId); };
+    document.getElementById("cal-overlay").classList.add("show");
+  }
+  function closeStayDetail(){ document.getElementById("cal-overlay").classList.remove("show"); }
+  document.getElementById("cal-close").onclick = closeStayDetail;
+  document.getElementById("cal-overlay").addEventListener("click", e => { if(e.target.id === "cal-overlay") closeStayDetail(); });
 
   // Arrivals and departures over the next 7 days, across every platform.
   function comingUpHtml(units){
     const today = saToday(), until = saToday(7);
     const when = d => d === today ? "Today" : d === saToday(1) ? "Tomorrow" : dayName(d);
     const arrivals = [], departures = [];
-    units.forEach(u => timelineBars(u).forEach(b => {
+    units.forEach(u => stayBars(u).forEach(b => {
       if(b.cls === "bar-block" || b.request) return;
       if(b.start >= today && b.start < until) arrivals.push({ d: b.start, text: `${esc(b.guest)} — ${esc(u.unitName)}${b.bookingId && bookingsById[b.bookingId].arrivalTime ? ", arriving " + esc(bookingsById[b.bookingId].arrivalTime) : ""}` });
       if(b.end >= today && b.end < until) departures.push({ d: b.end, text: `${esc(b.guest)} — ${esc(u.unitName)}` });
@@ -2233,30 +2298,32 @@
     return `<div class="tl-coming"><div class="box"><h4>Arrivals — next 7 days</h4>${list(arrivals)}</div><div class="box"><h4>Departures — next 7 days</h4>${list(departures)}</div></div>`;
   }
 
-  function renderTimelineSection(){
+  function renderCalendarSection(){
     const el = document.getElementById("tl-section");
     if(!el) return;
-    const start = tlStart || saToday(-3);
+    const ym = calMonth || saToday().slice(0, 7);
     el.innerHTML = `
       <div class="tl-toolbar">
-        <button type="button" data-tl="-14">← 2 weeks</button>
-        <button type="button" data-tl="today">Today</button>
-        <button type="button" data-tl="14">2 weeks →</button>
-        <span class="tl-range">${dayName(start)} – ${dayName(addDays(start, TL_DAYS - 1))}</span>
+        <button type="button" data-cal="-1">‹ Prev</button>
+        <button type="button" data-cal="0">This month</button>
+        <button type="button" data-cal="1">Next ›</button>
+        <span class="tl-range"><strong>${monthName(ym)}</strong> · tap a booking for details</span>
         <button type="button" class="btn-live" id="live-open">Live screen ⛶</button>
       </div>
-      ${timelineHtml(calendarUnits, start, TL_DAYS)}
+      ${monthGridHtml(calendarUnits, ym)}
       ${comingUpHtml(calendarUnits)}`;
-    el.querySelectorAll("[data-tl]").forEach(btn => btn.onclick = () => {
-      tlStart = btn.dataset.tl === "today" ? null : addDays(start, Number(btn.dataset.tl));
-      renderTimelineSection();
+    el.querySelectorAll("[data-cal]").forEach(btn => btn.onclick = () => {
+      const n = Number(btn.dataset.cal);
+      calMonth = n === 0 ? null : addMonths(ym, n);
+      renderCalendarSection();
     });
-    el.querySelectorAll(".tl-bar[data-booking-id]").forEach(bar => bar.onclick = () => openBookingCard(bar.dataset.bookingId));
+    wireCalendarChips(el);
     document.getElementById("live-open").onclick = openLiveScreen;
   }
 
-  // Jump from a bar on the timeline to that booking's card.
+  // Jump from a stay on the calendar to that booking's card.
   function openBookingCard(id){
+    if(!document.getElementById("live-screen").hidden) closeLiveScreen();
     document.querySelector('.tabs button[data-tab="bookings"]').click();
     setView("all");
     renderBookings();
@@ -2284,11 +2351,13 @@
       }
     }catch(e){ /* keep showing the last data */ }
     if(ok) liveLastOk = new Date();
-    const days = Math.max(14, Math.min(60, Math.floor((window.innerWidth - 150) / 32)));
     const warning = document.getElementById("sync-warning");
-    document.getElementById("live-body").innerHTML =
+    const body = document.getElementById("live-body");
+    body.innerHTML =
       (warning.classList.contains("show") ? `<div class="sync-warning show">${warning.innerHTML}</div>` : "") +
-      timelineHtml(calendarUnits, saToday(-2), days) + comingUpHtml(calendarUnits);
+      `<h3 class="live-month">${monthName(saToday().slice(0, 7))}</h3>` +
+      monthGridHtml(calendarUnits, saToday().slice(0, 7)) + comingUpHtml(calendarUnits);
+    wireCalendarChips(body);
     const upd = document.getElementById("live-updated");
     const t = liveLastOk ? liveLastOk.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit" }) : "never";
     upd.textContent = ok ? `Updated ${t} · refreshes every 5 minutes` : `Couldn't refresh — showing data from ${t}. Will try again in 5 minutes.`;
@@ -2316,7 +2385,7 @@
     if(APP) APP.keepScreenOn(false);
     if(liveWakeLock){ liveWakeLock.release().catch(() => {}); liveWakeLock = null; }
     if(document.fullscreenElement) document.exitFullscreen().catch(() => {});
-    renderTimelineSection();
+    renderCalendarSection();
   }
   document.getElementById("live-exit").onclick = closeLiveScreen;
   // The screen lock is dropped whenever the tab is hidden; take it back on return.
