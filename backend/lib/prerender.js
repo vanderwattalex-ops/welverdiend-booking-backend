@@ -279,7 +279,10 @@ const PAGE_INFO = {
   "faq.html":      { name: "FAQ",      type: "WebPage" }, // the FAQPage entity is already in faq.html
   "reviews.html":  { name: "Reviews",  type: "WebPage" },
   "contact.html":  { name: "Contact",  type: "ContactPage" },
-  "policies.html": { name: "House rules & policies", type: "WebPage" }
+  "policies.html": { name: "House rules & policies", type: "WebPage" },
+  "n1-overnight-stop.html": { name: "N1 overnight stop", type: "WebPage" },
+  "accommodation-near-grey-college-toyota-stadium.html": { name: "Near Grey College & Toyota Stadium", type: "WebPage" },
+  "selfsorg-akkommodasie-bloemfontein.html": { name: "Selfsorg-akkommodasie", type: "WebPage" }
 };
 
 // JSON for a <script> block: "</" would end the script early.
@@ -477,6 +480,9 @@ const PAGES = {
   "location.html": (c, h) => replaceContainer(h, "recs-grid", recsHtml(c.recommendations)),
   "contact.html":  (c, h) => h,
   "policies.html": (c, h) => h,
+  "n1-overnight-stop.html": (c, h) => h,
+  "accommodation-near-grey-college-toyota-stadium.html": (c, h) => h,
+  "selfsorg-akkommodasie-bloemfontein.html": (c, h) => h,
   "unit1.html":    (c, h) => { const g = galleryHtml(c, "unit1", "Unit 1"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "unit2.html":    (c, h) => { const g = galleryHtml(c, "unit2", "Unit 2"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },
   "wildlife.html": (c, h) => { const g = flatGalleryHtml(c, "wildlife", "Welverdiend wildlife"); return g ? replaceContainer(h, "gallery-wrap", g) : h; },

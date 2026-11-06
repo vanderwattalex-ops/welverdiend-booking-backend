@@ -32,6 +32,9 @@ const PAGES = [
   { path: "/reviews.html" },
   { path: "/contact.html" },
   { path: "/policies.html" },
+  { path: "/n1-overnight-stop.html" },
+  { path: "/accommodation-near-grey-college-toyota-stadium.html" },
+  { path: "/selfsorg-akkommodasie-bloemfontein.html" },
   { path: "/booking-widget.html" }
 ];
 
@@ -48,7 +51,9 @@ const SEED = {
   "/": "2026-10-24", "/about.html": "2026-10-24", "/unit1.html": "2026-10-24", "/unit2.html": "2026-10-24",
   "/wildlife.html": "2026-10-24", "/pets.html": "2026-10-24", "/location.html": "2026-10-24",
   "/faq.html": "2026-10-24", "/reviews.html": "2026-10-24", "/contact.html": "2026-10-24",
-  "/policies.html": "2026-10-24", "/booking-widget.html": "2026-10-24"
+  "/policies.html": "2026-10-24", "/booking-widget.html": "2026-10-24",
+  "/n1-overnight-stop.html": "2026-11-06", "/accommodation-near-grey-college-toyota-stadium.html": "2026-11-06",
+  "/selfsorg-akkommodasie-bloemfontein.html": "2026-11-06"
 };
 const DATES_DOC = settingsCollection.doc("sitemapDates");
 
