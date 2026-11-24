@@ -23,7 +23,7 @@ app.use(compression());
 // search results with X-Robots-Tag (and a robots meta tag). They are not
 // listed in robots.txt: a crawler blocked there never sees the noindex, and
 // the list would only advertise the paths.
-const NOINDEX_PATHS = /^\/(admin-dashboard\.html|upload-proof\.html|i\/)/;
+const NOINDEX_PATHS = /^\/(admin-dashboard\.html|guide-admin\.html|upload-proof\.html|i\/|unit[12](\/|$))/;
 app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -58,6 +58,10 @@ app.use((req, res, next) => {
 
 // llms.txt, the live sitemap, icons, IndexNow key (see routes/seo.js).
 app.use(require("./routes/seo"));
+
+// Guest guides (/unit2, /unit1) and their admin endpoints -- see routes/guestGuide.js.
+// Before express.static so saved edits are swapped into the page.
+app.use(require("./routes/guestGuide"));
 
 // Serve the site pages with their content already in the HTML. Crawlers that
 // do not run JavaScript -- Bing at times, and most AI crawlers -- otherwise

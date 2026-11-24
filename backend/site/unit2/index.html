@@ -1,0 +1,1675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Welverdiend Unit 2 – Guest Guide</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Everything for your stay at Welverdiend Unit 2: arrival, Wi-Fi, pool, house rules, weather and local tips.">
+<meta name="theme-color" content="#5b4632">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Welverdiend Accommodation">
+<meta property="og:title" content="Welverdiend Unit 2 – Guest Guide">
+<meta property="og:description" content="Arrival steps, Wi-Fi, pool, house rules, live weather and local tips. Ook in Afrikaans.">
+<meta property="og:image" content="https://welverdiendaccommodation.com/unit2/images/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://welverdiendaccommodation.com/unit2">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://api.open-meteo.com" crossorigin>
+<link rel="preload" as="image" href="/unit2/images/hero-800.webp" imagesrcset="/unit2/images/hero-800.webp 800w, /unit2/images/hero-1280.webp 1280w" imagesizes="100vw">
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --brown:#5b4632; --brown-dk:#43331f; --olive:#6b7a3a; --olive-dk:#55622c; --olive-soft:#eef0e2;
+  --bg:#faf7f1; --card:#ffffff; --ink:#231c14; --muted:#5e5446; --line:#e6ddcf; --cream:#f6efe2;
+  --warn-bg:#fff4e0; --warn:#8a4b00; --danger:#a3321f;
+  --radius:16px; --shadow:0 1px 2px rgba(60,40,20,.06),0 6px 20px rgba(60,40,20,.07);
+  --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+  --sans:"Nunito Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#17130f; --card:#221c16; --ink:#f3ece1; --muted:#c9bcaa; --line:#3a3027; --cream:#2a221a;
+    --olive:#a9b86b; --olive-dk:#c2cf86; --olive-soft:#2b2f1c; --warn-bg:#33270f; --warn:#f3c477; --danger:#ff8a73;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.6 var(--sans)}
+img{max-width:100%;display:block}
+a{color:var(--olive-dk)}
+h1,h2,h3{font-family:var(--serif);line-height:1.2;margin:0 0 .5em;font-weight:700}
+h2{font-size:1.75rem;color:var(--brown)}
+@media (prefers-color-scheme:dark){h2{color:#e8d6bd}}
+h3{font-size:1.2rem}
+p{margin:0 0 .9em}
+ul,ol{margin:0 0 1em;padding-left:1.3em}
+li{margin:.3em 0}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid var(--olive);outline-offset:2px;border-radius:6px}
+
+/* hero */
+.hero{position:relative;min-height:78vh;min-height:78svh;display:flex;align-items:flex-end;color:#fff;background:#3b2d1f}
+.hero picture,.hero img.bg{position:absolute;inset:0;width:100%;height:100%}
+.hero img.bg{object-fit:cover;object-position:50% 60%}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(30,20,10,.15) 0%,rgba(30,20,10,.25) 40%,rgba(30,20,10,.85) 100%)}
+.hero .inner{position:relative;z-index:1;width:100%;padding:28px 18px 26px;max-width:760px;margin:0 auto}
+.hero .logo{width:220px;max-width:62%;height:auto;margin-bottom:14px;filter:brightness(0) invert(1) drop-shadow(0 1px 6px rgba(0,0,0,.45))}
+.hero h1{font-size:clamp(2.1rem,8vw,3.2rem);margin:0 0 .15em;text-shadow:0 2px 12px rgba(0,0,0,.45)}
+.hero .sub{font-size:1.05rem;margin:0 0 18px;opacity:.95;text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.cta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 16px;border-radius:12px;border:0;font:700 1rem/1.2 var(--sans);text-decoration:none;cursor:pointer;color:#fff;background:var(--olive-dk);-webkit-tap-highlight-color:transparent}
+@media (prefers-color-scheme:dark){.btn{color:#17130f}}
+.btn:active{transform:translateY(1px)}
+.cta .btn{flex-direction:column;gap:4px;min-height:74px;font-size:.95rem;text-align:center;border-radius:14px}
+.cta .btn svg{width:26px;height:26px}
+.btn.wa{background:#1f8c4e;color:#fff}
+.btn.call{background:#fff;color:var(--brown-dk)}
+.btn.dir{background:var(--brown);color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35)}
+.btn.ghost{background:transparent;color:var(--olive-dk);box-shadow:inset 0 0 0 2px var(--olive)}
+.btn.small{min-height:44px;padding:8px 14px;font-size:.95rem}
+.hero .num{margin:12px 0 0;font-size:1rem}
+.hero .num a{display:inline-block;padding:10px 0;color:#fff;font-weight:800;text-decoration:none;border-bottom:2px solid rgba(255,255,255,.5)}
+
+.lang{position:absolute;top:12px;right:12px;z-index:2;display:flex;background:rgba(30,20,10,.55);border-radius:999px;padding:3px;backdrop-filter:blur(4px)}
+.lang button{min-height:44px;min-width:44px;padding:0 14px;border:0;border-radius:999px;background:transparent;color:#fff;font:700 .9rem/1 var(--sans);cursor:pointer}
+.lang button[aria-pressed="true"]{background:#f6efe2;color:var(--brown-dk)}
+/* sticky nav */
+.nav{position:sticky;top:0;z-index:20;background:var(--brown);box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.nav ul{display:flex;gap:6px;overflow-x:auto;list-style:none;margin:0 auto;padding:8px 12px;max-width:980px;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.nav ul::-webkit-scrollbar{display:none}
+.nav li{margin:0;flex:0 0 auto;scroll-snap-align:start}
+.nav a{display:flex;align-items:center;min-height:44px;padding:0 15px;border-radius:999px;color:#f6efe2;text-decoration:none;font-weight:700;font-size:.95rem;white-space:nowrap}
+.nav a[aria-current="true"]{background:#f6efe2;color:var(--brown-dk)}
+
+/* sections */
+main{padding-bottom:10px}
+section{padding:34px 0 8px;scroll-margin-top:64px}
+section + section{border-top:1px solid var(--line)}
+.eyebrow{display:block;font:800 .78rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--olive);margin-bottom:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin:0 0 16px}
+.card h3{margin-bottom:.4em}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:12px;padding:12px 14px;font-weight:700;margin:0 0 16px}
+.note.ok{background:var(--olive-soft);color:var(--olive-dk)}
+.note.danger{background:rgba(163,50,31,.1);color:var(--danger)}
+ol.steps{list-style:none;padding:0;counter-reset:s}
+ol.steps li{counter-increment:s;position:relative;padding:4px 0 4px 46px;margin:0 0 10px;min-height:34px}
+ol.steps li::before{content:counter(s);position:absolute;left:0;top:2px;width:32px;height:32px;border-radius:50%;background:var(--olive-dk);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center}
+@media (prefers-color-scheme:dark){ol.steps li::before{color:#17130f}}
+.two{display:grid;gap:14px}
+@media (min-width:640px){.two{grid-template-columns:1fr 1fr}}
+.remote{display:flex;flex-direction:column;gap:10px;margin:6px 0 4px}
+.remote div{display:flex;align-items:center;gap:12px;font-weight:700}
+.dot{flex:0 0 auto;width:28px;height:28px;border-radius:50%;box-shadow:inset 0 -3px 0 rgba(0,0,0,.2)}
+.dot.blue{background:#2f6fd6}.dot.red{background:#d33a2c}
+figure{margin:0 0 16px}
+figure img{width:100%;height:auto;border-radius:var(--radius);background:var(--cream)}
+figcaption{font-size:.9rem;color:var(--muted);margin-top:6px}
+.code-box{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;background:var(--cream);border-radius:12px;padding:12px 14px;margin:6px 0 12px}
+.code-box .val{font:800 1.15rem/1.3 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;word-break:break-all;flex:1 1 180px}
+.label{display:block;font-size:.85rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.toast{max-width:90vw;text-align:center;position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);opacity:0;background:#1e1912;color:#fff;padding:12px 20px;border-radius:999px;font-weight:800;transition:.25s;z-index:50;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.copy-btn[data-copied]::after{content:" ✓"}
+
+/* weather */
+.wx-now{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.wx-now .big{font:700 3rem/1 var(--serif)}
+.wx-now .icon{font-size:3rem;line-height:1}
+.wx-now .desc{font-weight:700}
+.wx-meta{display:flex;flex-wrap:wrap;gap:8px 16px;color:var(--muted);font-size:.95rem;margin-top:10px}
+.wx-days{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(86px,1fr);gap:8px;overflow-x:auto;padding:4px 2px 6px;margin-top:14px;scrollbar-width:thin}
+.wx-day{background:var(--cream);border-radius:12px;padding:10px 6px;text-align:center}
+.wx-day .d{font-weight:800;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.wx-day .i{font-size:1.6rem;margin:4px 0}
+.wx-day .t{font-weight:800}
+.wx-day .t span{font-weight:400;color:var(--muted)}
+.wx-day .r{font-size:.8rem;color:#2f6fd6}
+@media (prefers-color-scheme:dark){.wx-day .r{color:#8fb6ff}}
+.wx-updated{font-size:.85rem;color:var(--muted);margin-top:8px}
+
+/* appliances */
+details{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin:0 0 12px;box-shadow:var(--shadow);overflow:hidden}
+summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;min-height:60px;padding:12px 16px;font:700 1.08rem/1.3 var(--sans)}
+summary::-webkit-details-marker{display:none}
+summary .ico{font-size:1.5rem;width:32px;text-align:center}
+summary::after{content:"";margin-left:auto;width:12px;height:12px;border-right:3px solid var(--olive);border-bottom:3px solid var(--olive);transform:rotate(45deg);transition:transform .2s}
+details[open] summary::after{transform:rotate(-135deg)}
+.det-body{padding:0 16px 16px;display:grid;gap:16px}
+@media (min-width:640px){.det-body{grid-template-columns:220px 1fr;align-items:start}}
+.det-body img{border-radius:12px;width:100%;max-width:280px;height:auto;margin:0 auto}
+dl.kv{margin:0}
+dl.kv dt{font-weight:800;margin-top:8px}
+dl.kv dd{margin:0}
+
+/* wildlife */
+.animals{display:grid;gap:14px}
+@media (min-width:640px){.animals{grid-template-columns:1fr 1fr}}
+.animal{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.animal img{width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;background:var(--cream)}
+.animal .b{padding:14px 16px 6px}
+.animal .tag{font-style:italic;color:var(--muted);margin-bottom:.6em}
+.animal ul{padding-left:1.1em;font-size:.97rem}
+
+/* around */
+.cat{margin:0 0 18px}
+.cat h3{display:flex;align-items:center;gap:8px}
+.place{display:block;padding:10px 0;border-bottom:1px solid var(--line)}
+.place:last-child{border-bottom:0}
+.place a{font-weight:800;font-size:1.05rem;display:inline-flex;align-items:center;min-height:32px;text-decoration:none;border-bottom:2px solid var(--olive)}
+.place p{margin:.2em 0 0;color:var(--muted)}
+
+/* emergency */
+.tel-list{list-style:none;padding:0;margin:0}
+.tel-list li{margin:0}
+.tel-list a{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:56px;padding:10px 4px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink)}
+.tel-list li:last-child a{border-bottom:0}
+.tel-list .n{font:800 1.08rem/1.2 var(--sans);color:var(--olive-dk);white-space:nowrap}
+.tel-list .n::before{content:"📞 "}
+
+footer{background:var(--brown);color:#f6efe2;margin-top:30px;padding:34px 0 calc(34px + env(safe-area-inset-bottom))}
+footer h2{color:#fff}
+footer a{color:#fff}
+footer .btns{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+footer .btn.light{background:#f6efe2;color:var(--brown-dk)}
+footer .btn.outline{background:transparent;color:#fff;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
+footer small{opacity:.8;display:block;margin-top:14px}
+@media (min-width:900px){body{font-size:17.5px}.hero{min-height:70vh}}
+@media (max-width:380px){.cta{gap:8px}.cta .btn{font-size:.88rem;padding:8px 6px}}
+</style>
+</head>
+<body>
+<noscript><p style="padding:16px">This guide needs JavaScript / Hierdie gids het JavaScript nodig. Need help? / Hulp nodig? WhatsApp or call Ian on <a href="tel:0791183173">079 118 3173</a>.</p></noscript>
+<div id="app"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   GUIDE SETTINGS – everything on this page comes from this one object.
+   To make the Unit 1 guide: copy this folder to /unit1 and change the
+   unit name, Wi-Fi, gate name, photos and any text below.
+   Afrikaans: the "af" part at the end holds only the translated text;
+   photos, numbers and Wi-Fi come from the English part above it.
+   The admin editor (/guide-admin.html) saves changes over this object
+   on the live server, so edits there need no file changes.
+   NEVER put the lockbox code in here – this page is public.
+   ===================================================================== */
+const GUIDE = /*GUIDE-START*/{
+    "unit": {
+      "name": "Unit 2",
+      "gateName": "Unit 2",
+      "tagline": "Pet-friendly farm stay in Groenvlei, Bloemfontein"
+    },
+    "contact": {
+      "hostName": "Ian",
+      "whatsapp": "27791183173",
+      "phone": "0791183173",
+      "phoneDisplay": "079 118 3173"
+    },
+    "location": {
+      "address": "4 Kenilworth Road, Groenvlei, Bloemfontein",
+      "mapsUrl": "https://www.google.com/maps/search/?api=1&query=4+Kenilworth+Road,+Bloemfontein,+South+Africa",
+      "weatherLat": -29.1211,
+      "weatherLon": 26.214,
+      "weatherPlace": "Bloemfontein"
+    },
+    "photos": {
+      "hero": "images/hero-1280.webp",
+      "heroSmall": "images/hero-800.webp",
+      "logo": "images/logo.webp",
+      "og": "",
+      "gate": "",
+      "pool": "images/pool.webp"
+    },
+    "welcome": {
+      "heading": "Welcome to Unit 2",
+      "text": [
+        "We're so excited to host you! This guide has everything you need to know about the house, how things work, and some helpful local info.",
+        "If you ever need help, message us any time."
+      ]
+    },
+    "arrival": {
+      "directions": [
+        "Take the turnoff at the church.",
+        "Keep left at Ebenhaeser church.",
+        "Drive past the island with the notice board.",
+        "Stop at the gate marked \"Unit 2\"."
+      ],
+      "lockboxLocation": "Your keys are in the lockbox on the palisade fence outside the gate.",
+      "lockboxCodeNote": "Your lockbox code is in your WhatsApp message.",
+      "lockboxSteps": [
+        "Pull down the black cover.",
+        "Enter the code.",
+        "Press the black button (next to the code) down."
+      ],
+      "inLockbox": [
+        "Front door key",
+        "Gate remote (single button)"
+      ],
+      "atBackDoor": [
+        "Back door key",
+        "Gate remote with two buttons"
+      ],
+      "remoteBlue": "Blue – opens the gate",
+      "remoteRed": "Red – alarm panic button (emergencies only)",
+      "gateReminder": "Please always close the gate behind you for security.",
+      "checkout": [
+        "Put the keys and the remote back in the lockbox.",
+        "If the keys and remote don't fit back in the lockbox, leave the keys inside the house and put only the remote back in the lockbox."
+      ]
+    },
+    "wifi": {
+      "network": "Welverdiend Unit 2",
+      "password": "Welverdiend#2",
+      "tip": "Trouble connecting? Unplug the router, wait 10 seconds and plug it back in. A quick reboot usually does the trick!"
+    },
+    "pool": {
+      "heading": "Cool off, farm style!",
+      "intro": [
+        "Guests are more than welcome to use our farm-style swimming pool!",
+        "When the Free State sun is blazing, climb the stairs to the sun deck, take in the big open sky, and ease down the ladder into the cool water. It's the perfect spot to wash off a hot day, read a book in the sun, or simply watch the farm go by."
+      ],
+      "request": "Just one request: leave the diving and splashing to the ducks.",
+      "rules": [
+        "No lifeguard on duty. Swim at your own risk.",
+        "Children under 18 must be supervised by an adult at all times.",
+        "The pool is for staying guests only. No day visitors.",
+        "No jumping or diving into the pool.",
+        "No running on the deck. It can be slippery when wet.",
+        "No alcohol allowed in the pool area.",
+        "No glass in the pool area. Please use plastic cups and bottles.",
+        "No food in the water.",
+        "No pets in the pool area.",
+        "Never swim alone.",
+        "No loud music. The pool is shared, so please respect other guests.",
+        "Take your rubbish with you and leave the area neat.",
+        "Close and lock the pool gate when you leave."
+      ],
+      "keyNote": "The pool gate is kept locked for safety. The pool gate key is on your house keys. Please lock the gate when you leave.",
+      "signoff": "Enjoy your swim!"
+    },
+    "rules": [
+      "Pets are welcome indoors – maximum 3 pets. Please wipe their feet if they're muddy.",
+      "Smoking and vaping outside only. Ashtrays are under the sink.",
+      "No events or parties.",
+      "Quiet hours are 22:00 – 06:00.",
+      "Please follow the house rules respectfully.",
+      "You're welcome to walk around the field to look at the animals, at your own risk. Sorry, pets may not join the field walks."
+    ],
+    "pets": [
+      "We love furry visitors! Please clean their paws when they've been outside – the local soil stains rugs easily."
+    ],
+    "braai": {
+      "firewood": "For firewood, contact us for availability and pricing, or buy some at the Engen garage or Checkers nearby.",
+      "tips": [
+        "Stack larger logs at the bottom, then smaller kindling, with firelighters or crumpled paper on top. Light it from the top for a cleaner, more efficient burn.",
+        "Leave space for airflow. Don't pack the wood too tightly – fires need good airflow to burn well.",
+        "Pro tip: if the fire is struggling, a hairdryer for a few minutes gives it an extra boost."
+      ]
+    },
+    "food": {
+      "services": "Checkers Sixty60 and Uber Eats deliver here!",
+      "address": "4 Kenilworth Road, Bloemfontein",
+      "driverNote": "Next to Ebenhaeser Church, use the 3rd gate."
+    },
+    "power": {
+      "intro": "The house has solar panels and a backup battery that keep essential lights, Wi-Fi and plugs running during load-shedding.",
+      "hotWater": "The electric geyser is on a timer and switches off automatically, and a gas geyser is connected too – so you should always have hot water, even during power cuts.",
+      "energyUse": "The battery can't run high-draw appliances for long. Please avoid or limit panel heaters, the oven, hairdryers, electric blankets and other heavy-use items until mains power is back.",
+      "ifBatteryEmpty": [
+        "Two oil lamps are stored under the sink.",
+        "A battery-powered lantern is next to the kettle.",
+        "The gas hob lights without electricity.",
+        "Matches are in the drawer beside the oven."
+      ]
+    },
+    "extras": {
+      "items": [
+        "Blankets: in the bedroom cupboard, or the cupboard just outside the room.",
+        "Iron, ironing board, broom, mop and baby bath: in the bedroom cupboard.",
+        "Extra towels? Just message us!",
+        "Need the washing machine? Feel free to let us know."
+      ],
+      "winter": [
+        "Each bed has an electric blanket.",
+        "Each bedroom has a panel heater. We switch them on before you arrive so the rooms are warm and cosy.",
+        "We keep the bedroom doors closed so the heat stays in."
+      ]
+    },
+    "appliances": [
+      {
+        "icon": "📺",
+        "title": "Smart TV & streaming (Hisense VIDAA)",
+        "photo": "images/tv-remote.webp",
+        "intro": [
+          "Smart TV with streaming apps (Netflix, YouTube and more). Feel free to log in to your own profile.",
+          "Forgot to log out? No worries – we'll remove it before the next guest."
+        ],
+        "steps": [
+          [
+            "Power on/off",
+            "Press the red Power button."
+          ],
+          [
+            "Navigation",
+            "Use the arrow keys and OK to select."
+          ],
+          [
+            "Volume / channel",
+            "Controls are on the left and right."
+          ],
+          [
+            "Inputs",
+            "Press INPUT to switch sources (HDMI, etc.)."
+          ],
+          [
+            "Apps",
+            "Quick access with the app buttons (Netflix, YouTube, Prime Video, etc.)."
+          ],
+          [
+            "Home",
+            "Press Home to get to the apps and TV settings."
+          ]
+        ]
+      },
+      {
+        "icon": "☕",
+        "title": "Russell Hobbs coffee maker",
+        "photo": "images/coffee-maker.webp",
+        "intro": [],
+        "steps": [
+          [
+            "Fill the water tank",
+            "Open the lid and pour in the water you need (check the levels on the carafe)."
+          ],
+          [
+            "Add coffee",
+            "Put a coffee filter in the basket and add ground coffee."
+          ],
+          [
+            "Power on",
+            "Press the Power button (⏻)."
+          ],
+          [
+            "Start brewing",
+            "It should start brewing straight away."
+          ],
+          [
+            "PROG",
+            "Set a brew timer. Hold it to set the clock, then use h (hour) and min (minute)."
+          ],
+          [
+            "AUTO",
+            "Starts a delayed brew at the programmed time."
+          ],
+          [
+            "AROMA",
+            "Stronger extraction for stronger coffee."
+          ]
+        ]
+      },
+      {
+        "icon": "🍽️",
+        "title": "Microwave",
+        "photo": "images/microwave.webp",
+        "intro": [],
+        "steps": [
+          [
+            "Open the door",
+            "Pull the handle."
+          ],
+          [
+            "Food",
+            "Place it on a microwave-safe plate."
+          ],
+          [
+            "Power level",
+            "Press \"Microw\" repeatedly until you reach the power you want (10P–100P)."
+          ],
+          [
+            "Set the time",
+            "After choosing the power level, type the time on the keypad."
+          ],
+          [
+            "Start",
+            "Press START."
+          ],
+          [
+            "Cancel / stop",
+            "Press STOP."
+          ],
+          [
+            "Defrost",
+            "For thawing meat, poultry or seafood (enter the weight of the food)."
+          ],
+          [
+            "Express cooking",
+            "Press START to run for 30 seconds, or press 1–6 to cook for 1–6 minutes straight away."
+          ]
+        ]
+      },
+      {
+        "icon": "🍟",
+        "title": "Milex air fryer",
+        "photo": "images/air-fryer.webp",
+        "intro": [],
+        "steps": [
+          [
+            "Open the door",
+            "Pull the handle."
+          ],
+          [
+            "Food",
+            "Place it on one of the racks provided and close the door."
+          ],
+          [
+            "Presets",
+            "Press On/Off, then use the Menu button to scroll through the preset menus. The selected one lights up red."
+          ],
+          [
+            "Manual",
+            "Or press Time and use + / – to set the time. Do the same for the temperature."
+          ],
+          [
+            "Start",
+            "Press On/Off again."
+          ],
+          [
+            "Cancel / stop",
+            "Open the door or press On/Off."
+          ]
+        ]
+      },
+      {
+        "icon": "💨",
+        "title": "Ceiling fan & light remote",
+        "photo": "images/fan-remote.webp",
+        "intro": [],
+        "steps": [
+          [
+            "Lights on/off",
+            "Press ON/OFF (top left)."
+          ],
+          [
+            "FAN OFF / PAIR CODE (centre)",
+            "Turns the fan off, or pairs the remote."
+          ],
+          [
+            "Fan speed",
+            "Buttons 1–6 set the fan speed."
+          ],
+          [
+            "Brightness",
+            "Use + and – under the brightness symbol."
+          ],
+          [
+            "Timer",
+            "Press 2H or 4H to switch off automatically after 2 or 4 hours."
+          ],
+          [
+            "ALL OFF",
+            "Switches everything off."
+          ]
+        ]
+      }
+    ],
+    "wildlife": {
+      "intro": "During your stay you may meet some of our friendly resident animals. You're welcome to walk around the field to watch them, at your own risk. Sorry, pets may not join the field walks.",
+      "animals": [
+        {
+          "name": "Ostriches",
+          "photo": "images/ostrich.webp",
+          "tag": "Our local inspectors – majestic, curious and quite inquisitive.",
+          "facts": [
+            "The fastest birds on land – up to 70 km/h.",
+            "They have the largest eyes of any land animal.",
+            "One kick can seriously injure or even kill a predator.",
+            "They can't fly, but their speed, strong legs and sharp eyesight keep them safe."
+          ]
+        },
+        {
+          "name": "Springbok",
+          "photo": "images/springbok.webp",
+          "tag": "Graceful and gentle – our most reserved residents.",
+          "facts": [
+            "South Africa's national animal and the symbol of the national rugby team.",
+            "They leap stiff-legged into the air (\"pronking\") to confuse predators or show off their fitness.",
+            "They can go a long time without drinking, getting moisture from the plants they eat.",
+            "Top speed: up to 88 km/h."
+          ]
+        },
+        {
+          "name": "Ducks",
+          "photo": "images/duck.webp",
+          "tag": "Quirky and fun, usually near the water. They'll tell us when it's feeding time!",
+          "facts": [
+            "There are over 120 duck species, found everywhere except Antarctica.",
+            "A gland near the tail makes oil they spread on their feathers to stay dry.",
+            "They're social and talk with a wide range of quacks and calls.",
+            "That classic waddle comes from short legs set far back on the body."
+          ]
+        },
+        {
+          "name": "Geese",
+          "photo": "images/geese.webp",
+          "tag": "Loud but lovable – they enjoy waddling around the garden.",
+          "facts": [
+            "They form strong family bonds and often mate for life.",
+            "Excellent \"watch animals\" – they announce intruders loudly.",
+            "They've been seen mourning lost mates and remembering familiar people."
+          ]
+        },
+        {
+          "name": "Chickens",
+          "photo": "images/chickens.webp",
+          "tag": "Busy, chatty and always hoping for a snack.",
+          "facts": [
+            "They have over 30 distinct calls, from predator warnings to calling chicks.",
+            "Mother hens talk to their chicks before they hatch – and the chicks answer from inside the egg!",
+            "They can run up to 15 km/h, especially when food is involved."
+          ]
+        }
+      ]
+    },
+    "around": [
+      {
+        "category": "Restaurants & cafés",
+        "icon": "🍴",
+        "places": [
+          [
+            "Bella Casa Restaurant",
+            "Cosy Italian spot known for pastas, pizzas and other classics."
+          ],
+          [
+            "New York Restaurant",
+            "Stylish, steak-focused restaurant with a New York-inspired feel."
+          ],
+          [
+            "Margaritas",
+            "Relaxed dining with seafood and steak as the main attractions."
+          ],
+          [
+            "Copper Clover",
+            "Irish-style pub with a big menu and a kids' play area."
+          ],
+          [
+            "Bossa Bloemfontein",
+            "From nachos to burgers – something for every taste and occasion."
+          ],
+          [
+            "Airborne Café",
+            "Pet- and family-friendly, with live entertainment and skydiving nearby (New Tempe Airport)."
+          ]
+        ]
+      },
+      {
+        "category": "Markets",
+        "icon": "🧺",
+        "places": [
+          [
+            "Langenhoven Market (Boeremark)",
+            "Lively Saturday-morning farmers' market with fresh produce, homemade goods and local crafts."
+          ]
+        ]
+      },
+      {
+        "category": "Nature & sightseeing",
+        "icon": "🌿",
+        "places": [
+          [
+            "Free State National Botanical Garden",
+            "70 hectares of indigenous plants, trails and picnic spots."
+          ],
+          [
+            "Naval Hill Nature Reserve",
+            "Walk among giraffes, buck, ostriches and more. Safe for walkers and joggers – no predators."
+          ],
+          [
+            "Oliewenhuis Art Museum",
+            "Panoramic city views, hiking trails and a chance to spot wildlife."
+          ]
+        ]
+      },
+      {
+        "category": "Activities & wellness",
+        "icon": "🎾",
+        "places": [
+          [
+            "Padelworx",
+            "A premier padel tennis club in Langenhovenpark."
+          ],
+          [
+            "Picklers Park & Paletas Restaurant",
+            "Family-friendly spot at Sol Lifestyle Venue with activities, dining and social spaces."
+          ],
+          [
+            "Emoya Spa",
+            "Luxury safari spa for total relaxation."
+          ],
+          [
+            "Naval Hill Planetarium",
+            "The first digital planetarium in Africa south of the Sahara – stunning cosmic visuals and immersive shows. Booking via Computicket recommended."
+          ]
+        ]
+      },
+      {
+        "category": "For fitness fans",
+        "icon": "🏃",
+        "places": [
+          [
+            "Inibos Parkrun",
+            "Free, fun 5 km community run/walk every week. For all fitness levels."
+          ]
+        ]
+      }
+    ],
+    "emergency": [
+      {
+        "group": "Your hosts",
+        "items": [
+          [
+            "Ian",
+            "079 118 3173"
+          ],
+          [
+            "Alex",
+            "064 067 4041"
+          ]
+        ]
+      },
+      {
+        "group": "Police",
+        "items": [
+          [
+            "Bainsvlei Police",
+            "051 411 2910"
+          ],
+          [
+            "National Police",
+            "10111"
+          ]
+        ]
+      },
+      {
+        "group": "Ambulance",
+        "items": [
+          [
+            "ER24 Ambulance / Medical",
+            "084 124"
+          ],
+          [
+            "Netcare Medical Ambulance",
+            "082 911"
+          ],
+          [
+            "VR Medical Ambulance",
+            "087 537 2662"
+          ],
+          [
+            "National Ambulance / Medical",
+            "051 407 6000"
+          ],
+          [
+            "National Ambulance / Medical",
+            "10177"
+          ]
+        ]
+      },
+      {
+        "group": "Hospitals",
+        "items": [
+          [
+            "Emoya Med (nearest hospital)",
+            "051 011 4040"
+          ],
+          [
+            "Mediclinic",
+            "086 177 7884"
+          ],
+          [
+            "Life Rosepark Hospital",
+            "051 505 5111"
+          ]
+        ]
+      }
+    ],
+    "footer": {
+      "bookHeading": "Book direct & save",
+      "bookText": "Loved your stay? Next time, book direct on our website for our best rate.",
+      "website": "https://welverdiendaccommodation.com",
+      "pdfUrl": ""
+    },
+    "af": {
+      "unit": {
+        "tagline": "Troeteldiervriendelike plaasverblyf in Groenvlei, Bloemfontein"
+      },
+      "welcome": {
+        "heading": "Welkom by Unit 2",
+        "text": [
+          "Ons is so bly om jou te ontvang! Hierdie gids het alles wat jy oor die huis moet weet, hoe dinge werk, en nuttige plaaslike inligting.",
+          "As jy ooit hulp nodig het, stuur gerus enige tyd vir ons 'n boodskap."
+        ]
+      },
+      "arrival": {
+        "directions": [
+          "Draai af by die kerk.",
+          "Hou links by Ebenhaeser-kerk.",
+          "Ry verby die eiland met die kennisgewingbord.",
+          "Stop by die hek gemerk \"Unit 2\"."
+        ],
+        "lockboxLocation": "Jou sleutels is in die sleutelkassie op die palisadeheining buite die hek.",
+        "lockboxCodeNote": "Jou sleutelkassie-kode is in jou WhatsApp-boodskap.",
+        "lockboxSteps": [
+          "Trek die swart deksel af.",
+          "Sleutel die kode in.",
+          "Druk die swart knoppie (langs die kode) af."
+        ],
+        "inLockbox": [
+          "Voordeursleutel",
+          "Hekafstandbeheer (een knoppie)"
+        ],
+        "atBackDoor": [
+          "Agterdeursleutel",
+          "Hekafstandbeheer met twee knoppies"
+        ],
+        "remoteBlue": "Blou – maak die hek oop",
+        "remoteRed": "Rooi – alarm-paniekknoppie (slegs vir noodgevalle)",
+        "gateReminder": "Maak asseblief altyd die hek agter jou toe vir veiligheid.",
+        "checkout": [
+          "Sit die sleutels en die afstandbeheer terug in die sleutelkassie.",
+          "As die sleutels en afstandbeheer nie terug in die sleutelkassie pas nie, los die sleutels binne in die huis en sit net die afstandbeheer terug in die sleutelkassie."
+        ]
+      },
+      "wifi": {
+        "tip": "Sukkel jy om te koppel? Trek die router se prop uit, wag 10 sekondes en prop dit weer in. 'n Vinnige herbegin werk gewoonlik!"
+      },
+      "pool": {
+        "heading": "Koel af, plaasstyl!",
+        "intro": [
+          "Gaste is meer as welkom om ons plaasstyl-swembad te gebruik!",
+          "Wanneer die Vrystaatse son brand, klim die trappe na die sondek, geniet die groot oop lug, en sak met die leer af in die koel water. Dis die perfekte plek om 'n warm dag af te spoel, 'n boek in die son te lees, of net die plaaslewe te geniet."
+        ],
+        "request": "Net een versoek: los die duik en spat vir die eende.",
+        "rules": [
+          "Geen strandwag aan diens nie. Swem op eie risiko.",
+          "Kinders onder 18 moet te alle tye deur 'n volwassene toegesien word.",
+          "Die swembad is slegs vir gaste wat hier bly. Geen dagbesoekers nie.",
+          "Moenie in die swembad spring of duik nie.",
+          "Moenie op die dek hardloop nie. Dit kan glad wees as dit nat is.",
+          "Geen alkohol in die swembadarea nie.",
+          "Geen glas in die swembadarea nie. Gebruik asseblief plastiekbekers en -bottels.",
+          "Geen kos in die water nie.",
+          "Geen troeteldiere in die swembadarea nie.",
+          "Moet nooit alleen swem nie.",
+          "Geen harde musiek nie. Die swembad word gedeel, so respekteer asseblief ander gaste.",
+          "Neem jou rommel saam en los die area netjies.",
+          "Maak die swembadhek toe en sluit dit wanneer jy loop."
+        ],
+        "keyNote": "Die swembadhek word vir veiligheid gesluit gehou. Die swembadhek se sleutel is aan jou huissleutels. Sluit asseblief die hek wanneer jy loop.",
+        "signoff": "Geniet jou swem!"
+      },
+      "rules": [
+        "Troeteldiere is binne welkom – hoogstens 3 troeteldiere. Vee asseblief hul pote af as dit modderig is.",
+        "Rook en vape slegs buite. Asbakke is onder die wasbak.",
+        "Geen funksies of partytjies nie.",
+        "Stiltetyd is 22:00 – 06:00.",
+        "Volg asseblief die huisreëls met respek.",
+        "Jy is welkom om om die veld te stap en na die diere te kyk, op eie risiko. Jammer, troeteldiere mag nie saamstap nie."
+      ],
+      "pets": [
+        "Ons is mal oor harige besoekers! Maak asseblief hul pote skoon wanneer hulle buite was – die grond hier vlek matte maklik."
+      ],
+      "braai": {
+        "firewood": "Vir braaihout, kontak ons vir beskikbaarheid en pryse, of koop by die Engen-vulstasie of Checkers naby.",
+        "tips": [
+          "Pak groter stompe onder, dan kleiner aanmaakhout, met vuurmakers of opgefrommelde papier bo-op. Steek dit bo aan die brand vir 'n skoner, doeltreffender vuur.",
+          "Los spasie vir lugvloei. Moenie die hout te styf pak nie – 'n vuur het goeie lugvloei nodig om lekker te brand.",
+          "Wenk: as die vuur sukkel, gee 'n haardroër vir 'n paar minute dit 'n ekstra hupstoot."
+        ]
+      },
+      "food": {
+        "services": "Checkers Sixty60 en Uber Eats lewer hier af!"
+      },
+      "power": {
+        "intro": "Die huis het sonpanele en 'n rugsteunbattery wat noodsaaklike ligte, Wi-Fi en kragproppe aan die gang hou tydens beurtkrag.",
+        "hotWater": "Die elektriese geiser is op 'n tydskakelaar en skakel outomaties af, en daar is ook 'n gasgeiser gekoppel – so jy behoort altyd warm water te hê, selfs tydens kragonderbrekings.",
+        "energyUse": "Die battery kan nie toestelle wat baie krag trek lank aan die gang hou nie. Vermy of beperk asseblief paneelverwarmers, die oond, haardroërs, elektriese komberse en ander swaar verbruikers totdat die hoofkrag terug is.",
+        "ifBatteryEmpty": [
+          "Twee olielampe word onder die wasbak gebêre.",
+          "'n Battery-lantern staan langs die ketel.",
+          "Die gaskoolplaat brand sonder elektrisiteit.",
+          "Vuurhoutjies is in die laai langs die oond."
+        ]
+      },
+      "extras": {
+        "items": [
+          "Komberse: in die slaapkamerkas, of die kas net buite die kamer.",
+          "Strykyster, strykplank, besem, mop en bababad: in die slaapkamerkas.",
+          "Ekstra handdoeke? Stuur net vir ons 'n boodskap!",
+          "Wil jy die wasmasjien gebruik? Laat weet ons gerus."
+        ],
+        "winter": [
+          "Elke bed het 'n elektriese kombers.",
+          "Elke slaapkamer het 'n paneelverwarmer. Ons skakel dit aan voor jy aankom sodat die kamers warm en gesellig is.",
+          "Ons hou die slaapkamerdeure toe sodat die hitte binne bly."
+        ]
+      },
+      "appliances": [
+        {
+          "title": "Slim-TV en stroming (Hisense VIDAA)",
+          "intro": [
+            "Slim-TV met stroomtoepassings (Netflix, YouTube en meer). Teken gerus by jou eie profiel aan.",
+            "Vergeet om af te teken? Geen probleem nie – ons verwyder dit voor die volgende gas."
+          ],
+          "steps": [
+            [
+              "Aan/af",
+              "Druk die rooi Power-knoppie."
+            ],
+            [
+              "Navigasie",
+              "Gebruik die pyltjieknoppies en OK om te kies."
+            ],
+            [
+              "Volume / kanaal",
+              "Die kontroles is links en regs."
+            ],
+            [
+              "Insette",
+              "Druk INPUT om bronne te wissel (HDMI, ens.)."
+            ],
+            [
+              "Toepassings",
+              "Vinnige toegang met die toepassingknoppies (Netflix, YouTube, Prime Video, ens.)."
+            ],
+            [
+              "Tuis",
+              "Druk Home om by die toepassings en TV-instellings uit te kom."
+            ]
+          ]
+        },
+        {
+          "title": "Russell Hobbs-koffiemasjien",
+          "intro": [],
+          "steps": [
+            [
+              "Vul die watertenk",
+              "Maak die deksel oop en gooi soveel water in as wat jy nodig het (kyk na die vlakke op die kraffie)."
+            ],
+            [
+              "Voeg koffie by",
+              "Sit 'n koffiefilter in die mandjie en voeg gemaalde koffie by."
+            ],
+            [
+              "Skakel aan",
+              "Druk die Power-knoppie (⏻)."
+            ],
+            [
+              "Begin brou",
+              "Dit behoort dadelik te begin brou."
+            ],
+            [
+              "PROG",
+              "Stel 'n broutydhouer. Hou dit in om die horlosie te stel, gebruik dan h (uur) en min (minuut)."
+            ],
+            [
+              "AUTO",
+              "Begin 'n vertraagde brousel op die geprogrammeerde tyd."
+            ],
+            [
+              "AROMA",
+              "Sterker ekstraksie vir sterker koffie."
+            ]
+          ]
+        },
+        {
+          "title": "Mikrogolfoond",
+          "intro": [],
+          "steps": [
+            [
+              "Maak die deur oop",
+              "Trek aan die handvatsel."
+            ],
+            [
+              "Kos",
+              "Sit dit op 'n mikrogolfveilige bord."
+            ],
+            [
+              "Kragvlak",
+              "Druk \"Microw\" herhaaldelik tot by die krag wat jy wil hê (10P–100P)."
+            ],
+            [
+              "Stel die tyd",
+              "Nadat jy die kragvlak gekies het, sleutel die tyd op die sleutelbord in."
+            ],
+            [
+              "Begin",
+              "Druk START."
+            ],
+            [
+              "Kanselleer / stop",
+              "Druk STOP."
+            ],
+            [
+              "Ontdooi",
+              "Om vleis, hoender of seekos te ontdooi (sleutel die gewig van die kos in)."
+            ],
+            [
+              "Vinnige kook",
+              "Druk START om vir 30 sekondes te kook, of druk 1–6 om dadelik vir 1–6 minute te kook."
+            ]
+          ]
+        },
+        {
+          "title": "Milex-lugbraaier",
+          "intro": [],
+          "steps": [
+            [
+              "Maak die deur oop",
+              "Trek aan die handvatsel."
+            ],
+            [
+              "Kos",
+              "Sit dit op een van die rakke wat voorsien word en maak die deur toe."
+            ],
+            [
+              "Voorafinstellings",
+              "Druk On/Off en gebruik dan die Menu-knoppie om deur die voorafingestelde spyskaarte te blaai. Die gekose een brand rooi."
+            ],
+            [
+              "Self instel",
+              "Of druk Time en gebruik + / – om die tyd te stel. Doen dieselfde vir die temperatuur."
+            ],
+            [
+              "Begin",
+              "Druk weer On/Off."
+            ],
+            [
+              "Kanselleer / stop",
+              "Maak die deur oop of druk On/Off."
+            ]
+          ]
+        },
+        {
+          "title": "Plafonwaaier- en ligafstandbeheer",
+          "intro": [],
+          "steps": [
+            [
+              "Ligte aan/af",
+              "Druk ON/OFF (links bo)."
+            ],
+            [
+              "FAN OFF / PAIR CODE (middel)",
+              "Skakel die waaier af, of koppel die afstandbeheer."
+            ],
+            [
+              "Waaierspoed",
+              "Knoppies 1–6 stel die waaierspoed."
+            ],
+            [
+              "Helderheid",
+              "Gebruik + en – onder die helderheidsimbool."
+            ],
+            [
+              "Tydhouer",
+              "Druk 2H of 4H om ná 2 of 4 uur outomaties af te skakel."
+            ],
+            [
+              "ALL OFF",
+              "Skakel alles af."
+            ]
+          ]
+        }
+      ],
+      "wildlife": {
+        "intro": "Tydens jou verblyf ontmoet jy dalk van ons vriendelike inwonende diere. Jy is welkom om om die veld te stap en na hulle te kyk, op eie risiko. Jammer, troeteldiere mag nie saamstap nie.",
+        "animals": [
+          {
+            "name": "Volstruise",
+            "tag": "Ons plaaslike inspekteurs – statig, nuuskierig en baie weetgierig.",
+            "facts": [
+              "Die vinnigste voëls op land – tot 70 km/h.",
+              "Hulle het die grootste oë van enige landdier.",
+              "Een skop kan 'n roofdier ernstig beseer of selfs doodmaak.",
+              "Hulle kan nie vlieg nie, maar hul spoed, sterk bene en skerp sig hou hulle veilig."
+            ]
+          },
+          {
+            "name": "Springbokke",
+            "tag": "Grasieus en sag – ons mees terughoudende inwoners.",
+            "facts": [
+              "Suid-Afrika se nasionale dier en die simbool van die nasionale rugbyspan.",
+              "Hulle spring met stywe bene in die lug (\"pronk\") om roofdiere te verwar of hul fiksheid te wys.",
+              "Hulle kan lank sonder drink klaarkom en kry vog uit die plante wat hulle eet.",
+              "Topspoed: tot 88 km/h."
+            ]
+          },
+          {
+            "name": "Eende",
+            "tag": "Snaaks en vol pret, gewoonlik naby die water. Hulle laat ons weet wanneer dit voertyd is!",
+            "facts": [
+              "Daar is meer as 120 eendspesies, oral behalwe Antarktika.",
+              "'n Klier naby die stert maak olie wat hulle oor hul vere smeer om droog te bly.",
+              "Hulle is sosiaal en praat met 'n wye reeks kwaak- en roepgeluide.",
+              "Daardie klassieke waggel kom van kort bene wat ver agter aan die lyf sit."
+            ]
+          },
+          {
+            "name": "Ganse",
+            "tag": "Raserig maar lieflik – hulle waggel graag in die tuin rond.",
+            "facts": [
+              "Hulle vorm sterk familiebande en paar dikwels lewenslank.",
+              "Uitstekende \"wagdiere\" – hulle kondig indringers hard aan.",
+              "Hulle is al gesien hoe hulle oor verlore maats treur en bekende mense onthou."
+            ]
+          },
+          {
+            "name": "Hoenders",
+            "tag": "Besig, babbelsiek en altyd op soek na 'n peuselhappie.",
+            "facts": [
+              "Hulle het meer as 30 verskillende roepe, van waarskuwings oor roofdiere tot die roep van kuikens.",
+              "Henne praat met hul kuikens nog voor hulle uitbroei – en die kuikens antwoord van binne die eier!",
+              "Hulle kan tot 15 km/h hardloop, veral as daar kos betrokke is."
+            ]
+          }
+        ]
+      },
+      "around": [
+        {
+          "category": "Restaurante en kafees",
+          "places": [
+            [
+              "Bella Casa Restaurant",
+              "Gesellige Italiaanse plek bekend vir pasta, pizza en ander klassieke geregte."
+            ],
+            [
+              "New York Restaurant",
+              "Stylvolle steakrestaurant met 'n New York-geïnspireerde gevoel."
+            ],
+            [
+              "Margaritas",
+              "Ontspanne eetplek met seekos en steak as die hoofattraksies."
+            ],
+            [
+              "Copper Clover",
+              "Ierse kroeg met 'n groot spyskaart en 'n speelarea vir kinders."
+            ],
+            [
+              "Bossa Bloemfontein",
+              "Van nachos tot burgers – iets vir elke smaak en geleentheid."
+            ],
+            [
+              "Airborne Café",
+              "Troeteldier- en gesinsvriendelik, met lewendige vermaak en valskermspring naby (New Tempe-lughawe)."
+            ]
+          ]
+        },
+        {
+          "category": "Markte",
+          "places": [
+            [
+              "Langenhoven Market (Boeremark)",
+              "Lewendige Saterdagoggend-boeremark met vars produkte, tuisgemaakte goed en plaaslike handwerk."
+            ]
+          ]
+        },
+        {
+          "category": "Natuur en besienswaardighede",
+          "places": [
+            [
+              "Free State National Botanical Garden",
+              "70 hektaar inheemse plante, roetes en piekniekplekke."
+            ],
+            [
+              "Naval Hill Nature Reserve",
+              "Stap tussen kameelperde, bokke, volstruise en meer. Veilig vir stappers en drawwers – geen roofdiere nie."
+            ],
+            [
+              "Oliewenhuis Art Museum",
+              "Panoramiese uitsigte oor die stad, staproetes en 'n kans om wild te sien."
+            ]
+          ]
+        },
+        {
+          "category": "Aktiwiteite en welstand",
+          "places": [
+            [
+              "Padelworx",
+              "'n Toonaangewende padel-tennisklub in Langenhovenpark."
+            ],
+            [
+              "Picklers Park & Paletas Restaurant",
+              "Gesinsvriendelike plek by Sol Lifestyle Venue met aktiwiteite, eetplekke en sosiale ruimtes."
+            ],
+            [
+              "Emoya Spa",
+              "Luukse safari-spa vir algehele ontspanning."
+            ],
+            [
+              "Naval Hill Planetarium",
+              "Die eerste digitale planetarium in Afrika suid van die Sahara – asemrowende kosmiese beelde en meesleurende vertonings. Bespreek verkieslik via Computicket."
+            ]
+          ]
+        },
+        {
+          "category": "Vir fiksheidsliefhebbers",
+          "places": [
+            [
+              "Inibos Parkrun",
+              "Gratis, prettige 5 km-gemeenskapsdraf/-stap elke week. Vir alle fiksheidsvlakke."
+            ]
+          ]
+        }
+      ],
+      "emergency": [
+        {
+          "group": "Jou gashere",
+          "items": [
+            [
+              "Ian",
+              "079 118 3173"
+            ],
+            [
+              "Alex",
+              "064 067 4041"
+            ]
+          ]
+        },
+        {
+          "group": "Polisie",
+          "items": [
+            [
+              "Bainsvlei-polisie",
+              "051 411 2910"
+            ],
+            [
+              "Nasionale polisie",
+              "10111"
+            ]
+          ]
+        },
+        {
+          "group": "Ambulans",
+          "items": [
+            [
+              "ER24 Ambulans / Medies",
+              "084 124"
+            ],
+            [
+              "Netcare Mediese Ambulans",
+              "082 911"
+            ],
+            [
+              "VR Mediese Ambulans",
+              "087 537 2662"
+            ],
+            [
+              "Nasionale Ambulans / Medies",
+              "051 407 6000"
+            ],
+            [
+              "Nasionale Ambulans / Medies",
+              "10177"
+            ]
+          ]
+        },
+        {
+          "group": "Hospitale",
+          "items": [
+            [
+              "Emoya Med (naaste hospitaal)",
+              "051 011 4040"
+            ],
+            [
+              "Mediclinic",
+              "086 177 7884"
+            ],
+            [
+              "Life Rosepark-hospitaal",
+              "051 505 5111"
+            ]
+          ]
+        }
+      ],
+      "footer": {
+        "bookHeading": "Bespreek direk en spaar",
+        "bookText": "Het jy jou verblyf geniet? Bespreek volgende keer direk op ons webwerf vir ons beste prys."
+      }
+    }
+  }/*GUIDE-END*/;
+
+/* ---------- language ----------
+   English is GUIDE itself; Afrikaans is GUIDE.af, which holds only the
+   translated text. Anything not in GUIDE.af (photos, phone numbers, Wi-Fi
+   details, the driver note) comes from the English version.
+   Pick order: ?lang=af in the link, then the guest's last choice, then
+   the phone's language. */
+function merge(base, over) {
+  if (over === undefined) return base;
+  if (Array.isArray(base) && Array.isArray(over)) {
+    const objs = base.length && base[0] && typeof base[0] === "object" && !Array.isArray(base[0]);
+    return objs ? over.map((o, i) => merge(base[i] || {}, o)) : over;
+  }
+  if (base && over && typeof base === "object" && typeof over === "object" && !Array.isArray(over)) {
+    const out = { ...base };
+    for (const k in over) out[k] = merge(base[k], over[k]);
+    return out;
+  }
+  return over;
+}
+const LANGS = ["en", "af"];
+function pickLang() {
+  const q = new URLSearchParams(location.search).get("lang");
+  if (LANGS.includes(q)) return q;
+  try { const s = localStorage.getItem("wv-lang"); if (LANGS.includes(s)) return s; } catch (_) {}
+  return (navigator.languages || [navigator.language]).some(l => /^af\b/i.test(l || "")) ? "af" : "en";
+}
+let LANG = pickLang();
+
+const T = {
+  en: {
+    nav: ["Welcome", "Weather", "Arrival", "Wi-Fi", "Pool", "House rules", "Braai", "Food delivery", "Power", "Extras", "Appliances", "Wildlife", "Around town", "Emergency"],
+    heroAlt: "Unit 2 at Welverdiend on a sunny day", directions: "Directions", call: "Call",
+    eWelcome: "Welcome", eWeather: "Live forecast", hWeather: "Weather in", loading: "Loading the forecast…",
+    eArrival: "Getting here", hArrival: "Arrival & check-in", cDirections: "Directions", address: "Address:",
+    openMaps: "Open location in Google Maps", copyLoc: "Copy location link",
+    gateCap: g => `Look for the gate marked “${g}”. The lockbox is on the palisade fence outside it.`,
+    cLockbox: "The lockbox", cIn: "In the lockbox", cBack: "At the back door", cRemote: "The two-button remote", cCheckout: "At checkout",
+    eWifi: "Stay connected", network: "Network", password: "Password", copyPass: "Copy password",
+    ePool: "Swimming pool", poolAlt: "The farm-style pool with its sun deck and ladder", cPoolRules: "Pool rules",
+    eRules: "Good to know", hRules: "House rules", cPets: "🐶 Pets welcome!",
+    eBraai: "Firewood & braai", hBraai: "Braai time", cWood: "🔥 Firewood", cTips: "Tips for a great fire",
+    eFood: "Hungry?", hFood: "Food delivery", addrUse: "Address to use", copyAddr: "Copy address", driver: "Add this note for the driver", copyDriver: "Copy driver note",
+    ePower: "Load-shedding", hPower: "Power interruptions", cHot: "🚿 Hot water", cEasy: "⚡ Go easy on the battery", cFlat: "🕯️ If the battery runs flat",
+    eExtras: "Home comforts", hExtras: "Extras", cWinter: "☃️ Winter months",
+    eApp: "How things work", hApp: "Appliances",
+    eWild: "Meet the residents", hWild: "Wildlife",
+    eAround: "Local favourites", hAround: "Around Bloemfontein",
+    eEm: "Help", hEm: "In case of emergency",
+    website: "Visit our website", pdf: "Download the full guide (PDF)",
+    copied: "Copied!", copyFail: "Couldn't copy – press and hold to copy",
+    today: "Today", rain: "Rain", wind: "Wind", updated: "Updated", by: "Forecast by Open-Meteo", offline: "Offline – showing the last forecast.",
+    wxFail: "The forecast couldn't load right now. Check your signal and pull down to refresh.", days7: "7-day forecast", high: "high", low: "low",
+    tipUv: "Very high UV today – sunscreen and a hat, and keep pets in the shade.", tipRain: "Rain is likely today – bring the washing in.",
+    tipCold: "Cold night ahead – electric blankets are on each bed.", tipHot: "Hot one! Perfect pool weather.",
+    days: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    wx: ["Sunny", "Mostly sunny", "Partly cloudy", "Cloudy", "Fog", "Drizzle", "Freezing drizzle", "Light rain", "Rain", "Heavy rain", "Freezing rain", "Light snow", "Snow", "Heavy snow", "Showers", "Heavy showers", "Snow showers", "Thunderstorm", "Thunderstorm with hail"],
+    langLabel: "Language"
+  },
+  af: {
+    nav: ["Welkom", "Weer", "Aankoms", "Wi-Fi", "Swembad", "Huisreëls", "Braai", "Kos bestel", "Krag", "Ekstras", "Toestelle", "Diere", "Omgewing", "Nood"],
+    heroAlt: "Unit 2 op Welverdiend op 'n sonnige dag", directions: "Aanwysings", call: "Bel",
+    eWelcome: "Welkom", eWeather: "Lewendige voorspelling", hWeather: "Die weer in", loading: "Laai die voorspelling…",
+    eArrival: "Hoe om hier te kom", hArrival: "Aankoms en inteken", cDirections: "Aanwysings", address: "Adres:",
+    openMaps: "Maak ligging in Google Maps oop", copyLoc: "Kopieer liggingskakel",
+    gateCap: g => `Soek die hek gemerk “${g}”. Die sleutelkassie is op die palisadeheining buite die hek.`,
+    cLockbox: "Die sleutelkassie", cIn: "In die sleutelkassie", cBack: "By die agterdeur", cRemote: "Die afstandbeheer met twee knoppies", cCheckout: "Wanneer jy vertrek",
+    eWifi: "Bly gekoppel", network: "Netwerk", password: "Wagwoord", copyPass: "Kopieer wagwoord",
+    ePool: "Swembad", poolAlt: "Die plaasstyl-swembad met sy sondek en leer", cPoolRules: "Swembadreëls",
+    eRules: "Goed om te weet", hRules: "Huisreëls", cPets: "🐶 Troeteldiere welkom!",
+    eBraai: "Braaihout en braai", hBraai: "Braaityd", cWood: "🔥 Braaihout", cTips: "Wenke vir 'n goeie vuur",
+    eFood: "Honger?", hFood: "Kos bestel", addrUse: "Adres om te gebruik", copyAddr: "Kopieer adres", driver: "Voeg hierdie nota by vir die bestuurder", copyDriver: "Kopieer bestuurdernota",
+    ePower: "Beurtkrag", hPower: "Kragonderbrekings", cHot: "🚿 Warm water", cEasy: "⚡ Spaar die battery", cFlat: "🕯️ As die battery pap is",
+    eExtras: "Huislike gemak", hExtras: "Ekstras", cWinter: "☃️ Wintermaande",
+    eApp: "Hoe dinge werk", hApp: "Toestelle",
+    eWild: "Ontmoet die inwoners", hWild: "Diere op die plaas",
+    eAround: "Plaaslike gunstelinge", hAround: "Rondom Bloemfontein",
+    eEm: "Hulp", hEm: "In geval van nood",
+    website: "Besoek ons webwerf", pdf: "Laai die volledige gids af (PDF)",
+    copied: "Gekopieer!", copyFail: "Kon nie kopieer nie – druk en hou om te kopieer",
+    today: "Vandag", rain: "Reën", wind: "Wind", updated: "Opgedateer", by: "Voorspelling deur Open-Meteo", offline: "Vanlyn – wys die laaste voorspelling.",
+    wxFail: "Die voorspelling kon nie nou laai nie. Kyk na jou sein en trek af om te herlaai.", days7: "7-dae-voorspelling", high: "hoog", low: "laag",
+    tipUv: "Baie hoë UV vandag – sonroom en 'n hoed, en hou troeteldiere in die skaduwee.", tipRain: "Reën is waarskynlik vandag – bring die wasgoed in.",
+    tipCold: "Koue nag voor – elke bed het 'n elektriese kombers.", tipHot: "Warm dag! Perfekte swembadweer.",
+    days: ["So", "Ma", "Di", "Wo", "Do", "Vr", "Sa"],
+    wx: ["Sonnig", "Meestal sonnig", "Gedeeltelik bewolk", "Bewolk", "Mis", "Motreën", "Ysmotreën", "Ligte reën", "Reën", "Swaar reën", "Ysreën", "Ligte sneeu", "Sneeu", "Swaar sneeu", "Buie", "Swaar buie", "Sneeubuie", "Donderstorm", "Donderstorm met hael"],
+    langLabel: "Taal"
+  }
+};
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const list = a => (a || []).filter(Boolean);
+const lis = a => list(a).map(x => `<li>${esc(x)}</li>`).join("");
+const paras = a => list(a).map(x => `<p>${esc(x)}</p>`).join("");
+const telHref = n => "tel:" + String(n).replace(/[^\d+]/g, "");
+const safeUrl = u => /^(https?:|tel:|mailto:|\/|images\/)/i.test(String(u || "")) ? u : "#";
+// Page photos are relative (images/...). At /unit2 (no slash) they would load from /images, so add the folder.
+const BASE = /\/unit\d+$/.test(location.pathname) ? location.pathname + "/" : "";
+const P = p => /^images\//.test(String(p)) ? BASE + p : p;
+const img = (src, alt, w, h, extra = "") => src ? `<img src="${esc(safeUrl(P(src)))}" alt="${esc(alt)}" width="${w}" height="${h}" loading="lazy" decoding="async" ${extra}>` : "";
+const mapsSearch = name => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(name + ", Bloemfontein");
+const icon = {
+  map: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.6"/></svg>',
+  wa: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.4.1-.7.3-.2.3-.9.9-.9 2.2s1 2.5 1.1 2.7c.1.2 1.9 2.9 4.6 4 1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.8-1.2.2-.6.2-1.1.1-1.2l-.5-.2z"/></svg>',
+  call: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>'
+};
+const copyButton = (text, label) => `<button type="button" class="btn small copy-btn" data-copy="${esc(text)}">${esc(label)}</button>`;
+const SECTION_IDS = ["welcome", "weather", "arrival", "wifi", "pool", "rules", "braai", "food", "power", "extras", "appliances", "wildlife", "around", "emergency"];
+
+/* ---------- page ---------- */
+function render() {
+  const { af, ...en } = GUIDE;
+  const G = LANG === "af" ? merge(en, af || {}) : en;
+  const t = T[LANG], C = G.contact, U = G.unit, A = G.arrival;
+  const waHref = "https://wa.me/" + String(C.whatsapp).replace(/\D/g, "");
+  document.documentElement.lang = LANG;
+  $("#app").innerHTML = `
+<header class="hero" id="welcome">
+  <picture>
+    <source media="(min-width:801px)" srcset="${esc(P(G.photos.hero))}">
+    <img class="bg" src="${esc(P(G.photos.heroSmall || G.photos.hero))}" alt="${esc(t.heroAlt)}" width="800" height="394" fetchpriority="high">
+  </picture>
+  <div class="lang" role="group" aria-label="${esc(t.langLabel)}">
+    <button type="button" data-lang="en" aria-pressed="${LANG === "en"}" lang="en">English</button>
+    <button type="button" data-lang="af" aria-pressed="${LANG === "af"}" lang="af">Afrikaans</button>
+  </div>
+  <div class="inner">
+    ${G.photos.logo ? `<img class="logo" src="${esc(P(G.photos.logo))}" alt="Welverdiend" width="600" height="136">` : ""}
+    <h1>${esc(G.welcome.heading)}</h1>
+    <p class="sub">${esc(U.tagline)}</p>
+    <div class="cta">
+      <a class="btn dir" href="${esc(safeUrl(G.location.mapsUrl))}" target="_blank" rel="noopener">${icon.map}${esc(t.directions)}</a>
+      <a class="btn wa" href="${esc(waHref)}" target="_blank" rel="noopener">${icon.wa}WhatsApp ${esc(C.hostName)}</a>
+      <a class="btn call" href="${esc(telHref(C.phone))}">${icon.call}${esc(t.call)}</a>
+    </div>
+    <p class="num">${esc(C.hostName)}: <a href="${esc(telHref(C.phone))}">${esc(C.phoneDisplay)}</a></p>
+  </div>
+</header>
+<nav class="nav" aria-label="${esc(t.nav[0])}"><ul>${SECTION_IDS.map((id, i) => `<li><a href="#${id}">${esc(t.nav[i])}</a></li>`).join("")}</ul></nav>
+<main class="wrap">
+<section aria-labelledby="h-intro" style="border-top:0">
+  <span class="eyebrow">${esc(t.eWelcome)}</span>
+  <h2 id="h-intro" class="sr-only">${esc(t.eWelcome)}</h2>
+  ${paras(G.welcome.text)}
+</section>
+
+<section id="weather" aria-labelledby="h-weather">
+  <span class="eyebrow">${esc(t.eWeather)}</span>
+  <h2 id="h-weather">${esc(t.hWeather)} ${esc(G.location.weatherPlace)}</h2>
+  <div class="card" id="wx"><p>${esc(t.loading)}</p></div>
+</section>
+
+<section id="arrival" aria-labelledby="h-arrival">
+  <span class="eyebrow">${esc(t.eArrival)}</span>
+  <h2 id="h-arrival">${esc(t.hArrival)}</h2>
+  <div class="card">
+    <h3>${esc(t.cDirections)}</h3>
+    <ol class="steps">${lis(A.directions)}</ol>
+    <p><strong>${esc(t.address)}</strong> ${esc(G.location.address)}</p>
+    <div style="display:flex;flex-wrap:wrap;gap:10px">
+      <a class="btn small" href="${esc(safeUrl(G.location.mapsUrl))}" target="_blank" rel="noopener">${esc(t.openMaps)}</a>
+      ${copyButton(G.location.mapsUrl, t.copyLoc)}
+    </div>
+  </div>
+  ${G.photos.gate ? `<figure>${img(G.photos.gate, U.gateName, 800, 600)}<figcaption>${esc(t.gateCap(U.gateName))}</figcaption></figure>` : ""}
+  <div class="card">
+    <h3>${esc(t.cLockbox)}</h3>
+    <p>${esc(A.lockboxLocation)}</p>
+    <p class="note">🔑 ${esc(A.lockboxCodeNote)}</p>
+    <ol class="steps">${lis(A.lockboxSteps)}</ol>
+  </div>
+  <div class="two">
+    <div class="card"><h3>${esc(t.cIn)}</h3><ul>${lis(A.inLockbox)}</ul></div>
+    <div class="card"><h3>${esc(t.cBack)}</h3><ul>${lis(A.atBackDoor)}</ul></div>
+  </div>
+  <div class="card">
+    <h3>${esc(t.cRemote)}</h3>
+    <div class="remote">
+      <div><span class="dot blue" aria-hidden="true"></span>${esc(A.remoteBlue)}</div>
+      <div><span class="dot red" aria-hidden="true"></span>${esc(A.remoteRed)}</div>
+    </div>
+  </div>
+  <p class="note">🚪 ${esc(A.gateReminder)}</p>
+  <div class="card"><h3>${esc(t.cCheckout)}</h3><ul>${lis(A.checkout)}</ul></div>
+</section>
+
+<section id="wifi" aria-labelledby="h-wifi">
+  <span class="eyebrow">${esc(t.eWifi)}</span>
+  <h2 id="h-wifi">Wi-Fi</h2>
+  <div class="card">
+    <span class="label">${esc(t.network)}</span>
+    <div class="code-box"><span class="val">${esc(G.wifi.network)}</span></div>
+    <span class="label">${esc(t.password)}</span>
+    <div class="code-box"><span class="val">${esc(G.wifi.password)}</span>${copyButton(G.wifi.password, t.copyPass)}</div>
+    <p style="margin:0">${esc(G.wifi.tip)}</p>
+  </div>
+</section>
+
+<section id="pool" aria-labelledby="h-pool">
+  <span class="eyebrow">${esc(t.ePool)}</span>
+  <h2 id="h-pool">${esc(G.pool.heading)}</h2>
+  ${G.photos.pool ? `<figure>${img(G.photos.pool, t.poolAlt, 1000, 830)}</figure>` : ""}
+  ${paras(G.pool.intro)}
+  <p><strong>${esc(G.pool.request)}</strong></p>
+  <div class="card"><h3>${esc(t.cPoolRules)}</h3><ul>${lis(G.pool.rules)}</ul></div>
+  <p class="note">🔑 ${esc(G.pool.keyNote)}</p>
+  <p><strong>${esc(G.pool.signoff)}</strong></p>
+</section>
+
+<section id="rules" aria-labelledby="h-rules">
+  <span class="eyebrow">${esc(t.eRules)}</span>
+  <h2 id="h-rules">${esc(t.hRules)}</h2>
+  <div class="card"><ul>${lis(G.rules)}</ul></div>
+  ${list(G.pets).length ? `<div class="card"><h3>${esc(t.cPets)}</h3>${paras(G.pets)}</div>` : ""}
+</section>
+
+<section id="braai" aria-labelledby="h-braai">
+  <span class="eyebrow">${esc(t.eBraai)}</span>
+  <h2 id="h-braai">${esc(t.hBraai)}</h2>
+  <div class="card"><h3>${esc(t.cWood)}</h3><p style="margin:0">${esc(G.braai.firewood)}</p></div>
+  <div class="card"><h3>${esc(t.cTips)}</h3><ul>${lis(G.braai.tips)}</ul></div>
+</section>
+
+<section id="food" aria-labelledby="h-food">
+  <span class="eyebrow">${esc(t.eFood)}</span>
+  <h2 id="h-food">${esc(t.hFood)}</h2>
+  <div class="card">
+    <p><strong>${esc(G.food.services)}</strong></p>
+    <span class="label">${esc(t.addrUse)}</span>
+    <div class="code-box"><span class="val">${esc(G.food.address)}</span>${copyButton(G.food.address, t.copyAddr)}</div>
+    <span class="label">${esc(t.driver)}</span>
+    <div class="code-box"><span class="val">${esc(G.food.driverNote)}</span>${copyButton(G.food.driverNote, t.copyDriver)}</div>
+  </div>
+</section>
+
+<section id="power" aria-labelledby="h-power">
+  <span class="eyebrow">${esc(t.ePower)}</span>
+  <h2 id="h-power">${esc(t.hPower)}</h2>
+  <p>${esc(G.power.intro)}</p>
+  <div class="card"><h3>${esc(t.cHot)}</h3><p style="margin:0">${esc(G.power.hotWater)}</p></div>
+  <div class="card"><h3>${esc(t.cEasy)}</h3><p style="margin:0">${esc(G.power.energyUse)}</p></div>
+  <div class="card"><h3>${esc(t.cFlat)}</h3><ul>${lis(G.power.ifBatteryEmpty)}</ul></div>
+</section>
+
+<section id="extras" aria-labelledby="h-extras">
+  <span class="eyebrow">${esc(t.eExtras)}</span>
+  <h2 id="h-extras">${esc(t.hExtras)}</h2>
+  <div class="card"><ul>${lis(G.extras.items)}</ul></div>
+  <div class="card"><h3>${esc(t.cWinter)}</h3><ul>${lis(G.extras.winter)}</ul></div>
+</section>
+
+<section id="appliances" aria-labelledby="h-app">
+  <span class="eyebrow">${esc(t.eApp)}</span>
+  <h2 id="h-app">${esc(t.hApp)}</h2>
+  ${list(G.appliances).map(a => `
+  <details>
+    <summary><span class="ico" aria-hidden="true">${esc(a.icon)}</span>${esc(a.title)}</summary>
+    <div class="det-body">
+      ${img(a.photo, a.title, 600, 800)}
+      <div>${paras(a.intro)}<dl class="kv">${list(a.steps).map(s => `<dt>${esc(s[0])}</dt><dd>${esc(s[1])}</dd>`).join("")}</dl></div>
+    </div>
+  </details>`).join("")}
+</section>
+
+<section id="wildlife" aria-labelledby="h-wild">
+  <span class="eyebrow">${esc(t.eWild)}</span>
+  <h2 id="h-wild">${esc(t.hWild)}</h2>
+  <p>${esc(G.wildlife.intro)}</p>
+  <div class="animals">
+  ${list(G.wildlife.animals).map(a => `
+    <article class="animal">
+      ${img(a.photo, a.name, 800, 600)}
+      <div class="b"><h3>${esc(a.name)}</h3><p class="tag">${esc(a.tag)}</p><ul>${lis(a.facts)}</ul></div>
+    </article>`).join("")}
+  </div>
+</section>
+
+<section id="around" aria-labelledby="h-around">
+  <span class="eyebrow">${esc(t.eAround)}</span>
+  <h2 id="h-around">${esc(t.hAround)}</h2>
+  ${list(G.around).map(c => `
+  <div class="card cat">
+    <h3><span aria-hidden="true">${esc(c.icon)}</span>${esc(c.category)}</h3>
+    ${list(c.places).map(p => `<div class="place"><a href="${esc(mapsSearch(p[0]))}" target="_blank" rel="noopener">${esc(p[0])}</a><p>${esc(p[1])}</p></div>`).join("")}
+  </div>`).join("")}
+</section>
+
+<section id="emergency" aria-labelledby="h-em">
+  <span class="eyebrow">${esc(t.eEm)}</span>
+  <h2 id="h-em">${esc(t.hEm)}</h2>
+  ${list(G.emergency).map(g => `
+  <div class="card"><h3>${esc(g.group)}</h3>
+    <ul class="tel-list">${list(g.items).map(i => `<li><a href="${esc(telHref(i[1]))}"><span>${esc(i[0])}</span><span class="n">${esc(i[1])}</span></a></li>`).join("")}</ul>
+  </div>`).join("")}
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <h2>${esc(G.footer.bookHeading)}</h2>
+    <p>${esc(G.footer.bookText)}</p>
+    <div class="btns">
+      <a class="btn light" href="${esc(safeUrl(G.footer.website))}" target="_blank" rel="noopener">${esc(t.website)}</a>
+      ${G.footer.pdfUrl ? `<a class="btn outline" href="${esc(safeUrl(G.footer.pdfUrl))}" target="_blank" rel="noopener">${esc(t.pdf)}</a>` : ""}
+    </div>
+    <p><a href="${esc(safeUrl(G.footer.website))}">${esc(String(G.footer.website).replace(/^https?:\/\//, ""))}</a> · ${esc(G.location.address)} · <a href="${esc(telHref(C.phone))}">${esc(C.phoneDisplay)}</a></p>
+    <small>Welverdiend Accommodation · ${esc(U.name)}</small>
+  </div>
+</footer>`;
+  watchSections();
+  if (lastWeather) renderWeather(lastWeather.d, lastWeather.stale);
+}
+
+/* ---------- language switch ---------- */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-lang]"); if (!b || b.dataset.lang === LANG) return;
+  LANG = b.dataset.lang;
+  try { localStorage.setItem("wv-lang", LANG); } catch (_) {}
+  const u = new URL(location.href); u.searchParams.set("lang", LANG); history.replaceState(null, "", u.pathname + u.search + u.hash);
+  const y = scrollY; render(); scrollTo(0, y);
+  document.querySelector(`[data-lang="${LANG}"]`).focus();
+});
+
+/* ---------- copy buttons ---------- */
+const toast = $("#toast"); let toastT;
+function showToast(msg) { toast.textContent = msg; toast.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => toast.classList.remove("show"), 1800); }
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch (e) {
+    const ta = document.createElement("textarea"); ta.value = t; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand("copy"); } catch (_) {} ta.remove(); return ok;
+  }
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest(".copy-btn"); if (!b) return;
+  const ok = await copyText(b.dataset.copy);
+  showToast(ok ? T[LANG].copied : T[LANG].copyFail);
+  if (ok) { b.dataset.copied = ""; setTimeout(() => delete b.dataset.copied, 1800); }
+});
+
+/* ---------- active menu item ---------- */
+let io;
+function watchSections() {
+  if (io) io.disconnect();
+  const navLinks = [...document.querySelectorAll(".nav a")];
+  io = new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      navLinks.forEach(a => {
+        const on = a.getAttribute("href") === "#" + en.target.id;
+        a.setAttribute("aria-current", on ? "true" : "false");
+        if (on) a.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      });
+    });
+  }, { rootMargin: "-45% 0px -50% 0px" });
+  SECTION_IDS.forEach(id => { const el = document.getElementById(id); if (el) io.observe(el); });
+}
+
+/* ---------- live weather (Open-Meteo, no key, refreshes itself) ---------- */
+// code -> [icon, index into T[lang].wx]
+const WX = { 0:["☀️",0],1:["🌤️",1],2:["⛅",2],3:["☁️",3],45:["🌫️",4],48:["🌫️",4],51:["🌦️",5],53:["🌦️",5],55:["🌦️",5],56:["🌧️",6],57:["🌧️",6],
+  61:["🌧️",7],63:["🌧️",8],65:["🌧️",9],66:["🌧️",10],67:["🌧️",10],71:["🌨️",11],73:["🌨️",12],75:["❄️",13],77:["🌨️",12],80:["🌦️",14],81:["🌧️",14],82:["⛈️",15],
+  85:["🌨️",16],86:["🌨️",16],95:["⛈️",17],96:["⛈️",18],99:["⛈️",18] };
+const wxOf = c => { const [i, n] = WX[c] || ["☁️", 3]; return [i, T[LANG].wx[n]]; };
+const r0 = n => Math.round(n);
+let lastWeather = null;
+function renderWeather(d, stale) {
+  lastWeather = { d, stale };
+  const box = $("#wx"); if (!box) return;
+  const t = T[LANG], c = d.current, dl = d.daily, [ic, label] = wxOf(c.weather_code);
+  const uv = dl.uv_index_max[0];
+  const tips = [];
+  if (uv >= 8) tips.push(t.tipUv);
+  if (dl.precipitation_probability_max[0] >= 60) tips.push(t.tipRain);
+  if (dl.temperature_2m_min[0] <= 3) tips.push(t.tipCold);
+  if (dl.temperature_2m_max[0] >= 30) tips.push(t.tipHot);
+  box.innerHTML = `
+    <div class="wx-now">
+      <span class="icon" aria-hidden="true">${ic}</span>
+      <div><div class="big">${r0(c.temperature_2m)}°C</div><div class="desc">${esc(label)}</div></div>
+    </div>
+    <div class="wx-meta">
+      <span>${t.today} ${r0(dl.temperature_2m_max[0])}° / ${r0(dl.temperature_2m_min[0])}°</span>
+      <span>🌧️ ${t.rain} ${dl.precipitation_probability_max[0] ?? 0}%</span>
+      <span>💨 ${t.wind} ${r0(c.wind_speed_10m)} km/h</span>
+      <span>☀️ UV ${uv == null ? "–" : r0(uv)}</span>
+      <span>🌅 ${String(dl.sunrise[0]).slice(11, 16)} · 🌇 ${String(dl.sunset[0]).slice(11, 16)}</span>
+    </div>
+    ${tips.length ? `<p class="note ok" style="margin:12px 0 0">${tips.map(esc).join(" ")}</p>` : ""}
+    <div class="wx-days" role="list" aria-label="${esc(t.days7)}">
+      ${dl.time.map((day, i) => { const [di, dlab] = wxOf(dl.weather_code[i]); const name = i === 0 ? t.today : t.days[new Date(day + "T12:00:00").getDay()];
+        return `<div class="wx-day" role="listitem" aria-label="${esc(name)}: ${esc(dlab)}, ${t.high} ${r0(dl.temperature_2m_max[i])}, ${t.low} ${r0(dl.temperature_2m_min[i])}">
+          <div class="d">${esc(name)}</div><div class="i" aria-hidden="true">${di}</div>
+          <div class="t">${r0(dl.temperature_2m_max[i])}° <span>${r0(dl.temperature_2m_min[i])}°</span></div>
+          <div class="r">${dl.precipitation_probability_max[i] ?? 0}%</div></div>`; }).join("")}
+    </div>
+    <p class="wx-updated">${stale ? t.offline + " " : ""}${t.updated} ${new Date(d._at).toLocaleTimeString(LANG === "af" ? "af-ZA" : "en-ZA", { hour: "2-digit", minute: "2-digit" })} · ${t.by}</p>`;
+}
+async function loadWeather() {
+  const L = GUIDE.location;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${L.weatherLat}&longitude=${L.weatherLon}`
+    + "&current=temperature_2m,weather_code,wind_speed_10m"
+    + "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,uv_index_max,sunrise,sunset"
+    + "&timezone=Africa%2FJohannesburg&forecast_days=7";
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(res.status);
+    const d = await res.json(); d._at = Date.now();
+    try { localStorage.setItem("wv-wx", JSON.stringify(d)); } catch (_) {}
+    renderWeather(d, false);
+  } catch (e) {
+    let old = null; try { old = JSON.parse(localStorage.getItem("wv-wx")); } catch (_) {}
+    if (old) renderWeather(old, true);
+    else if ($("#wx")) $("#wx").innerHTML = `<p>${esc(T[LANG].wxFail)}</p>`;
+  }
+}
+
+render();
+let wxLast = 0;
+function maybeWeather() { if (Date.now() - wxLast > 20 * 60 * 1000) { wxLast = Date.now(); loadWeather(); } }
+maybeWeather();
+setInterval(maybeWeather, 60 * 1000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) maybeWeather(); });
+</script>
+</body>
+</html>

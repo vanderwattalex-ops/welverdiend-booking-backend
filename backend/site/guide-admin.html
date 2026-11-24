@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Guest guide editor – Welverdiend</title>
+<link rel="icon" href="/icon-192.png">
+<style>
+:root{--brown:#5b4632;--olive:#55622c;--bg:#f6f2ea;--card:#fff;--ink:#231c14;--muted:#6b6052;--line:#e3d9c9;--red:#a3321f;--green:#1f8c4e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;padding-bottom:90px}
+header{background:var(--brown);color:#fff;padding:14px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+@media(min-width:700px){header{position:sticky;top:0;z-index:5}}
+header h1{font-size:1.15rem;margin:0}
+header select{font:inherit;padding:8px;border-radius:8px;border:0;min-height:40px}
+.wrap{max-width:860px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 14px}
+.card h2{font-size:1.1rem;margin:0 0 10px}
+label{display:block;font-weight:700;font-size:.9rem;margin:10px 0 4px}
+.hint{font-weight:400;color:var(--muted);font-size:.85rem;margin:2px 0 6px}
+input[type=text],input[type=number],input[type=password],input[type=tel],input[type=date],textarea{width:100%;font:inherit;padding:10px 12px;border:1px solid #cfc3b0;border-radius:10px;background:#fff;color:inherit;min-height:44px}
+textarea{resize:vertical;min-height:44px}
+button,.btn{font:700 .95rem/1.2 inherit;font-family:inherit;min-height:44px;padding:10px 16px;border-radius:10px;border:0;background:var(--olive);color:#fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+button.sec,.btn.sec{background:#efe8db;color:var(--ink)}
+button.danger{background:#f6e1dc;color:var(--red)}
+button.wa,.btn.wa{background:var(--green)}
+button.icon{min-height:36px;padding:6px 10px;background:#efe8db;color:var(--ink);font-size:.85rem}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.grid2{display:grid;gap:10px}
+@media(min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
+details.sec{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:0 0 10px}
+details.sec>summary{cursor:pointer;padding:14px 16px;font-weight:800;font-size:1.02rem;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:52px}
+details.sec>summary::after{content:"＋";color:var(--olive)}
+details.sec[open]>summary::after{content:"－"}
+details.sec>.body{padding:0 16px 16px}
+fieldset{border:1px solid var(--line);border-radius:12px;padding:10px 12px 12px;margin:10px 0}
+legend{font-weight:800;padding:0 6px}
+.item{display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+.item>.fields{flex:1;display:grid;gap:6px}
+.item>.tools{display:flex;flex-direction:column;gap:4px}
+.photo{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.photo img{width:140px;height:96px;object-fit:contain;border-radius:10px;background:#eee;border:1px solid var(--line)}
+.photo .empty{width:140px;height:96px;border-radius:10px;border:2px dashed #cfc3b0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:.8rem;text-align:center;padding:6px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:12px 16px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;z-index:6;box-shadow:0 -4px 14px rgba(0,0,0,.06)}
+.status{font-size:.9rem;color:var(--muted)}
+.status.dirty{color:#8a4b00;font-weight:700}
+.msg-preview{white-space:pre-wrap;background:#e7f6dd;border-radius:12px;padding:12px;font-size:.95rem;border:1px solid #cde8bb}
+.warn{background:#fff4e0;color:#8a4b00;border-radius:10px;padding:10px 12px;font-weight:600;margin:8px 0}
+#login{max-width:420px;margin:60px auto}
+.toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#231c14;color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;opacity:0;transition:.2s;z-index:20;pointer-events:none}
+.toast.show{opacity:1}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <h1>📖 Guest guide editor</h1>
+  <div class="row">
+    <select id="unit" aria-label="Unit"><option value="unit2">Unit 2</option><option value="unit1">Unit 1</option></select>
+    <a class="btn sec" id="openGuide" href="/unit2" target="_blank" rel="noopener">Open guest page</a>
+    <a class="btn sec" href="/admin-dashboard.html">Dashboard</a>
+  </div>
+</header>
+
+<div id="login" class="card hidden">
+  <h2>Sign in</h2>
+  <p class="hint">Use the same admin token as the booking dashboard.</p>
+  <form id="loginForm"><label for="tok">Admin token</label><input type="password" id="tok" autocomplete="current-password" required>
+  <p class="row" style="margin-top:12px"><button type="submit">Sign in</button></p></form>
+  <p id="loginErr" class="warn hidden"></p>
+</div>
+
+<div class="wrap hidden" id="main">
+  <!-- 1. The one WhatsApp message -->
+  <div class="card">
+    <h2>💬 Send the check-in message</h2>
+    <p class="hint" style="margin-top:0">One WhatsApp message with the guide link (opens straight in the browser, nothing to download), the lockbox code and the location. The code is stored privately here and never appears on the guest page.</p>
+    <div class="grid2">
+      <div><label for="gName">Guest name</label><input type="text" id="gName" placeholder="e.g. Sarah"></div>
+      <div><label for="gPhone">Guest WhatsApp number</label><input type="tel" id="gPhone" placeholder="e.g. 082 123 4567"></div>
+      <div><label for="gIn">Check-in date</label><input type="date" id="gIn"></div>
+      <div><label for="code">Lockbox code <span class="hint">(private)</span></label><input type="text" id="code" autocomplete="off" inputmode="numeric"></div>
+    </div>
+    <label for="msgLang">Message language</label>
+    <select id="msgLang" style="font:inherit;padding:8px;border-radius:10px;min-height:44px"><option value="en">English</option><option value="af">Afrikaans</option></select>
+    <p class="hint">Afrikaans sends the guide link with ?lang=af, so it opens in Afrikaans. Guests can switch language on the page.</p>
+    <label for="tpl">Message wording</label>
+    <p class="hint">Fill-ins: {name} {unit} {link} {code} {map} {checkin} {wifi} {wifipass} {host} {phone}. WhatsApp shows the photo preview for the first link in the message, so keep {link} above {map}.</p>
+    <textarea id="tpl" rows="9"></textarea>
+    <label>Preview</label>
+    <div class="msg-preview" id="preview"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="wa" id="sendWa" type="button">Open in WhatsApp</button>
+      <button class="sec" id="copyMsg" type="button">Copy message</button>
+      <button class="sec" id="saveMsg" type="button">Save code &amp; wording</button>
+    </div>
+  </div>
+
+  <!-- 2. PDF -->
+  <div class="card">
+    <h2>📄 Full guide PDF (optional)</h2>
+    <p class="hint" style="margin-top:0">Shows a "Download the full guide (PDF)" button at the bottom of the guest page. It opens in the browser. <strong>Remove the lockbox code from the PDF before uploading</strong> – anyone with the link can open it.</p>
+    <p id="pdfState" class="hint"></p>
+    <div class="row"><label class="btn sec" style="margin:0">Upload PDF<input type="file" id="pdfFile" accept="application/pdf" hidden></label><button class="danger" id="pdfRemove" type="button">Remove PDF</button></div>
+  </div>
+
+  <!-- 3. Guide content -->
+  <h2 style="margin:22px 4px 10px">✏️ Guide content</h2>
+  <p class="hint" style="margin:0 4px 8px">Tap a section to edit it. Changes go live on the guest page as soon as you press <strong>Save</strong>.</p>
+  <div class="row" style="margin:0 4px 12px"><label for="editLang" style="margin:0">Editing</label>
+    <select id="editLang" style="font:inherit;padding:8px;border-radius:10px;min-height:44px"><option value="en">English</option><option value="af">Afrikaans</option></select></div>
+  <p class="hint" id="afHint" style="margin:0 4px 12px;display:none">Afrikaans holds only the wording. Photos, phone numbers, Wi-Fi, the address and the driver note are shared – change those under English.</p>
+  <div id="editor"></div>
+</div>
+
+<div class="bar hidden" id="bar">
+  <span class="status" id="status">No changes</span>
+  <button id="save" type="button" disabled>Save changes</button>
+  <button class="sec" id="undo" type="button" disabled>Undo changes</button>
+  <button class="danger" id="reset" type="button">Reset to original</button>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const TOKEN_KEY = "wv-admin-token"; // shared with admin-dashboard.html
+let token = localStorage.getItem(TOKEN_KEY) || "";
+let unit = new URLSearchParams(location.search).get("unit") || "unit2";
+let defaults = null, guide = null, savedJson = "", pdfUrl = null;
+const SITE = location.origin;
+
+const DEFAULT_TEMPLATE =
+"Hi {name}! 👋 Welcome to Welverdiend {unit}.\n\n" +
+"Your guest guide (directions, Wi-Fi, pool, house rules, live weather and local tips):\n{link}\n\n" +
+"🔑 Your lockbox code: {code}\n" +
+"📍 Location: {map}\n" +
+"📶 Wi-Fi: {wifi} – password {wifipass}\n\n" +
+"Check-in: {checkin}\n" +
+"Any questions, just WhatsApp {host} on {phone}. Enjoy your stay!";
+const DEFAULT_TEMPLATE_AF =
+"Hallo {name}! 👋 Welkom by Welverdiend {unit}.\n\n" +
+"Jou gasgids (aanwysings, Wi-Fi, swembad, huisreëls, lewendige weer en plaaslike wenke):\n{link}\n\n" +
+"🔑 Jou sleutelkassie-kode: {code}\n" +
+"📍 Ligging: {map}\n" +
+"📶 Wi-Fi: {wifi} – wagwoord {wifipass}\n\n" +
+"Inteken: {checkin}\n" +
+"Enige vrae, stuur net 'n WhatsApp aan {host} by {phone}. Geniet jou verblyf!";
+let templates = { en: DEFAULT_TEMPLATE, af: DEFAULT_TEMPLATE_AF }, msgLang = "en", editLang = "en";
+
+function toast(t) { const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("show"), 1800); }
+
+async function api(method, path, body, isForm) {
+  const opts = { method, headers: { "x-admin-token": token } };
+  if (body && !isForm) { opts.headers["content-type"] = "application/json"; opts.body = JSON.stringify(body); }
+  if (isForm) opts.body = body;
+  const res = await fetch(path, opts);
+  let data = {}; try { data = await res.json(); } catch (_) {}
+  if (res.status === 401) { localStorage.removeItem(TOKEN_KEY); token = ""; showLogin("That token was not accepted."); throw new Error("Unauthorized"); }
+  if (!res.ok || data.ok === false) throw new Error(data.error || ("Error " + res.status));
+  return data;
+}
+
+function showLogin(err) {
+  $("#login").classList.remove("hidden"); $("#main").classList.add("hidden"); $("#bar").classList.add("hidden");
+  $("#loginErr").textContent = err || ""; $("#loginErr").classList.toggle("hidden", !err);
+}
+$("#loginForm").addEventListener("submit", e => { e.preventDefault(); token = $("#tok").value.trim(); localStorage.setItem(TOKEN_KEY, token); load(); });
+
+/* ---------------- load ---------------- */
+async function load() {
+  if (!token) return showLogin();
+  $("#unit").value = unit;
+  $("#openGuide").href = "/" + unit;
+  try {
+    const d = await api("GET", `/api/admin/guest-guide/${unit}`);
+    defaults = d.defaults;
+    guide = JSON.parse(JSON.stringify(d.guide || d.defaults));
+    if (guide.photos && !("og" in guide.photos)) guide.photos.og = "";
+    if (!guide.af && defaults.af) guide.af = JSON.parse(JSON.stringify(defaults.af)); // guides saved before Afrikaans existed
+    savedJson = JSON.stringify(guide);
+    pdfUrl = d.pdfUrl;
+    $("#code").value = (d.message && d.message.lockboxCode) || "";
+    templates = { en: (d.message && d.message.template) || DEFAULT_TEMPLATE, af: (d.message && d.message.templateAf) || DEFAULT_TEMPLATE_AF };
+    $("#tpl").value = templates[msgLang];
+    $("#login").classList.add("hidden"); $("#main").classList.remove("hidden"); $("#bar").classList.remove("hidden");
+    renderEditor(); renderPdf(); updatePreview(); markDirty();
+  } catch (err) {
+    if (err.message !== "Unauthorized") { $("#main").classList.remove("hidden"); $("#editor").innerHTML = `<p class="warn">${esc(err.message)}</p>`; }
+  }
+}
+$("#unit").addEventListener("change", () => {
+  if (isDirty() && !confirm("You have unsaved changes. Switch unit and lose them?")) { $("#unit").value = unit; return; }
+  unit = $("#unit").value; history.replaceState(null, "", "?unit=" + unit); load();
+});
+
+/* ---------------- WhatsApp message ---------------- */
+function guideLink() { return SITE.replace(/^https?:\/\/(www\.)?welverdiendaccommodation\.com$/, "https://welverdiendaccommodation.com") + "/" + unit + (msgLang === "af" ? "?lang=af" : ""); }
+function fmtDate(v) { if (!v) return ""; const d = new Date(v + "T12:00:00"); return d.toLocaleDateString(msgLang === "af" ? "af-ZA" : "en-ZA", { weekday: "long", day: "numeric", month: "long" }); }
+function buildMessage() {
+  const g = guide || {}, c = g.contact || {}, w = g.wifi || {};
+  const vals = { name: $("#gName").value.trim() || (msgLang === "af" ? "daar" : "there"), unit: (g.unit && g.unit.name) || unit, link: guideLink(), code: $("#code").value.trim() || "____",
+    map: (g.location && g.location.mapsUrl) || "", checkin: fmtDate($("#gIn").value), wifi: w.network || "", wifipass: w.password || "",
+    host: c.hostName || "", phone: c.phoneDisplay || "" };
+  // no check-in date: leave out the line that holds {checkin}
+  const tpl = $("#tpl").value.split("\n").filter(l => vals.checkin || !l.includes("{checkin}")).join("\n");
+  return tpl.replace(/\{(\w+)\}/g, (m, k) => k in vals ? vals[k] : m);
+}
+function updatePreview() { $("#preview").textContent = buildMessage(); }
+["gName", "gPhone", "gIn", "code", "tpl"].forEach(id => $("#" + id).addEventListener("input", updatePreview));
+$("#tpl").addEventListener("input", () => { templates[msgLang] = $("#tpl").value; });
+$("#msgLang").addEventListener("change", () => { templates[msgLang] = $("#tpl").value; msgLang = $("#msgLang").value; $("#tpl").value = templates[msgLang]; updatePreview(); });
+$("#editLang").addEventListener("change", () => { editLang = $("#editLang").value; $("#afHint").style.display = editLang === "af" ? "" : "none"; renderEditor(); });
+function waNumber(v) { let n = String(v).replace(/\D/g, ""); if (n.startsWith("0")) n = "27" + n.slice(1); return n; }
+$("#sendWa").addEventListener("click", () => {
+  if (!$("#code").value.trim() && !confirm("No lockbox code filled in. Send anyway?")) return;
+  const n = waNumber($("#gPhone").value);
+  window.open((n ? "https://wa.me/" + n : "https://wa.me/") + "?text=" + encodeURIComponent(buildMessage()), "_blank", "noopener");
+});
+$("#copyMsg").addEventListener("click", async () => { try { await navigator.clipboard.writeText(buildMessage()); toast("Copied!"); } catch (_) { toast("Couldn't copy"); } });
+$("#saveMsg").addEventListener("click", async () => {
+  try { await api("PUT", `/api/admin/guest-guide/${unit}/message`, { lockboxCode: $("#code").value, template: templates.en, templateAf: templates.af }); toast("Saved"); }
+  catch (err) { alert(err.message); }
+});
+
+/* ---------------- PDF ---------------- */
+function renderPdf() {
+  $("#pdfState").innerHTML = pdfUrl ? `A PDF is live: <a href="/${unit}/guest-guide.pdf" target="_blank" rel="noopener">/${unit}/guest-guide.pdf</a>` : "No PDF uploaded – the button is hidden on the guest page.";
+  $("#pdfRemove").disabled = !pdfUrl;
+}
+$("#pdfFile").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  if (!confirm("This PDF will be public to anyone with the link. Is the lockbox code removed from it?")) return;
+  const fd = new FormData(); fd.append("pdf", f);
+  try {
+    toast("Uploading…"); const d = await api("POST", `/api/admin/guest-guide/${unit}/pdf`, fd, true);
+    pdfUrl = d.pdfUrl; guide.footer = guide.footer || {}; guide.footer.pdfUrl = "/" + unit + "/guest-guide.pdf";
+    renderPdf(); renderEditor(); await saveGuide(); toast("PDF uploaded");
+  } catch (err) { alert(err.message); }
+});
+$("#pdfRemove").addEventListener("click", async () => {
+  if (!confirm("Remove the PDF button from the guest page?")) return;
+  try { await api("DELETE", `/api/admin/guest-guide/${unit}/pdf`); pdfUrl = null; if (guide.footer) guide.footer.pdfUrl = ""; renderPdf(); renderEditor(); await saveGuide(); toast("PDF removed"); }
+  catch (err) { alert(err.message); }
+});
+
+/* ---------------- generic editor ---------------- */
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const TITLES = { unit: "Unit name & tagline", contact: "Host contact (top buttons)", location: "Location link & weather", photos: "Main photos",
+  welcome: "Welcome", arrival: "Arrival & check-in", wifi: "Wi-Fi", pool: "Pool", rules: "House rules", pets: "Pets", braai: "Firewood & braai",
+  food: "Food delivery", power: "Power & load-shedding", extras: "Extras & winter", appliances: "Appliances", wildlife: "Wildlife",
+  around: "Around town (recommendations)", emergency: "Emergency numbers", footer: "Footer" };
+const LABELS = { gateName: "Gate name", heroSmall: "Hero photo (phones)", hero: "Hero photo (big screens)", og: "WhatsApp preview photo",
+  mapsUrl: "Google Maps location link", weatherLat: "Weather latitude", weatherLon: "Weather longitude", weatherPlace: "Weather place name",
+  whatsapp: "WhatsApp number (international, e.g. 27791183173)", phone: "Phone number for the Call button", phoneDisplay: "Phone number as shown",
+  hostName: "Host name", lockboxCodeNote: "Lockbox code line (never the real code)", inLockbox: "In the lockbox", atBackDoor: "At the back door",
+  remoteBlue: "Blue button", remoteRed: "Red button", gateReminder: "Gate reminder", ifBatteryEmpty: "If the battery runs flat",
+  hotWater: "Hot water", energyUse: "Energy use", keyNote: "Pool gate key note", driverNote: "Note for the delivery driver",
+  bookHeading: "Book-direct heading", bookText: "Book-direct text", pdfUrl: "PDF link (set by the PDF upload above)", items: "Items", text: "Text",
+  lockboxSteps: "Lockbox steps", lockboxLocation: "Where the lockbox is" };
+const HINTS = { mapsUrl: "In Google Maps, drop a pin on the gate → Share → Copy link, and paste it here. Used by the Directions button and the message.",
+  og: "The photo WhatsApp shows with the link. Leave empty to use the standard one.", gate: "Photo of the gate marked with the unit name. Shown in Arrival.",
+  lockboxCodeNote: "The guest page is public – the real code goes only in the WhatsApp message above." };
+const PAIRS = { steps: ["Button / step", "What it does"], places: ["Name (links to Google Maps)", "Description"], items: ["Name", "Phone number"] };
+const PHOTO_KEYS = { hero: 1280, heroSmall: 800, logo: 600, gate: 1000, pool: 1000, photo: 900, og: 1200 };
+const human = k => LABELS[k] || String(k).replace(/([A-Z])/g, " $1").replace(/^./, c => c.toUpperCase());
+
+function getAt(path) { return path.reduce((o, k) => o[k], guide); }
+function setAt(path, v) { const last = path[path.length - 1]; getAt(path.slice(0, -1))[last] = v; markDirty(); }
+function blankLike(v) {
+  if (Array.isArray(v)) return v.length && Array.isArray(v[0]) ? [] : (v.length && typeof v[0] === "object" ? [] : []);
+  if (v && typeof v === "object") { const o = {}; for (const k in v) o[k] = blankLike(v[k]); return o; }
+  return typeof v === "number" ? 0 : "";
+}
+function newItemFor(arr, key) {
+  if (arr.length) { const f = arr[0]; if (Array.isArray(f)) return f.map(() => ""); if (f && typeof f === "object") return blankLike(f); return ""; }
+  if (PAIRS[key]) return ["", ""];
+  return "";
+}
+function photoSrc(v) { return /^images\//.test(v) ? "/" + unit + "/" + v : v; }
+
+function field(path, key, value) {
+  const id = "f_" + path.join("_");
+  const label = `<label for="${id}">${esc(human(key))}</label>${HINTS[key] ? `<p class="hint">${esc(HINTS[key])}</p>` : ""}`;
+  if (key in PHOTO_KEYS && typeof value === "string") {
+    return `<div data-photo="${esc(JSON.stringify(path))}">${label.replace(`for="${id}"`, "")}
+      <div class="photo">${value ? `<img src="${esc(photoSrc(value))}" alt="">` : `<div class="empty">No photo</div>`}
+      <div class="row"><label class="btn sec" style="margin:0">${value ? "Replace" : "Upload"} photo<input type="file" accept="image/jpeg,image/png,image/webp" hidden data-upload="${esc(JSON.stringify(path))}" data-width="${PHOTO_KEYS[key]}" data-og="${key === "og" ? 1 : ""}"></label>
+      ${value ? `<button type="button" class="danger" data-clear="${esc(JSON.stringify(path))}">Remove</button>` : ""}</div></div></div>`;
+  }
+  if (typeof value === "number") return `${label}<input type="number" step="any" id="${id}" data-path="${esc(JSON.stringify(path))}" data-num="1" value="${esc(value)}">`;
+  const long = String(value).length > 70;
+  return `${label}${long ? `<textarea id="${id}" rows="3" data-path="${esc(JSON.stringify(path))}">${esc(value)}</textarea>` : `<input type="text" id="${id}" data-path="${esc(JSON.stringify(path))}" value="${esc(value)}">`}`;
+}
+function tools(path, i, len) {
+  const p = esc(JSON.stringify(path));
+  return `<div class="tools"><button type="button" class="icon" data-move="${p}" data-i="${i}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="Move up">↑</button>
+    <button type="button" class="icon" data-move="${p}" data-i="${i}" data-d="1" ${i === len - 1 ? "disabled" : ""} aria-label="Move down">↓</button>
+    <button type="button" class="icon" data-del="${p}" data-i="${i}" aria-label="Remove">✕</button></div>`;
+}
+function render(value, path, key) {
+  if (Array.isArray(value)) {
+    const pairs = value.length ? Array.isArray(value[0]) : !!PAIRS[key];
+    const objs = value.length && !pairs && typeof value[0] === "object";
+    const rows = value.map((v, i) => {
+      if (pairs) {
+        const names = PAIRS[key] || ["", ""];
+        return `<div class="item"><div class="fields">${v.map((x, j) => `<input type="text" aria-label="${esc(names[j] || "")}" placeholder="${esc(names[j] || "")}" data-path="${esc(JSON.stringify([...path, i, j]))}" value="${esc(x)}">`).join("")}</div>${tools(path, i, value.length)}</div>`;
+      }
+      if (objs) {
+        const title = v.name || v.title || v.group || v.category || ("Item " + (i + 1));
+        return `<fieldset><legend>${esc(title)}</legend><div class="item"><div class="fields">${Object.keys(v).map(k => render(v[k], [...path, i, k], k)).join("")}</div>${tools(path, i, value.length)}</div></fieldset>`;
+      }
+      const long = String(v).length > 60;
+      return `<div class="item"><div class="fields">${long ? `<textarea rows="2" aria-label="${esc(human(key))} ${i + 1}" data-path="${esc(JSON.stringify([...path, i]))}">${esc(v)}</textarea>` : `<input type="text" aria-label="${esc(human(key))} ${i + 1}" data-path="${esc(JSON.stringify([...path, i]))}" value="${esc(v)}">`}</div>${tools(path, i, value.length)}</div>`;
+    }).join("");
+    return `<fieldset><legend>${esc(human(key))}</legend>${rows}<button type="button" class="sec" data-add="${esc(JSON.stringify(path))}" data-key="${esc(key)}">+ Add</button></fieldset>`;
+  }
+  if (value && typeof value === "object") {
+    return Object.keys(value).map(k => render(value[k], [...path, k], k)).join("");
+  }
+  return field(path, key, value);
+}
+function renderEditor() {
+  const open = [...document.querySelectorAll("details.sec[open]")].map(d => d.dataset.k);
+  const root = editLang === "af" ? (guide.af = guide.af || {}) : guide;
+  const base = editLang === "af" ? ["af"] : [];
+  $("#editor").innerHTML = Object.keys(root).filter(k => k !== "af").map(k =>
+    `<details class="sec" data-k="${esc(k)}" ${open.includes(k) ? "open" : ""}><summary>${esc(TITLES[k] || human(k))}</summary><div class="body">${render(root[k], [...base, k], k)}</div></details>`).join("");
+}
+
+$("#editor").addEventListener("input", e => {
+  const el = e.target; if (!el.dataset.path) return;
+  setAt(JSON.parse(el.dataset.path), el.dataset.num ? Number(el.value) : el.value);
+  updatePreview();
+});
+$("#editor").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.add) { const p = JSON.parse(b.dataset.add); const arr = getAt(p); arr.push(newItemFor(arr, b.dataset.key)); markDirty(); renderEditor(); }
+  else if (b.dataset.del) { const p = JSON.parse(b.dataset.del); if (!confirm("Remove this item?")) return; getAt(p).splice(+b.dataset.i, 1); markDirty(); renderEditor(); }
+  else if (b.dataset.move) { const p = JSON.parse(b.dataset.move), arr = getAt(p), i = +b.dataset.i, j = i + (+b.dataset.d); [arr[i], arr[j]] = [arr[j], arr[i]]; markDirty(); renderEditor(); }
+  else if (b.dataset.clear) { setAt(JSON.parse(b.dataset.clear), ""); renderEditor(); }
+});
+$("#editor").addEventListener("change", async e => {
+  const el = e.target; if (!el.dataset.upload) return;
+  const f = el.files[0]; if (!f) return;
+  const fd = new FormData(); fd.append("photo", f); fd.append("width", el.dataset.width);
+  try {
+    toast("Uploading…");
+    const d = await api("POST", `/api/admin/guest-guide/${unit}/${el.dataset.og ? "og-photo" : "photo"}`, fd, true);
+    setAt(JSON.parse(el.dataset.upload), d.url); renderEditor(); toast("Photo ready – press Save");
+  } catch (err) { alert(err.message); }
+});
+
+/* ---------------- save ---------------- */
+const isDirty = () => guide && JSON.stringify(guide) !== savedJson;
+function markDirty() {
+  const d = isDirty();
+  $("#status").textContent = d ? "Unsaved changes" : "All changes saved";
+  $("#status").classList.toggle("dirty", !!d);
+  $("#save").disabled = !d; $("#undo").disabled = !d;
+}
+async function saveGuide() {
+  const r = await api("PUT", `/api/admin/guest-guide/${unit}`, { guide });
+  savedJson = JSON.stringify(guide); markDirty(); return r;
+}
+$("#save").addEventListener("click", async () => { try { $("#save").disabled = true; await saveGuide(); toast("Saved – live on the guest page"); } catch (err) { alert(err.message); markDirty(); } });
+$("#undo").addEventListener("click", () => { guide = JSON.parse(savedJson); renderEditor(); markDirty(); updatePreview(); });
+$("#reset").addEventListener("click", async () => {
+  if (!confirm("Throw away all edits and go back to the original guide wording and photos?")) return;
+  try { await api("DELETE", `/api/admin/guest-guide/${unit}`); await load(); toast("Back to the original"); } catch (err) { alert(err.message); }
+});
+window.addEventListener("beforeunload", e => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
+
+load();
+</script>
+</body>
+</html>
