@@ -59,14 +59,14 @@ legend{font-weight:800;padding:0 6px}
   <h1>📖 Guest guide editor</h1>
   <div class="row">
     <select id="unit" aria-label="Unit"><option value="unit2">Unit 2</option><option value="unit1">Unit 1</option></select>
-    <a class="btn sec" id="openGuide" href="/unit2" target="_blank" rel="noopener">Open guest page</a>
+    <a class="btn sec" id="openGuide" href="https://welverdiendaccommodation.com/unit2" target="_blank" rel="noopener">Open guest page</a>
     <a class="btn sec" href="/admin-dashboard.html">Dashboard</a>
   </div>
 </header>
 
 <div id="login" class="card hidden">
   <h2>Sign in</h2>
-  <p class="hint">Use the same admin token as the booking dashboard.</p>
+  <p class="hint">Use the same admin token as the booking dashboard. Open this page from the dashboard's "Guest guide" button and you're signed in already.</p>
   <form id="loginForm"><label for="tok">Admin token</label><input type="password" id="tok" autocomplete="current-password" required>
   <p class="row" style="margin-top:12px"><button type="submit">Sign in</button></p></form>
   <p id="loginErr" class="warn hidden"></p>
@@ -129,7 +129,10 @@ const TOKEN_KEY = "wv-admin-token"; // shared with admin-dashboard.html
 let token = localStorage.getItem(TOKEN_KEY) || "";
 let unit = new URLSearchParams(location.search).get("unit") || "unit2";
 let defaults = null, guide = null, savedJson = "", pdfUrl = null;
-const SITE = location.origin;
+// Guests always get the public address, even when this page is opened on
+// the run.app address (the dashboard and the Android app use that one).
+const PUBLIC_SITE = "https://welverdiendaccommodation.com";
+const APP = window.WelverdiendApp || null; // set inside the Android admin app
 
 const DEFAULT_TEMPLATE =
 "Hi {name}! 👋 Welcome to Welverdiend {unit}.\n\n" +
@@ -172,7 +175,7 @@ $("#loginForm").addEventListener("submit", e => { e.preventDefault(); token = $(
 async function load() {
   if (!token) return showLogin();
   $("#unit").value = unit;
-  $("#openGuide").href = "/" + unit;
+  $("#openGuide").href = PUBLIC_SITE + "/" + unit;
   try {
     const d = await api("GET", `/api/admin/guest-guide/${unit}`);
     defaults = d.defaults;
@@ -196,7 +199,7 @@ $("#unit").addEventListener("change", () => {
 });
 
 /* ---------------- WhatsApp message ---------------- */
-function guideLink() { return SITE.replace(/^https?:\/\/(www\.)?welverdiendaccommodation\.com$/, "https://welverdiendaccommodation.com") + "/" + unit + (msgLang === "af" ? "?lang=af" : ""); }
+function guideLink() { return PUBLIC_SITE + "/" + unit + (msgLang === "af" ? "?lang=af" : ""); }
 function fmtDate(v) { if (!v) return ""; const d = new Date(v + "T12:00:00"); return d.toLocaleDateString(msgLang === "af" ? "af-ZA" : "en-ZA", { weekday: "long", day: "numeric", month: "long" }); }
 function buildMessage() {
   const g = guide || {}, c = g.contact || {}, w = g.wifi || {};
@@ -218,7 +221,10 @@ $("#sendWa").addEventListener("click", () => {
   const n = waNumber($("#gPhone").value);
   window.open((n ? "https://wa.me/" + n : "https://wa.me/") + "?text=" + encodeURIComponent(buildMessage()), "_blank", "noopener");
 });
-$("#copyMsg").addEventListener("click", async () => { try { await navigator.clipboard.writeText(buildMessage()); toast("Copied!"); } catch (_) { toast("Couldn't copy"); } });
+$("#copyMsg").addEventListener("click", async () => {
+  try { if (APP) APP.copyText(buildMessage()); else await navigator.clipboard.writeText(buildMessage()); toast("Copied!"); }
+  catch (_) { toast("Couldn't copy"); }
+});
 $("#saveMsg").addEventListener("click", async () => {
   try { await api("PUT", `/api/admin/guest-guide/${unit}/message`, { lockboxCode: $("#code").value, template: templates.en, templateAf: templates.af }); toast("Saved"); }
   catch (err) { alert(err.message); }

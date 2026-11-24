@@ -170,6 +170,10 @@
   .tabs{display:flex;gap:8px;margin-bottom:20px;border-bottom:1px solid var(--line);}
   .tabs button{padding:9px 4px;margin-right:20px;border:none;background:none;cursor:pointer;font-size:14px;color:var(--ink-soft);border-bottom:2px solid transparent;font-weight:500;}
   .tabs button.active{color:var(--taupe-deep);border-bottom-color:var(--taupe-deep);}
+  /* Guest guide: its own page (guide-admin.html) on this same address, so it reuses the remembered token */
+  .tabs a.tab-link{padding:9px 4px;margin-right:20px;font-size:14px;color:var(--ink-soft);text-decoration:none;font-weight:500;border-bottom:2px solid transparent;white-space:nowrap;}
+  .tabs a.tab-link:hover{color:var(--taupe-deep);}
+  .more-sheet a.sheet-link{display:block;padding:15px 6px;border-bottom:1px solid var(--line);font-size:15px;color:var(--ink);text-decoration:none;}
   .tab-panel{display:none;}
   .tab-panel.active{display:block;}
   .unit-block{background:var(--white);border:1px solid var(--line);border-radius:6px;padding:16px 20px;margin-bottom:16px;}
@@ -402,6 +406,7 @@
     <button type="button" data-go="settings">Settings</button>
     <button type="button" data-go="website">Website</button>
     <button type="button" data-go="analytics">Analytics</button>
+    <a class="sheet-link" href="/guide-admin.html">Guest guide</a>
     <button type="button" class="danger" id="logout-sheet-btn">Log out on this phone</button>
     <button type="button" id="more-sheet-close">Close</button>
   </div>
@@ -415,6 +420,7 @@
   <button data-tab="settings">Settings</button>
   <button data-tab="website">Website</button>
   <button data-tab="analytics">Analytics</button>
+  <a class="tab-link" href="/guide-admin.html">Guest guide</a>
 </div>
 
 <div class="tab-panel active" id="panel-bookings">
